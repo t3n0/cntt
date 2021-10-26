@@ -1,7 +1,7 @@
 # SWCNT tight binding band structure
 
 Utility to compute the electronic band structure of carbon nanotubes.
-It uses the well known tight binding approximation and displays the band structure in linear and helical coordinates.
+It uses the well known tight binding approximation of CNTs and displays the band structure in linear and helical coordinates.
 
 ## Getting started
 
