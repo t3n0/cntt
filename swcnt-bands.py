@@ -16,7 +16,7 @@
 
 """Pollo."""
 import numpy as np
-
+import matplotlib.pyplot as plt
 
 def pollo(k, a1, a2):
     """Pollo."""
@@ -36,3 +36,6 @@ a1 = 30
 a2 = 24
 
 print(pollo(k, a1, a2))
+
+plt.plot([1,2,3,4,5])
+plt.show()
