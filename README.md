@@ -21,7 +21,7 @@ Run the code from the terminal
 `python swcnt-bands`
 
 ## Support
-For any problems, questions or suggestions, please contact me at pillo@pollo.com.
+For any problems, questions or suggestions, please contact me at tenobaldi@gmail.com.
 
 ## Roadmap
 Currently the project only supports computing and displaying the carbon nanotube band structure from the tight-binding zone-folding approximation. Future developments will include:
