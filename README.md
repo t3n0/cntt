@@ -18,7 +18,7 @@ Requirements:
 ## Usage
 Run the code from the terminal
 
-`python swcnt-bands`
+`python swcnt-bands.py`
 
 ## Support
 For any problems, questions or suggestions, please contact me at tenobaldi@gmail.com.
@@ -28,7 +28,6 @@ Currently the project only supports computing and displaying the carbon nanotube
 - optical matrix elements
 - density of states
 - doping
-- true tight-binding approximation (no zone-folding)
 
 ## Authors and acknowledgment
 The development of SWCNT is proudly powered by [me](https://github.com/t3n0).
