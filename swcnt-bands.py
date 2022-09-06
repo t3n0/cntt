@@ -67,7 +67,7 @@ b1 = b0*np.array([1/2,np.sqrt(3)/2])
 b2 = b0*np.array([1/2,-np.sqrt(3)/2])
 
 # carbon nanotube parameters
-n, m = 4, 2
+n, m = 6,5
 R = np.gcd(2*m+n,2*n+m)
 M = np.gcd(m,n)
 N = n**2 + n*m + m**2

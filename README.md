@@ -9,31 +9,39 @@
 Utility to compute the electronic band structure of carbon nanotubes. It uses the well known tight binding approximation of CNTs and displays the band structure in linear and helical coordinates.
 
 ## Installation
+
 Simply download or clone the package repository.
 
 Requirements:
+
 - `python 3.x`
 - `numpy`
 
 ## Usage
+
 Run the code from the terminal
 
 `python swcnt-bands`
 
 ## Support
+
 For any problems, questions or suggestions, please contact me at pillo@pollo.com.
 
 ## Roadmap
+
 Currently the project only supports computing and displaying the carbon nanotube band structure from the tight-binding zone-folding approximation. Future developments will include:
+
 - optical matrix elements
 - density of states
 - doping
 - true tight-binding approximation (no zone-folding)
 
 ## Authors and acknowledgment
+
 The development of SWCNT is proudly powered by [me](https://github.com/t3n0).
 
 ## License
+
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
