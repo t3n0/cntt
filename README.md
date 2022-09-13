@@ -24,6 +24,7 @@ Run the code from the terminal
 `python swcnt-bands.py`
 
 ## Support
+
 For any problems, questions or suggestions, please contact me at tenobaldi@gmail.com.
 
 ## Roadmap
