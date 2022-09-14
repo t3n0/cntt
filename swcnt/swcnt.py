@@ -32,7 +32,6 @@ class Swcnt(object):
         self.p, self.q = (2 * m + n) // self.R, -(2 * n + m) // self.R
 
         # graphene lattice vectors
-
         self.a0 = 0.2461  # nm
         # self.a0 = 2.461 # Angstrom
         # self.a0 = 4.6511 # bohr'
@@ -66,10 +65,10 @@ class Swcnt(object):
         self.k2H = -self.NU / self.D * self.KT
 
         # CNT linear and helical BZs
-        normLin = np.linalg.norm(self.KT)
-        normHel = np.linalg.norm(self.k2H)
+        self.normLin = np.linalg.norm(self.KT)
+        self.normHel = np.linalg.norm(self.k2H)
         kstepsLin = ksteps
-        kstepsHel = int(normHel / normLin * kstepsLin)
+        kstepsHel = int(self.normHel / self.normLin * kstepsLin)
         self.bzLin, self.bzCutsLin, self.bandLin = utils.subBands(
             self.KT, self.KC, self.a1, self.a2, self.NU, kstepsLin
         )
@@ -163,6 +162,8 @@ class Swcnt(object):
             ec="b",
         )
         ax2.add_collection(lines)
+
+        # plot band minima
         for mu in range(0, self.D):
             ax2.plot(*self.excPos[mu].T, "r.")
 
@@ -237,20 +238,42 @@ class Swcnt(object):
         self.excEnergy = np.array(self.excEnergy)
         self.excPos = np.array(self.excPos)
 
-        # excdic = {}
-        # for mu in range(2):
-        #     for nu in range(2):
-        #         for i in range(5):
-        #             for j in range(5):
-        #                 e[mu, nu, i, j] = a[mu, i]+a[nu, j]
-        #                 edic[f'E{mu}.{nu}.{i}.{j}'] = a[mu, i]+a[nu, j]
+        excDic = {}
+        binding = 0.1
+        for mu in range(self.D):
+            for nu in range(self.D):
+                for i in range(len(self.excPos[mu])):
+                    for j in range(len(self.excPos[nu])):
+                        excDic[f"E{mu}.{nu}.{i}.{j}"] = [
+                            (
+                                self.excHelPos[mu, i]
+                                - self.excHelPos[nu, j]
+                                + self.normHel / 2
+                            )
+                            % self.normHel
+                            - self.normHel / 2,
+                            (self.excInvMasses[mu, i] + self.excInvMasses[nu, j])
+                            / self.excInvMasses[mu, i]
+                            / self.excInvMasses[nu, j],
+                            self.excEnergy[mu, i] + self.excEnergy[nu, j] - binding,
+                        ]
 
         # excPrams[1,1,0,2]=[pos, mass, energy]
-        self.excParams = []
-        masses = np.array(
-            np.meshgrid(self.excHelPos.reshape(-1), self.excHelPos.reshape(-1))
-        ).T.reshape(-1, 2)
-        print(masses)
+        # for k in excDic:
+        #     print(k, " ", excDic[k])
+        excBands = {}
+        # for k in excDic:
+        #     excBands[k] = (excDic[k][0] - self.bzHel) ** 2 / excDic[k][1] / 2 + excDic[
+        #         k
+        #     ][2]
+        # for k in excBands:
+        #     # plt.plot(self.bzHel, excBands[k])
+        #     mask = ((excDic[k][0] - self.bzHel) < 10) * (
+        #         (excDic[k][0] - self.bzHel) > -10
+        #     )
+        #     plt.plot(self.bzHel, np.where(mask, excBands[k], np.nan))
+        # plt.ylim(0, 3)
+        # plt.show()
 
     def textParams(self):
         text = (
