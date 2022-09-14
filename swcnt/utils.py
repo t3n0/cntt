@@ -114,7 +114,7 @@ def hexPatches(minx, maxx, miny, maxy, c, lat='dir'):
     return hexs
 
 
-def uv(l, k, n):
+def minVector2AtomUnitCell(l, k, n):
     # seq is [0, 1, -1, 2, -2, 3, -3, ...]
     # maybe there is a smarter python way to do it
     seq = [0]
@@ -137,3 +137,18 @@ def opt_mat_elems(k, a1, a2, n, m):
     elem = ((n-m)*np.cos(np.dot(k, (a2-a1))) - (2*n+m)*np.cos(np.dot(k, a1)
                                                               ) + (n+2*m)*np.cos(np.dot(k, a2)))/2/np.sqrt(N)/bands(k, a1, a2)
     return elem
+
+
+def subBands(k1, k2, a1, a2, N, ksteps):
+    norm = np.linalg.norm(k1)
+    kmesh = np.linspace(-0.5, 0.5, ksteps)
+    bz = kmesh * norm
+    bzCuts = []
+    subBands = []
+    for mu in range(0, N):
+        cut = np.outer(kmesh, k1) + mu*k2
+        subBands.append(bands(cut, a1, a2))
+        bzCuts.append(cut)
+    bzCuts = np.array(bzCuts)
+    subBands = np.array(subBands)
+    return bz, bzCuts, subBands

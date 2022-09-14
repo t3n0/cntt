@@ -26,24 +26,25 @@ def main():
     n, m = args.n, args.m
     cnt = Swcnt(n, m)
 
-    if args.outdir:
-        WORK_DIR = os.getcwd()
-        OUT_DIR = os.path.join(WORK_DIR, args.outdir)
-        print(f'Current working directory:\n\t{WORK_DIR}')
+    # if args.outdir:
+    #     WORK_DIR = os.getcwd()
+    #     OUT_DIR = os.path.join(WORK_DIR, args.outdir)
+    #     print(f'Current working directory:\n\t{WORK_DIR}')
 
-        if not os.path.exists(OUT_DIR):
-            os.makedirs(OUT_DIR)
-        print(f'Output directoriy:\n\t{OUT_DIR}')
+    #     if not os.path.exists(OUT_DIR):
+    #         os.makedirs(OUT_DIR)
+    #     print(f'Output directoriy:\n\t{OUT_DIR}')
 
-        out_figure = os.path.join(OUT_DIR, f'cnt({n},{m}).png')
-        cnt.plot(out_figure)
-        cnt.saveData(OUT_DIR)
-    else:
-        cnt.plot()
+    #     out_figure = os.path.join(OUT_DIR, f'cnt({n},{m}).png')
+    #     cnt.plot(out_figure)
+    #     cnt.saveData(OUT_DIR)
+    # else:
+    #     cnt.plot()
 
-    # cnt.plotTransition(0,'perp')
-    # cnt.plotExcitons(0,'para')
-    # cnt.calculateExcitons()
+    # cnt.plotTransition(0, 'perp')
+    cnt.calculateExcitons()
+
+    cnt.plot()
 
     # for vec in [C,T,t1,t2,k1H,k2H]:
     #     arrow = mpatches.FancyArrow(0,0,vec[0],vec[1], width=0.005, length_includes_head=True, color='red')
