@@ -33,24 +33,13 @@ def save_file(*args, path, header=""):
 
 
 def getArgs():
-    parser = argparse.ArgumentParser(
-        description="Calculate the direct space, reciprocal space and band structure of a given (n,m) CNT"
-    )
+    parser = argparse.ArgumentParser(description="Calculate the direct space, reciprocal space and band structure of a given (n,m) CNT")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-v", "--verbose", action="store_true")
     group.add_argument("-q", "--quiet", action="store_true")
     parser.add_argument("n", help="(n,m) carbon nanotube n paramenter", type=int)
     parser.add_argument("m", help="(n,m) carbon nanotube m paramenter", type=int)
     parser.add_argument("-o", "--outdir", help="output destinatiom folder")
-    parser.add_argument(
-        "--length",
-        help="lenght units",
-        default="nm",
-        choices=["nm", "bohr", "angstrom"],
-    )
-    parser.add_argument(
-        "--energy", help="energy units", default="eV", choices=["eV", "Ha", "Ry"]
-    )
     args = parser.parse_args()
     return args
 
@@ -91,14 +80,12 @@ def hexPatches(minx, maxx, miny, maxy, c, lat="dir"):
         maxNx = int(np.ceil(2 * maxx / c / np.sqrt(3)))
         minNy = int(np.floor(miny / c)) - 1
         maxNy = int(np.ceil(maxy / c))
-        print(minNx, maxNx, minNy, maxNy)
         rotation = np.pi / 6
     elif lat == "rec":
         minNx = int(np.floor(minx / c)) - 1
         maxNx = int(np.ceil(maxx / c))
         minNy = 2 * int(np.floor(miny / c / np.sqrt(3)))
         maxNy = int(np.ceil(2 * maxy / c / np.sqrt(3)))
-        print(minNx, maxNx, minNy, maxNy)
         rotation = 0
     xs, ys = np.meshgrid(range(minNx, maxNx + 1), range(minNy, maxNy + 1))
     if lat == "dir":
@@ -113,9 +100,7 @@ def hexPatches(minx, maxx, miny, maxy, c, lat="dir"):
     xs = xs.reshape(-1) * c
     patches = []
     for x, y in zip(xs, ys):
-        line = mpatches.RegularPolygon(
-            (x, y), numVertices=6, radius=c / np.sqrt(3), orientation=rotation
-        )
+        line = mpatches.RegularPolygon((x, y), numVertices=6, radius=c / np.sqrt(3), orientation=rotation)
         patches.append(line)
     hexs = PatchCollection(patches, edgecolor="k", facecolor="w")
     return hexs
@@ -133,28 +118,14 @@ def minVector2AtomUnitCell(l, k, n):
             return u, int(v)
 
 
-def bands(k, a1, a2):
-    band = np.sqrt(
-        3
-        + 2 * np.cos(np.dot(k, a1))
-        + 2 * np.cos(np.dot(k, a2))
-        + 2 * np.cos(np.dot(k, (a2 - a1)))
-    )
-    return band
+def bands(k, a1, a2, gamma=1.0):
+    band = np.sqrt(3 + 2 * np.cos(np.dot(k, a1)) + 2 * np.cos(np.dot(k, a2)) + 2 * np.cos(np.dot(k, (a2 - a1))))
+    return gamma * band
 
 
 def opt_mat_elems(k, a1, a2, n, m):
     N = n ** 2 + n * m + m ** 2
-    elem = (
-        (
-            (n - m) * np.cos(np.dot(k, (a2 - a1)))
-            - (2 * n + m) * np.cos(np.dot(k, a1))
-            + (n + 2 * m) * np.cos(np.dot(k, a2))
-        )
-        / 2
-        / np.sqrt(N)
-        / bands(k, a1, a2)
-    )
+    elem = (((n - m) * np.cos(np.dot(k, (a2 - a1))) - (2 * n + m) * np.cos(np.dot(k, a1)) + (n + 2 * m) * np.cos(np.dot(k, a2))) / 2 / np.sqrt(N) / bands(k, a1, a2))
     return elem
 
 
