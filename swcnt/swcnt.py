@@ -105,7 +105,15 @@ class Swcnt(object):
         for mu in range(0, self.D):
             path = os.path.join(dirpath, f"bandHel{mu:03d}.txt")
             utils.save_file(self.bzHel, self.bandHel[mu], path=path)
-        
+        for k in self.excParaBands:
+            path = os.path.join(dirpath, f"excPara{k}.txt")
+            utils.save_file(self.bzHel, self.excParaBands[k], path=path)
+        for k in self.excPerpBands:
+            path = os.path.join(dirpath, f"excPerp{k}.txt")
+            utils.save_file(self.bzHel, self.excPerpBands[k], path=path)
+        for k in self.excDarkBands:
+            path = os.path.join(dirpath, f"excDark{k}.txt")
+            utils.save_file(self.bzHel, self.excDarkBands[k], path=path)
 
     def calculateExcitons(self, bindEnergy = 0.05):
         # dic = [pos, invMass, energy]
@@ -123,13 +131,13 @@ class Swcnt(object):
                         energy = self.bandEnergy[mu, i] + self.bandEnergy[nu, j] - bindEnergy
                         if deltaNorm < 1e-4:
                             # parallel excitons
-                            excPara[f"E{mu}.{i}.{j}"] = [helPos, invMass, energy]
+                            excPara[f"{mu}.{i}.{j}"] = [helPos, invMass, energy]
                         elif 0.8*self.normKC < deltaNorm < 1.2*self.normKC:
                             # perpendicular excitons
-                            excPerp[f"E{mu}.{nu}.{i}.{j}"] = [helPos, invMass, energy]
+                            excPerp[f"{mu}.{nu}.{i}.{j}"] = [helPos, invMass, energy]
                         else:
                             # dark excitons
-                            excDark[f"E{mu}.{nu}.{i}.{j}"] = [helPos, invMass, energy]
+                            excDark[f"{mu}.{nu}.{i}.{j}"] = [helPos, invMass, energy]
         self.excParaBands = utils.excBands(excPara, self.bzHel)
         self.excPerpBands = utils.excBands(excPerp, self.bzHel)
         self.excDarkBands = utils.excBands(excDark, self.bzHel)
@@ -194,7 +202,7 @@ class Swcnt(object):
         # labels
         ax1.set_xlabel("x (nm)")
         ax1.set_ylabel("y (nm)")
-        ax2.set_xlabel("kx ({nm-1)")
+        ax2.set_xlabel("kx (nm-1)")
         ax2.set_ylabel("ky (nm-1)")
         ax3.set_title("Linear")
         ax3.set_ylabel("Energy (eV)")

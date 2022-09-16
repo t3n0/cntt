@@ -19,33 +19,28 @@ def main():
     from swcnt.swcnt import Swcnt
     import os
 
-    # plt.ion()
-
     args = utils.getArgs()
 
     n, m = args.n, args.m
     cnt = Swcnt(n, m)
 
-    # if args.outdir:
-    #     WORK_DIR = os.getcwd()
-    #     OUT_DIR = os.path.join(WORK_DIR, args.outdir)
-    #     print(f'Current working directory:\n\t{WORK_DIR}')
+    if args.outdir:
+        WORK_DIR = os.getcwd()
+        OUT_DIR = os.path.join(WORK_DIR, args.outdir)
+        print(f'Current working directory:\n\t{WORK_DIR}')
 
-    #     if not os.path.exists(OUT_DIR):
-    #         os.makedirs(OUT_DIR)
-    #     print(f'Output directoriy:\n\t{OUT_DIR}')
+        if not os.path.exists(OUT_DIR):
+            os.makedirs(OUT_DIR)
+        print(f'Output directoriy:\n\t{OUT_DIR}')
 
-    #     out_figure = os.path.join(OUT_DIR, f'cnt({n},{m}).png')
-    #     cnt.plot(out_figure)
-    #     cnt.saveData(OUT_DIR)
-    # else:
-    #     cnt.plot()
-
-    # cnt.plotTransition(0, 'perp')
-    cnt.calculateExcitons()
-
-    cnt.plot()
-    cnt.plotExcitons()
+        out_figure = os.path.join(OUT_DIR, f'cnt({n},{m}).png')
+        cnt.plot(out_figure)
+        cnt.calculateExcitons()
+        cnt.saveData(OUT_DIR)
+    else:
+        cnt.calculateExcitons()
+        cnt.plot()
+        cnt.plotExcitons()
 
     # for vec in [C,T,t1,t2,k1H,k2H]:
     #     arrow = mpatches.FancyArrow(0,0,vec[0],vec[1], width=0.005, length_includes_head=True, color='red')
