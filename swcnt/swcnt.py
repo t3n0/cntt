@@ -121,10 +121,10 @@ class Swcnt(object):
                         helPos = (self.bandMinHel[mu, i] - self.bandMinHel[nu, j] + self.normHel / 2) % self.normHel - self.normHel / 2
                         invMass = self.bandInvMasses[mu, i] * self.bandInvMasses[nu, j] / (self.bandInvMasses[mu, i] + self.bandInvMasses[nu, j])
                         energy = self.bandEnergy[mu, i] + self.bandEnergy[nu, j] - bindEnergy
-                        if deltaNorm < 1e-6:
+                        if deltaNorm < 1e-4:
                             # parallel excitons
                             excPara[f"E{mu}.{i}.{j}"] = [helPos, invMass, energy]
-                        elif 0.9*self.normKC < deltaNorm < 1.1*self.normKC:
+                        elif 0.8*self.normKC < deltaNorm < 1.2*self.normKC:
                             # perpendicular excitons
                             excPerp[f"E{mu}.{nu}.{i}.{j}"] = [helPos, invMass, energy]
                         else:
