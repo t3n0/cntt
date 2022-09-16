@@ -43,6 +43,8 @@ class Swcnt(object):
         self.b0 = 4 * np.pi / np.sqrt(3) / self.a0
         self.b1 = self.b0 * np.array([1 / 2, np.sqrt(3) / 2])
         self.b2 = self.b0 * np.array([1 / 2, -np.sqrt(3) / 2])
+        self.ac = self.a0/np.sqrt(3)
+        self.bc = self.b0/np.sqrt(3)
 
         # CNT lattice vectors
         self.C = self.n * self.a1 + self.m * self.a2
@@ -63,32 +65,38 @@ class Swcnt(object):
         self.k2H = -self.NU / self.D * self.KT
 
         # CNT linear and helical BZs
+        self.normKC = np.linalg.norm(self.KC)
         self.normLin = np.linalg.norm(self.KT)
         self.normHel = np.linalg.norm(self.k2H)
+        self.normOrt = abs(self.beta)/self.D*self.normLin
         kstepsLin = ksteps
         kstepsHel = int(self.normHel / self.normLin * kstepsLin)
         self.bzLin, self.bzCutsLin, self.bandLin = utils.subBands(self.KT, self.KC, self.a1, self.a2, self.NU, kstepsLin)
         self.bzHel, self.bzCutsHel, self.bandHel = utils.subBands(self.k2H, self.k1H / self.D, self.a1, self.a2, self.D, kstepsHel)
 
-        # CNT excitons minima, energies and masses
-        self.excHelPos = []
-        self.excPos = []
-        self.excInvMasses = []
-        self.excEnergy = []
+        # CNT band minima, energies and masses
+        self.bandMinHel = []
+        self.bandMinXy = []
+        self.bandInvMasses = []
+        self.bandEnergy = []
         for mu in range(0, self.D):
             band = self.bandHel[mu]
             prime = np.gradient(band, self.bzHel)
             second = np.gradient(prime, self.bzHel)
+            # todo avoid dirac points in metallic cnts
+            # mask1 = (np.roll(prime, 1) < 0) * (prime > 0)
+            # mask2 = abs(np.roll(prime, 1) - prime) < 1e-1
+            # mask = mask1 * mask2
             mask = (np.roll(prime, 1) < 0) * (prime > 0)
-            self.excHelPos.append(self.bzHel[mask])
-            self.excInvMasses.append(second[mask])
-            self.excEnergy.append(band[mask])
-            self.excPos.append(self.bzCutsHel[mu][mask])
-        self.excHelPos = np.array(self.excHelPos)
-        self.excInvMasses = np.array(self.excInvMasses)
-        self.excEnergy = np.array(self.excEnergy)
-        self.excPos = np.array(self.excPos)
-
+            self.bandMinHel.append(self.bzHel[mask])
+            self.bandInvMasses.append(second[mask])
+            self.bandEnergy.append(band[mask])
+            self.bandMinXy.append(self.bzCutsHel[mu][mask])
+        
+        self.bandMinHel = np.array(self.bandMinHel)
+        self.bandInvMasses = np.array(self.bandInvMasses)
+        self.bandEnergy = np.array(self.bandEnergy)
+        self.bandMinXy = np.array(self.bandMinXy)
 
     def saveData(self, dirpath):
         for mu in range(0, self.NU):
@@ -97,56 +105,44 @@ class Swcnt(object):
         for mu in range(0, self.D):
             path = os.path.join(dirpath, f"bandHel{mu:03d}.txt")
             utils.save_file(self.bzHel, self.bandHel[mu], path=path)
-
-    def plotTransition(self, mu, pol):
-        valBand = -utils.bands(self.bzCutsHel[mu], self.a1, self.a2)
-        if pol == "para":
-            conBand = utils.bands(self.bzCutsHel[mu], self.a1, self.a2)
-        elif pol == "perp":
-            conBand = utils.bands(
-                self.bzCutsHel[mu] + self.KC, self.a1, self.a2)
-        plt.plot(self.bzHel, valBand, "r")
-        plt.plot(self.bzHel, conBand, "b")
-        plt.show()
-
-    def plotExcitons(self, mu, pol):
-        valBand = -utils.bands(self.bzCutsHel[mu], self.a1, self.a2)
-        if pol == "para":
-            conBand = utils.bands(self.bzCutsHel[mu], self.a1, self.a2)
-        elif pol == "perp":
-            conBand = utils.bands(
-                self.bzCutsHel[mu] + self.KC, self.a1, self.a2)
-        fprime = np.gradient(valBand, self.bzHel)
-        fsecond = np.gradient(fprime, self.bzHel)
-        mask1 = np.roll(fprime, 1) > 0
-        mask2 = fprime < 0
-        print(mask1)
-        print(mask2)
-        print(mask1 * mask2)
-        print(self.bzHel[mask1 * mask2])
-        plt.plot(self.bzHel, valBand, self.bzHel, fprime)
-        plt.show()
+        
 
     def calculateExcitons(self, bindEnergy = 0.05):
-        excDic = {} # excDic = [pos, invMass, energy]
+        # dic = [pos, invMass, energy]
+        excPara = {}
+        excPerp = {}
+        excDark = {}
+        nMin = len(self.bandMinXy[0])
         for mu in range(self.D):
             for nu in range(self.D):
-                for i in range(len(self.excPos[mu])):
-                    for j in range(len(self.excPos[nu])):
-                        excDic[f"E{mu}.{nu}.{i}.{j}"] = [
-                            (self.excHelPos[mu, i] - self.excHelPos[nu, j] + self.normHel / 2) % self.normHel - self.normHel / 2,
-                            self.excInvMasses[mu, i] * self.excInvMasses[nu, j] / (self.excInvMasses[mu, i] + self.excInvMasses[nu, j]),
-                            self.excEnergy[mu, i] + self.excEnergy[nu, j] - bindEnergy]
-        excBands = {}
-        for k in excDic:
-            excBands[k] = 0.5 * excDic[k][1] * (excDic[k][0] - self.bzHel) ** 2 + excDic[k][2]
-        self.kOrt = self.beta/self.D*self.normLin
-        for k in excBands:
-            # plt.plot(self.bzHel, excBands[k])
-            mask = ((excDic[k][0] - self.bzHel) < 10) * ((excDic[k][0] - self.bzHel) > -10)
-            plt.plot(self.bzHel, np.where(mask, excBands[k], np.nan))
-        plt.vlines(self.kOrt,0,3,linestyles ="dashed", colors ="k")
-        plt.vlines(-self.kOrt,0,3,linestyles ="dashed", colors ="k")
+                for i in range(nMin):
+                    for j in range(nMin):
+                        deltaNorm = utils.findMinDelta(self.bandMinXy[mu, i] - self.bandMinXy[nu, j], self.k1H, self.k2H)
+                        helPos = (self.bandMinHel[mu, i] - self.bandMinHel[nu, j] + self.normHel / 2) % self.normHel - self.normHel / 2
+                        invMass = self.bandInvMasses[mu, i] * self.bandInvMasses[nu, j] / (self.bandInvMasses[mu, i] + self.bandInvMasses[nu, j])
+                        energy = self.bandEnergy[mu, i] + self.bandEnergy[nu, j] - bindEnergy
+                        if deltaNorm < 1e-6:
+                            # parallel excitons
+                            excPara[f"E{mu}.{i}.{j}"] = [helPos, invMass, energy]
+                        elif 0.9*self.normKC < deltaNorm < 1.1*self.normKC:
+                            # perpendicular excitons
+                            excPerp[f"E{mu}.{nu}.{i}.{j}"] = [helPos, invMass, energy]
+                        else:
+                            # dark excitons
+                            excDark[f"E{mu}.{nu}.{i}.{j}"] = [helPos, invMass, energy]
+        self.excParaBands = utils.excBands(excPara, self.bzHel)
+        self.excPerpBands = utils.excBands(excPerp, self.bzHel)
+        self.excDarkBands = utils.excBands(excDark, self.bzHel)
+        
+    def plotExcitons(self):
+        for k in self.excParaBands:
+            plt.plot(self.bzHel, self.excParaBands[k],'r')
+        for k in self.excPerpBands:
+            plt.plot(self.bzHel, self.excPerpBands[k],'y')
+        for k in self.excDarkBands:
+            plt.plot(self.bzHel, self.excDarkBands[k],'grey')
+        plt.vlines(self.normOrt,0,3,linestyles ="dashed", colors ="k")
+        plt.vlines(-self.normOrt,0,3,linestyles ="dashed", colors ="k")
         plt.ylim(0, 3)
         plt.show()
 
@@ -239,15 +235,15 @@ class Swcnt(object):
 
         # plot band minima
         for mu in range(0, self.D):
-            ax2.plot(*self.excPos[mu].T, "r.")
+            ax2.plot(*self.bandMinXy[mu].T, "r.")
 
         # plot bands
         for mu in range(0, self.NU):
             ax3.plot(self.bzLin, self.bandLin[mu], "r")
             ax3.plot(self.bzLin, -self.bandLin[mu], "r")
         for mu in range(0, self.D):
-            ax4.plot(self.bzHel, self.bandHel[mu], "b")
-            ax4.plot(self.bzHel, -self.bandHel[mu], "b")
+            ax4.plot(self.bzHel, self.bandHel[mu],'b')
+            ax4.plot(self.bzHel, -self.bandHel[mu],'b')
         mine, maxe = np.min(-self.bandHel), np.max(self.bandHel)
         for ax in [ax3, ax4, ax5]:
             ax.set_ylim(1.1 * mine, 1.1 * maxe)

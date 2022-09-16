@@ -39,7 +39,7 @@ def getArgs():
     group.add_argument("-q", "--quiet", action="store_true")
     parser.add_argument("n", help="(n,m) carbon nanotube n paramenter", type=int)
     parser.add_argument("m", help="(n,m) carbon nanotube m paramenter", type=int)
-    parser.add_argument("-o", "--outdir", help="output destinatiom folder")
+    parser.add_argument("-o", "--outdir", help="output destination folder")
     args = parser.parse_args()
     return args
 
@@ -128,6 +128,21 @@ def opt_mat_elems(k, a1, a2, n, m):
     elem = (((n - m) * np.cos(np.dot(k, (a2 - a1))) - (2 * n + m) * np.cos(np.dot(k, a1)) + (n + 2 * m) * np.cos(np.dot(k, a2))) / 2 / np.sqrt(N) / bands(k, a1, a2))
     return elem
 
+def findMinDelta(vec, k1, k2):
+    norm = np.linalg.norm(vec)
+    for n in range(-1,2):
+        for m in range(-1,2):
+            newvec = vec + n*k1 + m*k2
+            newnorm = np.linalg.norm(newvec)
+            if newnorm < norm:
+                norm = newnorm
+    return norm
+
+def excBands(dic, bz):
+    res = {}
+    for k in dic:
+        res[k] = 0.5 * dic[k][1] * (dic[k][0] - bz) ** 2 + dic[k][2]
+    return res
 
 def subBands(k1, k2, a1, a2, N, ksteps):
     norm = np.linalg.norm(k1)
