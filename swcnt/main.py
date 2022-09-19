@@ -22,7 +22,7 @@ def main():
     args = utils.getArgs()
 
     n, m = args.n, args.m
-    cnt = Swcnt(n, m)
+    cnt = Swcnt(n, m, 10)
 
     if args.outdir:
         WORK_DIR = os.getcwd()

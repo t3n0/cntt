@@ -132,7 +132,7 @@ class Swcnt(object):
                         if deltaNorm < 1e-4:
                             # parallel excitons
                             excPara[f"{mu}.{i}.{j}"] = [helPos, invMass, energy]
-                        elif 0.8*self.normKC < deltaNorm < 1.2*self.normKC:
+                        elif 0.6*self.normKC < deltaNorm < 1.4*self.normKC:
                             # perpendicular excitons
                             excPerp[f"{mu}.{nu}.{i}.{j}"] = [helPos, invMass, energy]
                         else:
