@@ -21,7 +21,7 @@ import os
 
 
 class Swcnt(object):
-    def __init__(self, n, m, ksteps=100):
+    def __init__(self, n, m):
 
         # units
         self.a0 = 0.2461  # nm
@@ -64,6 +64,7 @@ class Swcnt(object):
         self.k1H = self.beta * self.KT + self.D * self.KC
         self.k2H = -self.NU / self.D * self.KT
 
+    def calculateElectronBands(self, ksteps=10):
         # CNT linear and helical BZs
         self.normKC = np.linalg.norm(self.KC)
         self.normLin = np.linalg.norm(self.KT)
@@ -74,6 +75,7 @@ class Swcnt(object):
         self.bzLin, self.bzCutsLin, self.bandLin = utils.subBands(self.KT, self.KC, self.a1, self.a2, self.NU, kstepsLin)
         self.bzHel, self.bzCutsHel, self.bandHel = utils.subBands(self.k2H, self.k1H / self.D, self.a1, self.a2, self.D, kstepsHel)
 
+    def calculateExcitonBands(self, bindEnergy = 0.05, deltak = None):
         # CNT band minima, energies and masses
         self.bandMinHel = []
         self.bandMinXy = []
@@ -98,24 +100,6 @@ class Swcnt(object):
         self.bandEnergy = np.array(self.bandEnergy)
         self.bandMinXy = np.array(self.bandMinXy)
 
-    def saveData(self, dirpath):
-        for mu in range(0, self.NU):
-            path = os.path.join(dirpath, f"bandLin{mu:03d}.txt")
-            utils.save_file(self.bzLin, self.bandLin[mu], path=path)
-        for mu in range(0, self.D):
-            path = os.path.join(dirpath, f"bandHel{mu:03d}.txt")
-            utils.save_file(self.bzHel, self.bandHel[mu], path=path)
-        for k in self.excParaBands:
-            path = os.path.join(dirpath, f"excPara{k}.txt")
-            utils.save_file(self.bzHel, self.excParaBands[k], path=path)
-        for k in self.excPerpBands:
-            path = os.path.join(dirpath, f"excPerp{k}.txt")
-            utils.save_file(self.bzHel, self.excPerpBands[k], path=path)
-        for k in self.excDarkBands:
-            path = os.path.join(dirpath, f"excDark{k}.txt")
-            utils.save_file(self.bzHel, self.excDarkBands[k], path=path)
-
-    def calculateExcitons(self, bindEnergy = 0.05):
         # dic = [pos, invMass, energy]
         excPara = {}
         excPerp = {}
@@ -141,7 +125,24 @@ class Swcnt(object):
         self.excParaBands = utils.excBands(excPara, self.bzHel)
         self.excPerpBands = utils.excBands(excPerp, self.bzHel)
         self.excDarkBands = utils.excBands(excDark, self.bzHel)
-        
+
+    def saveData(self, dirpath):
+        for mu in range(0, self.NU):
+            path = os.path.join(dirpath, f"bandLin{mu:03d}.txt")
+            utils.save_file(self.bzLin, self.bandLin[mu], path=path)
+        for mu in range(0, self.D):
+            path = os.path.join(dirpath, f"bandHel{mu:03d}.txt")
+            utils.save_file(self.bzHel, self.bandHel[mu], path=path)
+        for k in self.excParaBands:
+            path = os.path.join(dirpath, f"excPara{k}.txt")
+            utils.save_file(self.bzHel, self.excParaBands[k], path=path)
+        for k in self.excPerpBands:
+            path = os.path.join(dirpath, f"excPerp{k}.txt")
+            utils.save_file(self.bzHel, self.excPerpBands[k], path=path)
+        for k in self.excDarkBands:
+            path = os.path.join(dirpath, f"excDark{k}.txt")
+            utils.save_file(self.bzHel, self.excDarkBands[k], path=path)
+
     def plotExcitons(self):
         for k in self.excParaBands:
             plt.plot(self.bzHel, self.excParaBands[k],'r')
