@@ -21,11 +21,11 @@ This will install the system-wide command `swcnt-bands` and the python package `
 
 For a basic usage of the tool, simply type in the terminal
 ```
-swcnt-bands.py 4 2
+swcnt-bands 4 2
 ```
 This will display the linear and helical band structure of a [(4,2) single-walled carbon nanotube](./example42/cnt(4,2).png), along with the most important physical parameters, unit cells and Brillouin zones.
 
-Also, typing `swcnt-bands.py -h` provide a help dialoge for advanced usage.
+Also, typing `swcnt-bands -h` provide a help dialoge for advanced usage.
 
 ## Usage: package
 
