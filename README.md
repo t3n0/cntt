@@ -1,43 +1,65 @@
 # SWCNT tight binding band structure
 
-*insert image here*
-
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ![GitHub Release Date](https://img.shields.io/github/release-date/t3n0/swcnt-bands)
 ![GitHub all releases](https://img.shields.io/github/downloads/t3n0/swcnt-bands/total)
 
+![swcnt42](./example42/cnt(4,2).png)
+
 Utility to compute the electronic band structure of carbon nanotubes. It uses the well known tight binding approximation of CNTs and displays the band structure in linear and helical coordinates.
 
-## Installation
+## Installation with `pip`
 
-Simply download or clone the package repository.
+Simply download [.zip file](https://github.com/t3n0/swcnt-bands/releases/latest), extract it at your favourite location and run
+```
+pip install .
+```
+This will install the system-wide command `swcnt-bands` and the python package `swcnt`.
 
-Requirements:
+## Usage: command line
 
-- `python 3.x`
-- `numpy`
+For a basic usage of the tool, simply type in the terminal
+```
+swcnt-bands.py 4 2
+```
+This will display the linear and helical band structure of a [(4,2) single-walled carbon nanotube](./example42/cnt(4,2).png), along with the most important physical parameters, unit cells and Brillouin zones.
 
-## Usage
+Also, typing `swcnt-bands.py -h` provide a help dialoge for advanced usage.
 
-Run the code from the terminal
+## Usage: package
 
-`python swcnt-bands.py`
+From a pyhton interpreter, import the `Swcnt` class. For a basic usage, just copy the following snippet:
+```
+import swcnt.swcnt as Swcnt
 
+mycnt = Swcnt(4,2)
+mycnt.calculateElectronBands()
+mycnt.calculateExcitonBands()
+mycnt.plot()
+mycnt.plotExcitons()
+```
 ## Support
 
 For any problems, questions or suggestions, please contact me at tenobaldi@gmail.com.
 
 ## Roadmap
 
-Currently the project only supports computing and displaying the carbon nanotube band structure from the tight-binding zone-folding approximation. Future developments will include:
+Currently the project only supports:
+ - plotting the unit cells in three different configurations (the cnt supercell N-atom flake, the linear 2-atom cell and the helical 2-atom cell);
+ - visualizing the corresponding graphene-like Brillouin zones;
+ - computing and displaying the carbon nanotube band structure from the tight-binding zone-folding approximation;
+ - computing and displaying the dispersion relation of bright and dark singlet excitons;
 
+Future developments will include:
 - optical matrix elements
 - density of states
-- doping
+
 
 ## Authors and acknowledgment
 
 The development of SWCNT is proudly powered by [me](https://github.com/t3n0).
+Also, please consider citing the relevant literature if you are going to use this tool:
+ - [Carbon 186, 465-474 (2022)](https://doi.org/10.1016/j.carbon.2021.10.048)
 
 ## License
 

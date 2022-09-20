@@ -1,5 +1,3 @@
-# ignore every file in subdirectories
-**/
-
-# do not ignore the files in the following directories
-!swcnt/
+.vscode
+*.pyc
+*.txt
