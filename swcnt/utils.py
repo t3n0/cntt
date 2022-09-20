@@ -138,11 +138,10 @@ def findMinDelta(vec, k1, k2):
                 norm = newnorm
     return norm
 
-def excBands(dic, bz):
-    res = {}
-    for k in dic:
-        res[k] = 0.5 * dic[k][1] * (dic[k][0] - bz) ** 2 + dic[k][2]
-    return res
+def excBands(helPos, invMass, energy, deltak, kstep):
+    kmesh = np.linspace(-0.5*deltak, 0.5*deltak, kstep)
+    band = 0.5 * invMass * kmesh ** 2 + energy
+    return kmesh-helPos, band
 
 def subBands(k1, k2, a1, a2, N, ksteps):
     norm = np.linalg.norm(k1)

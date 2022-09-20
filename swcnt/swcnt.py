@@ -75,7 +75,7 @@ class Swcnt(object):
         self.bzLin, self.bzCutsLin, self.bandLin = utils.subBands(self.KT, self.KC, self.a1, self.a2, self.NU, kstepsLin)
         self.bzHel, self.bzCutsHel, self.bandHel = utils.subBands(self.k2H, self.k1H / self.D, self.a1, self.a2, self.D, kstepsHel)
 
-    def calculateExcitonBands(self, bindEnergy = 0.05, deltak = None):
+    def calculateExcitonBands(self, bindEnergy = 0.05, deltak = 10.0, kstep = 10):
         # CNT band minima, energies and masses
         self.bandMinHel = []
         self.bandMinXy = []
@@ -100,10 +100,10 @@ class Swcnt(object):
         self.bandEnergy = np.array(self.bandEnergy)
         self.bandMinXy = np.array(self.bandMinXy)
 
-        # dic = [pos, invMass, energy]
-        excPara = {}
-        excPerp = {}
-        excDark = {}
+        # dic = [bz, band]
+        self.excParaBands = {}
+        self.excPerpBands = {}
+        self.excDarkBands = {}
         nMin = len(self.bandMinXy[0])
         for mu in range(self.D):
             for nu in range(self.D):
@@ -115,16 +115,13 @@ class Swcnt(object):
                         energy = self.bandEnergy[mu, i] + self.bandEnergy[nu, j] - bindEnergy
                         if deltaNorm < 1e-4:
                             # parallel excitons
-                            excPara[f"{mu}.{i}.{j}"] = [helPos, invMass, energy]
+                            self.excParaBands[f"{mu}.{i}.{j}"] = utils.excBands(helPos, invMass, energy, deltak, kstep)
                         elif 0.6*self.normKC < deltaNorm < 1.4*self.normKC:
                             # perpendicular excitons
-                            excPerp[f"{mu}.{nu}.{i}.{j}"] = [helPos, invMass, energy]
+                            self.excPerpBands[f"{mu}.{nu}.{i}.{j}"] = utils.excBands(helPos, invMass, energy, deltak, kstep)
                         else:
                             # dark excitons
-                            excDark[f"{mu}.{nu}.{i}.{j}"] = [helPos, invMass, energy]
-        self.excParaBands = utils.excBands(excPara, self.bzHel)
-        self.excPerpBands = utils.excBands(excPerp, self.bzHel)
-        self.excDarkBands = utils.excBands(excDark, self.bzHel)
+                            self.excDarkBands[f"{mu}.{nu}.{i}.{j}"] = utils.excBands(helPos, invMass, energy, deltak, kstep)
 
     def saveData(self, dirpath):
         for mu in range(0, self.NU):
@@ -145,11 +142,11 @@ class Swcnt(object):
 
     def plotExcitons(self):
         for k in self.excParaBands:
-            plt.plot(self.bzHel, self.excParaBands[k],'r')
+            plt.plot(*self.excParaBands[k],'r')
         for k in self.excPerpBands:
-            plt.plot(self.bzHel, self.excPerpBands[k],'y')
+            plt.plot(*self.excPerpBands[k],'y')
         for k in self.excDarkBands:
-            plt.plot(self.bzHel, self.excDarkBands[k],'grey')
+            plt.plot(*self.excDarkBands[k],'grey')
         plt.vlines(self.normOrt,0,3,linestyles ="dashed", colors ="k")
         plt.vlines(-self.normOrt,0,3,linestyles ="dashed", colors ="k")
         plt.ylim(0, 3)

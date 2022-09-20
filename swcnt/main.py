@@ -22,7 +22,7 @@ def main():
     args = utils.getArgs()
 
     n, m = args.n, args.m
-    cnt = Swcnt(n, m, 20)
+    cnt = Swcnt(n, m)
 
     if args.outdir:
         WORK_DIR = os.getcwd()
@@ -38,7 +38,8 @@ def main():
         cnt.calculateExcitons()
         cnt.saveData(OUT_DIR)
     else:
-        cnt.calculateExcitons()
+        cnt.calculateElectronBands()
+        cnt.calculateExcitonBands()
         cnt.plot()
         cnt.plotExcitons()
 
