@@ -132,13 +132,13 @@ class Swcnt(object):
             utils.save_file(self.bzHel, self.bandHel[mu], path=path)
         for k in self.excParaBands:
             path = os.path.join(dirpath, f"excPara{k}.txt")
-            utils.save_file(self.bzHel, self.excParaBands[k], path=path)
+            utils.save_file(*self.excParaBands[k], path=path)
         for k in self.excPerpBands:
             path = os.path.join(dirpath, f"excPerp{k}.txt")
-            utils.save_file(self.bzHel, self.excPerpBands[k], path=path)
+            utils.save_file(*self.excPerpBands[k], path=path)
         for k in self.excDarkBands:
             path = os.path.join(dirpath, f"excDark{k}.txt")
-            utils.save_file(self.bzHel, self.excDarkBands[k], path=path)
+            utils.save_file(*self.excDarkBands[k], path=path)
 
     def plotExcitons(self):
         for k in self.excParaBands:

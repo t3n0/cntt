@@ -23,6 +23,8 @@ def main():
 
     n, m = args.n, args.m
     cnt = Swcnt(n, m)
+    cnt.calculateElectronBands()
+    cnt.calculateExcitonBands()
 
     if args.outdir:
         WORK_DIR = os.getcwd()
@@ -35,11 +37,8 @@ def main():
 
         out_figure = os.path.join(OUT_DIR, f'cnt({n},{m}).png')
         cnt.plot(out_figure)
-        cnt.calculateExcitons()
         cnt.saveData(OUT_DIR)
     else:
-        cnt.calculateElectronBands()
-        cnt.calculateExcitonBands()
         cnt.plot()
         cnt.plotExcitons()
 
