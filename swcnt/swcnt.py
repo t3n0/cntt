@@ -74,8 +74,10 @@ class Swcnt(object):
         kstepsHel = int(self.normHel / self.normLin * kstepsLin)
         self.bzLin, self.bzCutsLin, self.bandLin = utils.subBands(self.KT, self.KC, self.a1, self.a2, self.NU, kstepsLin)
         self.bzHel, self.bzCutsHel, self.bandHel = utils.subBands(self.k2H, self.k1H / self.D, self.a1, self.a2, self.D, kstepsHel)
+        self.bandLin = self.bandLin * self.gamma
+        self.bandHel = self.bandHel * self.gamma
 
-    def calculateExcitonBands(self, bindEnergy = 0.05, deltak = 10.0, kstep = 10):
+    def calculateExcitonBands(self, bindEnergy = 0.05, deltak = 10.0, kstep = 20):
         # CNT band minima, energies and masses
         self.bandMinHel = []
         self.bandMinXy = []
@@ -140,28 +142,19 @@ class Swcnt(object):
             path = os.path.join(dirpath, f"excDark{k}.txt")
             utils.save_file(*self.excDarkBands[k], path=path)
 
-    def plotExcitons(self):
-        for k in self.excParaBands:
-            plt.plot(*self.excParaBands[k],'r')
-        for k in self.excPerpBands:
-            plt.plot(*self.excPerpBands[k],'y')
-        for k in self.excDarkBands:
-            plt.plot(*self.excDarkBands[k],'grey')
-        plt.vlines(self.normOrt,0,3,linestyles ="dashed", colors ="k")
-        plt.vlines(-self.normOrt,0,3,linestyles ="dashed", colors ="k")
-        plt.ylim(0, 3)
-        plt.show()
-
     def textParams(self):
         text = (
             f"n, m = {self.n},{self.m}\n"
-            f"Diameter = {np.linalg.norm(self.C)/np.pi:.2f} (nm)\n"
+            f"Diameter = {np.linalg.norm(self.C)/np.pi:.2f} nm\n"
             f"C = {self.n:+d} a1 {self.m:+d} a2\n"
             f"T = {self.p:+d} a1 {self.q:+d} a2\n"
             f"t1 = {self.u1:+d} a1 {self.v1:+d} a2\n"
             f"t2 = {self.u2:+d} a1 {self.v2:+d} a2\n"
             f"NU = {self.NU}\n"
-            f"D = {self.D}"
+            f"D = {self.D}\n"
+            f"BZ_lin = {self.normLin:.2f} nm-1\n"
+            f"BZ_hel = {self.normHel:.2f} nm-1\n"
+            f"K_ort = {self.normOrt:.2f} nm-1"
         )
         return text
 
@@ -171,16 +164,21 @@ class Swcnt(object):
         else:
             fig = plt.figure(figsize=(16, 9), dpi=300)
 
+        # figure and axes
         fig.suptitle(f"CNT ({self.n},{self.m})")
-        ax1 = fig.add_axes([0.23, 0.53, 0.35, 0.42])
-        ax2 = fig.add_axes([0.63, 0.53, 0.35, 0.42])
-        ax3 = fig.add_axes([0.05, 0.05, 0.2, 0.4])
-        ax4 = fig.add_axes([0.25, 0.05, 0.58, 0.4])
-        ax5 = fig.add_axes([0.83, 0.05, 0.15, 0.4])
+        ax1 = fig.add_axes([0.23, 0.63, 0.35, 0.32])
+        ax2 = fig.add_axes([0.63, 0.63, 0.35, 0.32])
+        ax3 = fig.add_axes([0.05, 0.25, 0.2, 0.3])
+        ax4 = fig.add_axes([0.25, 0.25, 0.58, 0.3])
+        ax5 = fig.add_axes([0.83, 0.25, 0.15, 0.3])
+        ax6 = fig.add_axes([0.25, 0.05, 0.58, 0.2])
+        ax7 = fig.add_axes([0.83, 0.05, 0.15, 0.2])
+
+        # -------------------------------------------------------
+        # ax1 and ax2 (unit cell and BZ)
         ax1.set_aspect("equal")
         ax2.set_aspect("equal")
-        minx, maxx, miny, maxy = utils.boundingRectangle(
-            self.C, self.T, self.C + self.T, self.t1, self.t1 + self.T, self.t2, self.t2 + self.C / self.D,)
+        minx, maxx, miny, maxy = utils.boundingRectangle(self.C, self.T, self.C + self.T, self.t1, self.t1 + self.T, self.t2, self.t2 + self.C / self.D,)
         hexDir = utils.hexPatches(minx, maxx, miny, maxy, self.a0, lat="dir")
         ax1.set_xlim(minx, maxx)
         ax1.set_ylim(miny, maxy)
@@ -197,29 +195,22 @@ class Swcnt(object):
         hexRec = utils.hexPatches(minx, maxx, miny, maxy, self.b0, lat="rec")
         ax2.set_xlim(minx, maxx)
         ax2.set_ylim(miny, maxy)
-        # labels
-        ax1.set_xlabel("x (nm)")
-        ax1.set_ylabel("y (nm)")
-        ax2.set_xlabel("kx (nm-1)")
-        ax2.set_ylabel("ky (nm-1)")
-        ax3.set_title("Linear")
-        ax3.set_ylabel("Energy (eV)")
-        ax4.set_title("Helical")
-        ax5.set_title("DOS")
-        ax4.set_yticks([])
-        ax5.set_yticks([])
-        plt.text(0.05, 0.9, self.textParams(), ha="left", va="top", transform=fig.transFigure)
 
-        # plot unic cells
+        # create unit cells vectors
+        dirVectors = utils.arrowPatches(self.C, self.T, self.t1, self.t2, color='grey')
+        #recVectors = utils.arrowPatches(self.k1L, self.k2L, self.k1H, self.k2H, color='grey')
+
         unitCell_la = np.array([[0.0, 0.0], self.C, self.C + self.T, self.T])
         unitCell_lh = np.array([[0.0, 0.0], self.t1, self.t1 + self.T, self.T])
         unitCell_ha = np.array([[0.0, 0.0], self.C / self.D, self.C / self.D + self.t2, self.t2])
         cells = utils.cellPatches([unitCell_la, unitCell_ha, unitCell_lh], ["g", "b", "r"])
 
-        # plot hexagons
+        # plot hexagons and unit cells
         ax1.add_collection(hexDir)
         ax2.add_collection(hexRec)
         ax1.add_collection(cells)
+        ax1.add_collection(dirVectors)
+        #ax2.add_collection(recVectors)
 
         # plot cutting lines
         lines = utils.linePatches(
@@ -243,17 +234,74 @@ class Swcnt(object):
         for mu in range(0, self.D):
             ax2.plot(*self.bandMinXy[mu].T, "r.")
 
-        # plot bands
+        # -------------------------------------------------
+        # ax3 ax4 plot subbands
         for mu in range(0, self.NU):
             ax3.plot(self.bzLin, self.bandLin[mu], "r")
             ax3.plot(self.bzLin, -self.bandLin[mu], "r")
         for mu in range(0, self.D):
             ax4.plot(self.bzHel, self.bandHel[mu],'b')
             ax4.plot(self.bzHel, -self.bandHel[mu],'b')
-        mine, maxe = np.min(-self.bandHel), np.max(self.bandHel)
-        for ax in [ax3, ax4, ax5]:
-            ax.set_ylim(1.1 * mine, 1.1 * maxe)
+        
+        # ax6 plot excitons
+        for i,k in enumerate(self.excParaBands):
+            if i == 0:
+                label='Para'
+            else:
+                label='_'
+            ax6.plot(*self.excParaBands[k],'r', label=label)
+        for i,k in enumerate(self.excPerpBands):
+            if i == 0:
+                label='Perp'
+            else:
+                label='_'
+            ax6.plot(*self.excPerpBands[k],'y', label=label)
+        for i,k in enumerate(self.excDarkBands):
+            if i == 0:
+                label='Dark'
+            else:
+                label='_'
+            ax6.plot(*self.excDarkBands[k],'grey', label=label)
 
+        # ax5 ax7 plot DOS and absorption
+        # todo
+
+        # -------------------------------------------------
+        # labels, ticks, range, grids, legends, texts
+        ax1.set_xlabel("x (nm)")
+        ax1.set_ylabel("y (nm)")
+        ax2.set_xlabel("kx (nm-1)")
+        ax2.set_ylabel("ky (nm-1)")
+        ax3.set_title("Linear")
+        ax3.set_ylabel("Energy (eV)")
+        ax3.set_xlabel("k (nm-1)")
+        ax4.set_title("Helical")
+        ax5.set_title("DOS")
+        ax6.set_ylabel("Energy (eV)")
+        ax6.set_xlabel("k (nm-1)")
+        ax4.set_yticklabels([])
+        ax5.set_yticklabels([])
+        ax4.set_xticklabels([])
+        ax5.set_xticklabels([])
+        ax7.set_yticklabels([])
+        plt.text(0.05, 0.9, self.textParams(), ha="left", va="top", transform=fig.transFigure)
+
+        minElEn, maxElEn = 1.1 * np.min(-self.bandHel), 1.1 * np.max(self.bandHel)
+        minBzHel, maxBzHel = 1.1 * np.min(self.bzHel), 1.1 * np.max(self.bzHel)
+        for ax in [ax4, ax6]:
+            ax.set_xlim(minBzHel, maxBzHel)
+            ax.locator_params(axis='x', nbins=20)
+        for ax in [ax3, ax4, ax5]:
+            ax.set_ylim(minElEn, maxElEn)
+            ax.locator_params(axis='y', nbins=10)
+        for ax in [ax3, ax4, ax5, ax6, ax7]:    
+            ax.grid(linestyle='--')
+
+        ax6.vlines(self.normOrt,0,6,linestyles ="dashed", colors ="k")
+        ax6.vlines(-self.normOrt,0,6,linestyles ="dashed", colors ="k")
+        ax6.legend(loc=(-0.2, 0.0))
+
+        # save or plot
         if path == None:
             plt.show()
         else:

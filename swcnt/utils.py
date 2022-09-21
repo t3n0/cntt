@@ -56,6 +56,14 @@ def boundingRectangle(*args):
     return minx, maxx, miny, maxy
 
 
+def arrowPatches(*vec,color):
+    patches = []
+    for v in vec:
+        arrow = mpatches.FancyArrow(0,0,v[0],v[1], width=0.005, length_includes_head=True, color=color)
+        #ax.add_patch(arrow)
+        patches.append(arrow)
+    return PatchCollection(patches, match_original=True)
+
 def cellPatches(cells, colors):
     patches = []
     for aux, c in zip(cells, colors):
@@ -118,9 +126,9 @@ def minVector2AtomUnitCell(l, k, n):
             return u, int(v)
 
 
-def bands(k, a1, a2, gamma=1.0):
+def bands(k, a1, a2):
     band = np.sqrt(3 + 2 * np.cos(np.dot(k, a1)) + 2 * np.cos(np.dot(k, a2)) + 2 * np.cos(np.dot(k, (a2 - a1))))
-    return gamma * band
+    return band
 
 
 def opt_mat_elems(k, a1, a2, n, m):

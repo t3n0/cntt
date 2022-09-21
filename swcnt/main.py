@@ -40,8 +40,3 @@ def main():
         cnt.saveData(OUT_DIR)
     else:
         cnt.plot()
-        cnt.plotExcitons()
-
-    # for vec in [C,T,t1,t2,k1H,k2H]:
-    #     arrow = mpatches.FancyArrow(0,0,vec[0],vec[1], width=0.005, length_includes_head=True, color='red')
-    #     ax.add_patch(arrow)
