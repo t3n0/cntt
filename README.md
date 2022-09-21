@@ -7,7 +7,7 @@
 
 ![swcnt42](./example42/cnt(4,2).png)
 
-Utility to compute the electronic band structure of carbon nanotubes. It uses the well known tight binding approximation of CNTs and displays the band structure in linear and helical coordinates.
+Utility to compute the electronic band structure of single-walled carbon nanotubes (SWCNTs). It uses the well known tight binding approximation of CNTs and displays the band structure in linear and helical coordinates.
 
 ## Installation with `pip`
 
@@ -37,7 +37,6 @@ mycnt = Swcnt(4,2)
 mycnt.calculateElectronBands()
 mycnt.calculateExcitonBands()
 mycnt.plot()
-mycnt.plotExcitons()
 ```
 ## Support
 
@@ -52,9 +51,10 @@ Currently the project only supports:
  - computing and displaying the dispersion relation of bright and dark singlet excitons;
 
 Future developments will include:
-- optical matrix elements
-- density of states
-
+- optical matrix elements;
+- density of states;
+- exciton absorption spectrum;
+- output of the 3D carbon atoms coordinates.
 
 ## Authors and acknowledgment
 
