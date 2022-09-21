@@ -11,7 +11,7 @@ Utility to compute the electronic band structure of single-walled carbon nanotub
 
 ## Installation with `pip`
 
-Simply download [.zip file](https://github.com/t3n0/swcnt-bands/releases/latest), extract it at your favourite location and run
+Simply download [.zip file](https://github.com/t3n0/swcnt-bands/releases/download/v0.1/swcnt-bands-v0.1.zip), extract it at your favourite location and run
 ```
 pip install .
 ```
