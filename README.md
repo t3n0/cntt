@@ -2,7 +2,7 @@
 
 [![GitHub Release Date](https://img.shields.io/github/release-date/t3n0/swcnt-bands)](https://github.com/t3n0/swcnt-bands/releases/latest)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/t3n0/swcnt-bands)](https://github.com/t3n0/swcnt-bands/releases/latest)
-[![GitHub all releases](https://img.shields.io/github/downloads/t3n0/swcnt-bands/total)](https://github.com/t3n0/swcnt-bands/releases/latest)
+[![GitHub all releases](https://img.shields.io/github/downloads/t3n0/swcnt-bands/total)](https://github.com/t3n0/swcnt-bands/releases/download/v0.1/swcnt-bands-v0.1.zip)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 ![swcnt42](./example42/cnt(4,2).png)
