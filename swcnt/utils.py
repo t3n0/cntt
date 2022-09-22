@@ -19,7 +19,6 @@ import numpy as np
 import matplotlib.patches as mpatches
 from matplotlib.collections import PatchCollection
 
-
 def save_file(*args, path, header=""):
     data = []
     for arg in args:
@@ -110,7 +109,7 @@ def hexPatches(minx, maxx, miny, maxy, c, lat="dir"):
     for x, y in zip(xs, ys):
         line = mpatches.RegularPolygon((x, y), numVertices=6, radius=c / np.sqrt(3), orientation=rotation)
         patches.append(line)
-    hexs = PatchCollection(patches, edgecolor="k", facecolor="w")
+    hexs = PatchCollection(patches, edgecolor="k", facecolor=(1,1,1,0))
     return hexs
 
 

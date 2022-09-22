@@ -17,6 +17,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import swcnt.utils as utils
+import swcnt.plotting as plotting
 import os
 
 
@@ -24,6 +25,9 @@ class Swcnt(object):
     def __init__(self, n, m):
 
         # units
+        self.unitL = 'nm'
+        self.unitE = 'eV'
+        self.unitInvL = 'nm-1'
         self.a0 = 0.2461  # nm
         self.gamma = 3.0  # eV
         # self.a0 = 2.461 # Angstrom
@@ -174,14 +178,11 @@ class Swcnt(object):
         ax6 = fig.add_axes([0.25, 0.05, 0.58, 0.2])
         ax7 = fig.add_axes([0.83, 0.05, 0.15, 0.2])
 
+        plotting.dirLat(self, ax1)
+
         # -------------------------------------------------------
         # ax1 and ax2 (unit cell and BZ)
-        ax1.set_aspect("equal")
         ax2.set_aspect("equal")
-        minx, maxx, miny, maxy = utils.boundingRectangle(self.C, self.T, self.C + self.T, self.t1, self.t1 + self.T, self.t2, self.t2 + self.C / self.D,)
-        hexDir = utils.hexPatches(minx, maxx, miny, maxy, self.a0, lat="dir")
-        ax1.set_xlim(minx, maxx)
-        ax1.set_ylim(miny, maxy)
         minx, maxx, miny, maxy = utils.boundingRectangle(
             self.bzCutsLin[0, 0, :],
             self.bzCutsLin[0, -1, :],
@@ -197,19 +198,12 @@ class Swcnt(object):
         ax2.set_ylim(miny, maxy)
 
         # create unit cells vectors
-        dirVectors = utils.arrowPatches(self.C, self.T, self.t1, self.t2, color='grey')
         #recVectors = utils.arrowPatches(self.k1L, self.k2L, self.k1H, self.k2H, color='grey')
 
-        unitCell_la = np.array([[0.0, 0.0], self.C, self.C + self.T, self.T])
-        unitCell_lh = np.array([[0.0, 0.0], self.t1, self.t1 + self.T, self.T])
-        unitCell_ha = np.array([[0.0, 0.0], self.C / self.D, self.C / self.D + self.t2, self.t2])
-        cells = utils.cellPatches([unitCell_la, unitCell_ha, unitCell_lh], ["g", "b", "r"])
-
         # plot hexagons and unit cells
-        ax1.add_collection(hexDir)
+        
         ax2.add_collection(hexRec)
-        ax1.add_collection(cells)
-        ax1.add_collection(dirVectors)
+        
         #ax2.add_collection(recVectors)
 
         # plot cutting lines
@@ -268,9 +262,8 @@ class Swcnt(object):
 
         # -------------------------------------------------
         # labels, ticks, range, grids, legends, texts
-        ax1.set_xlabel("x (nm)")
-        ax1.set_ylabel("y (nm)")
-        ax2.set_xlabel("kx (nm-1)")
+        
+        ax2.set_xlabel(f"kx ({self.unitInvL})")
         ax2.set_ylabel("ky (nm-1)")
         ax3.set_title("Linear")
         ax3.set_ylabel("Energy (eV)")
@@ -303,7 +296,8 @@ class Swcnt(object):
 
         # save or plot
         if path == None:
-            plt.show()
+            # plt.show()
+            pass
         else:
             fig.savefig(path)
             plt.close()
