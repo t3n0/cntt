@@ -14,21 +14,25 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# from swcnt.main import main
+from swcnt.main import main
 
-# main()
+main()
 
-import matplotlib.pyplot as plt
-from swcnt.swcnt import Swcnt
+# import matplotlib.pyplot as plt
+# from swcnt.swcnt import Swcnt
+# import swcnt.plotting as plotting
 
-cnt1 = Swcnt(4,2)
-cnt2 = Swcnt(4,3)
+# cnt1 = Swcnt(4,2)
+# cnt2 = Swcnt(4,3)
 
-cnt1.calculateElectronBands()
-cnt1.calculateExcitonBands()
-cnt2.calculateElectronBands()
-cnt2.calculateExcitonBands()
+# cnt1.calculateElectronBands()
+# cnt1.calculateExcitonBands()
+# cnt2.calculateElectronBands()
+# cnt2.calculateExcitonBands()
 
-cnt1.plot()
-cnt2.plot()
-plt.show()
+# cnt1.plot()
+# cnt2.plot()
+# plt.show()
+
+# plotting.dirLat(cnt1)
+# plt.show()

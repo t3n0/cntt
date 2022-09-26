@@ -15,6 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 def main():
+    from matplotlib.pyplot import show
     import swcnt.utils as utils
     from swcnt.swcnt import Swcnt
     import os
@@ -23,7 +24,7 @@ def main():
 
     n, m = args.n, args.m
     cnt = Swcnt(n, m)
-    cnt.calculateElectronBands()
+    cnt.calculateElectronBands(ksteps=50)
     cnt.calculateExcitonBands()
 
     if args.outdir:
@@ -40,3 +41,4 @@ def main():
         cnt.saveData(OUT_DIR)
     else:
         cnt.plot()
+        show()

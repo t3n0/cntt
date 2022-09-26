@@ -29,6 +29,56 @@ def dirLat(cnt, ax=None):
     ax.set_ylim(miny, maxy)
     return ax
 
+def recLat(cnt, ax=None):
+    if ax is None:
+        fig = plt.figure(figsize=(5, 5))
+        ax = fig.add_axes([0.05, 0.05, 0.9, 0.9])
+    # hexagons
+    boundVectors = cnt.k1L - 0.5*cnt.KT, \
+        cnt.k1L + cnt.k2L- cnt.KT, cnt.k2L- 0.5*cnt.KT, \
+        cnt.k1H + 0.5*cnt.NU/cnt.D*cnt.KT, \
+        cnt.k1H + cnt.k2H + cnt.NU/cnt.D*cnt.KT, \
+        cnt.k2H + 0.5*cnt.NU/cnt.D*cnt.KT
+    minx, maxx, miny, maxy = boundingRectangle(*boundVectors)
+    hexs = recHexPatches(minx, maxx, miny, maxy, cnt.b0)
+    # cells
+    recCell_lh = np.array([[0.0, 0.0], cnt.k1L, cnt.k1L + cnt.k2L, cnt.k2L]) - 0.5*cnt.KT
+    recCell_ha = np.array([[0.0, 0.0], cnt.k1H, cnt.k1H + cnt.k2H, cnt.k2H]) + 0.5*cnt.NU/cnt.D*cnt.KT
+    recCells = cellPatches([recCell_lh, recCell_ha], ["r", "b"])
+    # lattice vectors
+    #latVecs = arrowPatches(cnt.k1L, cnt.k2L, cnt.k1H, cnt.k2H, color='grey', d= cnt.KT)
+    if hasattr(cnt, 'bzCutsLin') and hasattr(cnt, 'bzCutsHel'):
+        # plot cutting lines
+        bzCutsLin = linePatches(cnt.bzCutsLin[:, 0, 0], cnt.bzCutsLin[:, 0, 1], cnt.bzCutsLin[:, -1, 0] - cnt.bzCutsLin[:, 0, 0], cnt.bzCutsLin[:, -1, 1] - cnt.bzCutsLin[:, 0, 1], ec="r")
+        bzCutsHel = linePatches(cnt.bzCutsHel[:, 0, 0], cnt.bzCutsHel[:, 0, 1], cnt.bzCutsHel[:, -1, 0] - cnt.bzCutsHel[:, 0, 0], cnt.bzCutsHel[:, -1, 1] - cnt.bzCutsHel[:, 0, 1], ec="b")
+        ax.add_collection(bzCutsLin)
+        ax.add_collection(bzCutsHel)
+    if hasattr(cnt, 'bandMinXy'):
+        for mu in range(0, len(cnt.bandMinXy)):
+            ax.plot(*cnt.bandMinXy[mu].T, "r.")
+    # plot
+    ax.add_collection(hexs)
+    ax.add_collection(recCells)
+    #ax.add_collection(latVecs)
+    ax.set_aspect("equal")
+    ax.set_xlabel(f'kx ({cnt.unitInvL})')
+    ax.set_ylabel(f'ky ({cnt.unitInvL})')
+    ax.set_xlim(minx, maxx)
+    ax.set_ylim(miny, maxy)
+    return ax
+
+def subBands(cnt, attr, color='k', ax=None):
+    if hasattr(cnt, attr):
+        bands = getattr(cnt, attr)
+        for mu in range(0, len(bands)):
+            ax.plot(bands[mu,0,:], bands[mu,1,:], color=color)
+            ax.plot(bands[mu,0,:], -bands[mu,1,:], color=color)
+            ax.set_ylabel(f'Energy ({cnt.unitE})')
+            ax.set_xlabel(f'k ({cnt.unitInvL})')
+
+def excitonBands(cnt):
+    pass
+
 def boundingRectangle(*args):
     vecs = [[0.0, 0.0]]
     for arg in args:
@@ -42,8 +92,9 @@ def boundingRectangle(*args):
 
 def arrowPatches(*vec,color):
     patches = []
+    width = np.max(vec)/150
     for v in vec:
-        arrow = mpatches.FancyArrow(0,0,v[0],v[1], width=0.005, length_includes_head=True, color=color)
+        arrow = mpatches.FancyArrow(0,0,v[0],v[1], width=width, length_includes_head=True, color=color)
         patches.append(arrow)
     return PatchCollection(patches, match_original=True)
 
@@ -82,33 +133,20 @@ def dirHexPatches(minx, maxx, miny, maxy, c):
         patches.append(hex)
     return PatchCollection(patches, edgecolor="k", facecolor=(1,1,1,0))
 
-def _hexPatches(minx, maxx, miny, maxy, c, lat="dir"):
-    if lat == "dir":
-        minNx = 2 * int(np.floor(minx / c / np.sqrt(3)))
-        maxNx = int(np.ceil(2 * maxx / c / np.sqrt(3)))
-        minNy = int(np.floor(miny / c)) - 1
-        maxNy = int(np.ceil(maxy / c))
-        rotation = np.pi / 6
-    elif lat == "rec":
-        minNx = int(np.floor(minx / c)) - 1
-        maxNx = int(np.ceil(maxx / c))
-        minNy = 2 * int(np.floor(miny / c / np.sqrt(3)))
-        maxNy = int(np.ceil(2 * maxy / c / np.sqrt(3)))
-        rotation = 0
+def recHexPatches(minx, maxx, miny, maxy, c):
+    minNx = int(np.floor(minx / c)) - 1
+    maxNx = int(np.ceil(maxx / c))
+    minNy = 2 * int(np.floor(miny / c / np.sqrt(3)))
+    maxNy = int(np.ceil(2 * maxy / c / np.sqrt(3)))
+    rotation = 0
     xs, ys = np.meshgrid(range(minNx, maxNx + 1), range(minNy, maxNy + 1))
-    if lat == "dir":
-        xs = xs * np.sqrt(3) / 2
-        ys = ys.astype("float")
-        ys[:, 1::2] += 0.5
-    elif lat == "rec":
-        ys = ys * np.sqrt(3) / 2
-        xs = xs.astype("float")
-        xs[1::2, :] += 0.5
+    ys = ys * np.sqrt(3) / 2
+    xs = xs.astype("float")
+    xs[1::2, :] += 0.5
     ys = ys.reshape(-1) * c
     xs = xs.reshape(-1) * c
     patches = []
     for x, y in zip(xs, ys):
-        line = mpatches.RegularPolygon((x, y), numVertices=6, radius=c / np.sqrt(3), orientation=rotation)
-        patches.append(line)
-    hexs = PatchCollection(patches, edgecolor="k", facecolor=(1,1,1,0))
-    return hexs
+        hex = mpatches.RegularPolygon((x, y), numVertices=6, radius=c / np.sqrt(3), orientation=rotation)
+        patches.append(hex)
+    return PatchCollection(patches, edgecolor="k", facecolor=(1,1,1,0))

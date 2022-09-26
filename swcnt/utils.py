@@ -124,6 +124,33 @@ def minVector2AtomUnitCell(l, k, n):
         if v.is_integer():
             return u, int(v)
 
+def findMinima(x,y):
+    prime = np.gradient(y, x)
+    second = np.gradient(prime, x)
+    # todo avoid dirac points in metallic cnts
+    threshold = np.max(prime) - np.min(prime)
+    mask1 = (np.roll(prime, 1) < 0) * (prime > 0) # derivative change sign, might be minimum
+    mask2 = np.abs(np.roll(prime, 1) - prime) > 0.3*threshold # delta derivative too big, might be dirac point
+    mask = mask1 & (~ mask2) # tilde is negation, not mask2
+    xMin = x[mask]
+    yMin = y[mask]
+    secondMin = second[mask]
+    return xMin, yMin, secondMin, mask
+
+def subBands(k1, k2, a1, a2, N, ksteps):
+    norm = np.linalg.norm(k1)
+    kmesh = np.linspace(-0.5, 0.5, ksteps)
+    bz = kmesh * norm
+    bzCuts = []
+    subBands = []
+    outer = np.outer(kmesh, k1)
+    for mu in range(0, N):
+        cut = outer + mu * k2
+        subBands.append( [bz, bands(cut, a1, a2)] )
+        bzCuts.append(cut)
+    bzCuts = np.array(bzCuts)
+    subBands = np.array(subBands)
+    return bzCuts, subBands
 
 def bands(k, a1, a2):
     band = np.sqrt(3 + 2 * np.cos(np.dot(k, a1)) + 2 * np.cos(np.dot(k, a2)) + 2 * np.cos(np.dot(k, (a2 - a1))))
@@ -150,16 +177,4 @@ def excBands(helPos, invMass, energy, deltak, kstep):
     band = 0.5 * invMass * kmesh ** 2 + energy
     return kmesh-helPos, band
 
-def subBands(k1, k2, a1, a2, N, ksteps):
-    norm = np.linalg.norm(k1)
-    kmesh = np.linspace(-0.5, 0.5, ksteps)
-    bz = kmesh * norm
-    bzCuts = []
-    subBands = []
-    for mu in range(0, N):
-        cut = np.outer(kmesh, k1) + mu * k2
-        subBands.append(bands(cut, a1, a2))
-        bzCuts.append(cut)
-    bzCuts = np.array(bzCuts)
-    subBands = np.array(subBands)
-    return bz, bzCuts, subBands
+
