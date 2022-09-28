@@ -161,6 +161,8 @@ def _bands(k, a1, a2):
 
 
 def tightBindingElectronBands(cnt, name, sym='hel', gamma=3.0):
+    if name == None:
+        name = f'elBandsTB{sym}'
     if not f'bzCuts{sym}' in cnt.data.keys():
         print(f'{sym} cutting lines are missing')
         return

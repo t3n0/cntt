@@ -24,8 +24,10 @@ def main():
 
     n, m = args.n, args.m
     cnt = Swcnt(n, m)
-    cnt.calculateElectronBands(ksteps=50)
-    cnt.calculateExcitonBands()
+
+    cnt.calculateCuttingLines(50)
+    cnt.calculateElectronBands('TB', 'pollo')
+    #cnt.calculateExcitonBands()
 
     if args.outdir:
         WORK_DIR = os.getcwd()

@@ -47,12 +47,12 @@ def recLat(cnt, ax=None):
     recCells = cellPatches([recCell_lh, recCell_ha], ["r", "b"])
     # lattice vectors
     #latVecs = arrowPatches(cnt.k1L, cnt.k2L, cnt.k1H, cnt.k2H, color='grey', d= cnt.KT)
-    if hasattr(cnt, 'bzCutsLin') and hasattr(cnt, 'bzCutsHel'):
-        # plot cutting lines
-        bzCutsLin = linePatches(cnt.bzCutsLin[:, 0, 0], cnt.bzCutsLin[:, 0, 1], cnt.bzCutsLin[:, -1, 0] - cnt.bzCutsLin[:, 0, 0], cnt.bzCutsLin[:, -1, 1] - cnt.bzCutsLin[:, 0, 1], ec="r")
-        bzCutsHel = linePatches(cnt.bzCutsHel[:, 0, 0], cnt.bzCutsHel[:, 0, 1], cnt.bzCutsHel[:, -1, 0] - cnt.bzCutsHel[:, 0, 0], cnt.bzCutsHel[:, -1, 1] - cnt.bzCutsHel[:, 0, 1], ec="b")
-        ax.add_collection(bzCutsLin)
-        ax.add_collection(bzCutsHel)
+    for sym in ['lin', 'hel']:
+        if f'bzCuts{sym}' in cnt.data.keys():
+            # plot cutting lines
+            cuts = cnt.data[f'bzCuts{sym}']
+            cutsPatches = linePatches(cuts[:, 0, 0], cuts[:, 0, 1], cuts[:, -1, 0] - cuts[:, 0, 0], cuts[:, -1, 1] - cuts[:, 0, 1], ec="r")
+            ax.add_collection(cutsPatches)
     if hasattr(cnt, 'bandMinXy'):
         for mu in range(0, len(cnt.bandMinXy)):
             ax.plot(*cnt.bandMinXy[mu].T, "r.")

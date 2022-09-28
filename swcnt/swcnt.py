@@ -85,17 +85,14 @@ class Swcnt(object):
         self.unitInvL = length + '-1'
 
 
-    def calculateCuttingLines(self, sym='hel', ksteps=50):
-        if sym == 'lin':
-            bzCuts = utils.bzCuts(self.KT, self.KC, self.NU, ksteps)
-        elif sym == 'hel':
-            bzCuts = utils.bzCuts(self.k2H, self.k1H / self.D, self.D, ksteps)
-        else:
-            print(f'Symmetry "{sym}" not recognised.')
-        self.data[f'bzCuts{sym}'] = bzCuts
+    def calculateCuttingLines(self, ksteps=50):
+        kstepsLin = ksteps
+        kstepsHel = int(self.normHel / self.normLin * kstepsLin)
+        self.bzCutsLin = utils.bzCuts(self.KT, self.KC, self.NU, kstepsLin)
+        self.bzCutsHel = utils.bzCuts(self.k2H, self.k1H / self.D, self.D, kstepsHel)
 
 
-    def calculateElectronBands(self, name, calc, **kwargs):
+    def calculateElectronBands(self, calc, name=None, **kwargs):
         if calc == 'TB':
             utils.tightBindingElectronBands(self, name, **kwargs)
         elif calc == 'DFT':
