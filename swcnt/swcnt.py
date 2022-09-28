@@ -28,8 +28,12 @@ class Swcnt(object):
         self.unitL = 'nm'
         self.unitE = 'eV'
         self.unitInvL = 'nm-1'
+
+        # graphene constants
         self.a0 = 0.2461  # nm
-        self.gamma = 3.0  # eV
+        self.b0 = 4 * np.pi / np.sqrt(3) / self.a0 # nm-1
+        self.ac = self.a0/np.sqrt(3)
+        self.bc = self.b0/np.sqrt(3)
         # self.a0 = 2.461 # Angstrom
         # self.a0 = 4.6511 # bohr'
 
@@ -41,14 +45,11 @@ class Swcnt(object):
         self.NU = 2 * self.N // self.R
         self.p, self.q = (2 * m + n) // self.R, -(2 * n + m) // self.R
 
-        # CNT lattice vectors
+        # graphene lattice vectors
         self.a1 = self.a0 * np.array([np.sqrt(3) / 2, 1 / 2])
         self.a2 = self.a0 * np.array([np.sqrt(3) / 2, -1 / 2])
-        self.b0 = 4 * np.pi / np.sqrt(3) / self.a0
         self.b1 = self.b0 * np.array([1 / 2, np.sqrt(3) / 2])
         self.b2 = self.b0 * np.array([1 / 2, -np.sqrt(3) / 2])
-        self.ac = self.a0/np.sqrt(3)
-        self.bc = self.b0/np.sqrt(3)
 
         # CNT lattice vectors
         self.C = self.n * self.a1 + self.m * self.a2
@@ -74,10 +75,38 @@ class Swcnt(object):
         self.normHel = np.linalg.norm(self.k2H)
         self.normOrt = abs(self.beta)/self.D*self.normLin
 
-    def electronBands(self, name, calc, **kwargs):
-        pass
+        # CNT data container for electron and exciton bands, DOS, JDOS, etc
+        self.data = {}
 
-    def calculateElectronBands(self, ksteps=20):        
+
+    def setUnits(self, energy, length):
+        self.unitE = energy
+        self.unitL = length
+        self.unitInvL = length + '-1'
+
+
+    def calculateCuttingLines(self, sym='hel', ksteps=50):
+        if sym == 'lin':
+            bzCuts = utils.bzCuts(self.KT, self.KC, self.NU, ksteps)
+        elif sym == 'hel':
+            bzCuts = utils.bzCuts(self.k2H, self.k1H / self.D, self.D, ksteps)
+        else:
+            print(f'Symmetry "{sym}" not recognised.')
+        self.data[f'bzCuts{sym}'] = bzCuts
+
+
+    def calculateElectronBands(self, name, calc, **kwargs):
+        if calc == 'TB':
+            utils.tightBindingElectronBands(self, name, **kwargs)
+        elif calc == 'DFT':
+            pass
+        elif calc == 'something else':
+            pass
+        else:
+            print(f'Calculation {calc} not implemented.')
+
+
+    def _calculateElectronBands(self, ksteps=20):        
         kstepsLin = ksteps
         kstepsHel = int(self.normHel / self.normLin * kstepsLin)
         self.bzCutsLin, self.bandLin = utils.subBands(self.KT, self.KC, self.a1, self.a2, self.NU, kstepsLin)
@@ -85,7 +114,8 @@ class Swcnt(object):
         self.bandLin[:,1,:] = self.bandLin[:,1,:] * self.gamma
         self.bandHel[:,1,:] = self.bandHel[:,1,:] * self.gamma
 
-    def calculateExcitonBands(self, bindEnergy = 0.05, deltak = 10.0, kstep = 20):
+
+    def _calculateExcitonBands(self, bindEnergy = 0.05, deltak = 10.0, kstep = 20):
         # CNT band minima, energies and masses
         self.bandMinHel = []
         self.bandMinXy = []
@@ -131,6 +161,7 @@ class Swcnt(object):
                             # dark excitons
                             self.excDarkBands[f"{mu}.{nu}.{i}.{j}"] = utils.excBands(helPos, invMass, energy, deltak, kstep)
 
+
     def saveData(self, dirpath):
         for mu in range(0, self.NU):
             path = os.path.join(dirpath, f"bandLin{mu:03d}.txt")
@@ -148,6 +179,7 @@ class Swcnt(object):
             path = os.path.join(dirpath, f"excDark{k}.txt")
             utils.save_file(*self.excDarkBands[k], path=path)
 
+
     def textParams(self):
         text = (
             f"n, m = {self.n},{self.m}\n"
@@ -163,6 +195,7 @@ class Swcnt(object):
             f"K_ort = {self.normOrt:.2f} nm-1"
         )
         return text
+
 
     def plot(self, path=None):
         if path == None:

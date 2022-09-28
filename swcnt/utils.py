@@ -137,7 +137,47 @@ def findMinima(x,y):
     secondMin = second[mask]
     return xMin, yMin, secondMin, mask
 
-def subBands(k1, k2, a1, a2, N, ksteps):
+def bzCuts(k1, k2, N, ksteps):
+    kmesh = np.linspace(-0.5, 0.5, ksteps)
+    k1grid = np.outer(kmesh, k1)
+    cuts = []
+    for mu in range(0, N):
+        cut = k1grid + mu * k2
+        cuts.append(cut)
+    return np.array(cuts)
+
+
+def grapheneTBBands(cuts, a1, a2, gamma=3.0):
+    bands = []
+    for cut in cuts:
+        band = gamma * np.sqrt(3 + 2 * np.cos(np.dot(cut, a1)) + 2 * np.cos(np.dot(cut, a2)) + 2 * np.cos(np.dot(cut, (a2 - a1))))
+        bands.append(band)
+    return np.array(bands)
+
+
+def _bands(k, a1, a2):
+    band = np.sqrt(3 + 2 * np.cos(np.dot(k, a1)) + 2 * np.cos(np.dot(k, a2)) + 2 * np.cos(np.dot(k, (a2 - a1))))
+    return band
+
+
+def tightBindingElectronBands(cnt, name, sym='hel', gamma=3.0):
+    if not f'bzCuts{sym}' in cnt.data.keys():
+        print(f'{sym} cutting lines are missing')
+        return
+    bzCuts = cnt.data[f'bzCuts{sym}']
+    subN, ksteps, _ = bzCuts.shape
+    if sym == 'lin':
+        bz = np.linspace(-0.5, 0.5, ksteps) * cnt.normLin
+    elif sym == 'hel':
+        bz = np.linspace(-0.5, 0.5, ksteps) * cnt.normHel
+    bands = grapheneTBBands(bzCuts, cnt.a1, cnt.a2, gamma)
+    data = np.zeros((subN, 2, ksteps))
+    data[:,0,:] = bz
+    data[:,1,:] = bands
+    cnt.data[name] = data
+
+
+def _subBands(k1, k2, a1, a2, N, ksteps):
     norm = np.linalg.norm(k1)
     kmesh = np.linspace(-0.5, 0.5, ksteps)
     bz = kmesh * norm
@@ -152,9 +192,7 @@ def subBands(k1, k2, a1, a2, N, ksteps):
     subBands = np.array(subBands)
     return bzCuts, subBands
 
-def bands(k, a1, a2):
-    band = np.sqrt(3 + 2 * np.cos(np.dot(k, a1)) + 2 * np.cos(np.dot(k, a2)) + 2 * np.cos(np.dot(k, (a2 - a1))))
-    return band
+
 
 
 def opt_mat_elems(k, a1, a2, n, m):
