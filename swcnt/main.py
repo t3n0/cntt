@@ -25,8 +25,10 @@ def main():
     n, m = args.n, args.m
     cnt = Swcnt(n, m)
 
-    cnt.calculateCuttingLines(50)
-    cnt.calculateElectronBands('TB', 'pollo')
+    cnt.calculateCuttingLines(31)
+    cnt.calculateElectronBands('TB', 'TB5', sym='hel', gamma=5.0)
+    cnt.calculateElectronBands('TB', 'TB2', sym='hel', gamma=2.0)
+    cnt.calculateElectronBands('TB', 'TB3.5', sym='lin', gamma=3.5)
     #cnt.calculateExcitonBands()
 
     if args.outdir:

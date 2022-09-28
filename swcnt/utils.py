@@ -19,6 +19,10 @@ import numpy as np
 import matplotlib.patches as mpatches
 from matplotlib.collections import PatchCollection
 
+
+def changeUnits():
+    pass
+
 def save_file(*args, path, header=""):
     data = []
     for arg in args:
@@ -152,6 +156,7 @@ def grapheneTBBands(cuts, a1, a2, gamma=3.0):
     for cut in cuts:
         band = gamma * np.sqrt(3 + 2 * np.cos(np.dot(cut, a1)) + 2 * np.cos(np.dot(cut, a2)) + 2 * np.cos(np.dot(cut, (a2 - a1))))
         bands.append(band)
+        bands.append(-band)
     return np.array(bands)
 
 
@@ -161,22 +166,22 @@ def _bands(k, a1, a2):
 
 
 def tightBindingElectronBands(cnt, name, sym='hel', gamma=3.0):
-    if name == None:
-        name = f'elBandsTB{sym}'
-    if not f'bzCuts{sym}' in cnt.data.keys():
-        print(f'{sym} cutting lines are missing')
-        return
-    bzCuts = cnt.data[f'bzCuts{sym}']
-    subN, ksteps, _ = bzCuts.shape
-    if sym == 'lin':
-        bz = np.linspace(-0.5, 0.5, ksteps) * cnt.normLin
-    elif sym == 'hel':
-        bz = np.linspace(-0.5, 0.5, ksteps) * cnt.normHel
-    bands = grapheneTBBands(bzCuts, cnt.a1, cnt.a2, gamma)
-    data = np.zeros((subN, 2, ksteps))
-    data[:,0,:] = bz
-    data[:,1,:] = bands
-    cnt.data[name] = data
+    attrCuts = f'bzCuts{sym.capitalize()}'
+    attrNorm = f'norm{sym.capitalize()}'
+    attrBands = f'electronBands{sym.capitalize()}'
+    if hasattr(cnt, attrCuts):
+        bzCuts = getattr(cnt, attrCuts)
+        bzNorm = getattr(cnt, attrNorm)
+        subN, ksteps, _ = bzCuts.shape
+        bz = np.linspace(-0.5, 0.5, ksteps) * bzNorm
+        bands = grapheneTBBands(bzCuts, cnt.a1, cnt.a2, gamma)
+        data = np.zeros((2*subN, 2, ksteps))
+        data[:,0,:] = bz
+        data[:,1,:] = bands
+        getattr(cnt, attrBands)[name] = data
+        # cnt.bandsHel[name] = data
+    else:
+        print(f'Cutlines "{sym}" not defined.')    
 
 
 def _subBands(k1, k2, a1, a2, N, ksteps):

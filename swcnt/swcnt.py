@@ -75,8 +75,11 @@ class Swcnt(object):
         self.normHel = np.linalg.norm(self.k2H)
         self.normOrt = abs(self.beta)/self.D*self.normLin
 
-        # CNT data container for electron and exciton bands, DOS, JDOS, etc
-        self.data = {}
+        # CNT data containers for electron and exciton bands, DOS, JDOS, etc
+        self.electronBandsLin = {}
+        self.electronBandsHel = {}
+        self.excitonBands = {}
+        self.electronDOS = {}
 
 
     def setUnits(self, energy, length):
@@ -85,14 +88,14 @@ class Swcnt(object):
         self.unitInvL = length + '-1'
 
 
-    def calculateCuttingLines(self, ksteps=50):
+    def calculateCuttingLines(self, ksteps=51):
         kstepsLin = ksteps
         kstepsHel = int(self.normHel / self.normLin * kstepsLin)
         self.bzCutsLin = utils.bzCuts(self.KT, self.KC, self.NU, kstepsLin)
         self.bzCutsHel = utils.bzCuts(self.k2H, self.k1H / self.D, self.D, kstepsHel)
 
 
-    def calculateElectronBands(self, calc, name=None, **kwargs):
+    def calculateElectronBands(self, calc, name, **kwargs):
         if calc == 'TB':
             utils.tightBindingElectronBands(self, name, **kwargs)
         elif calc == 'DFT':
@@ -212,8 +215,8 @@ class Swcnt(object):
 
         plotting.dirLat(self, ax1)
         plotting.recLat(self, ax2)
-        plotting.subBands(self, 'bandLin', 'r', ax3)
-        plotting.subBands(self, 'bandHel', 'b', ax4)
+        plotting.electronBands(self, 'lin', ax3)
+        plotting.electronBands(self, 'hel', ax4)
         
         ax3.set_title("Linear")
         ax4.set_title("Helical")

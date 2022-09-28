@@ -2,6 +2,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.collections import PatchCollection
+from matplotlib.cm import get_cmap
+
+def show():
+    plt.show()
+
+def mycolors(i, n):
+    x = np.linspace(0.1, 0.9, n)
+    cmap = get_cmap('cividis')
+    rgba = cmap(x)
+    return rgba[i]
+
+def mylabel(i, label):
+    if i == 0:
+        return label
+    else:
+        return '_'
 
 def dirLat(cnt, ax=None):
     if ax is None:
@@ -32,7 +48,7 @@ def dirLat(cnt, ax=None):
 def recLat(cnt, ax=None):
     if ax is None:
         fig = plt.figure(figsize=(5, 5))
-        ax = fig.add_axes([0.05, 0.05, 0.9, 0.9])
+        ax = fig.add_axes([0.08, 0.05, 0.9, 0.9])
     # hexagons
     boundVectors = cnt.k1L - 0.5*cnt.KT, \
         cnt.k1L + cnt.k2L- cnt.KT, cnt.k2L- 0.5*cnt.KT, \
@@ -47,12 +63,15 @@ def recLat(cnt, ax=None):
     recCells = cellPatches([recCell_lh, recCell_ha], ["r", "b"])
     # lattice vectors
     #latVecs = arrowPatches(cnt.k1L, cnt.k2L, cnt.k1H, cnt.k2H, color='grey', d= cnt.KT)
-    for sym in ['lin', 'hel']:
-        if f'bzCuts{sym}' in cnt.data.keys():
-            # plot cutting lines
-            cuts = cnt.data[f'bzCuts{sym}']
-            cutsPatches = linePatches(cuts[:, 0, 0], cuts[:, 0, 1], cuts[:, -1, 0] - cuts[:, 0, 0], cuts[:, -1, 1] - cuts[:, 0, 1], ec="r")
-            ax.add_collection(cutsPatches)
+    if hasattr(cnt, 'bzCutsLin') and hasattr(cnt, 'bzCutsHel'):
+        # plot linear cutting lines
+        cuts = cnt.bzCutsLin
+        cutsPatches = linePatches(cuts[:, 0, 0], cuts[:, 0, 1], cuts[:, -1, 0] - cuts[:, 0, 0], cuts[:, -1, 1] - cuts[:, 0, 1], ec="r")
+        ax.add_collection(cutsPatches)
+        # plot helical cutting lines
+        cuts = cnt.bzCutsHel
+        cutsPatches = linePatches(cuts[:, 0, 0], cuts[:, 0, 1], cuts[:, -1, 0] - cuts[:, 0, 0], cuts[:, -1, 1] - cuts[:, 0, 1], ec="b")
+        ax.add_collection(cutsPatches)
     if hasattr(cnt, 'bandMinXy'):
         for mu in range(0, len(cnt.bandMinXy)):
             ax.plot(*cnt.bandMinXy[mu].T, "r.")
@@ -67,14 +86,19 @@ def recLat(cnt, ax=None):
     ax.set_ylim(miny, maxy)
     return ax
 
-def subBands(cnt, attr, color='k', ax=None):
-    if hasattr(cnt, attr):
-        bands = getattr(cnt, attr)
+def electronBands(cnt, sym='hel', ax=None):
+    if ax is None:
+        fig = plt.figure(figsize=(8, 5))
+        ax = fig.add_axes([0.08, 0.05, 0.9, 0.9])
+    dicBands = getattr(cnt, f'electronBands{sym.capitalize()}')
+    NN = len(dicBands)
+    for i, key in enumerate(dicBands):
+        bands = dicBands[key]
         for mu in range(0, len(bands)):
-            ax.plot(bands[mu,0,:], bands[mu,1,:], color=color)
-            ax.plot(bands[mu,0,:], -bands[mu,1,:], color=color)
+            ax.plot(bands[mu,0,:], bands[mu,1,:], color=mycolors(i,NN), label=mylabel(mu,key))
             ax.set_ylabel(f'Energy ({cnt.unitE})')
             ax.set_xlabel(f'k ({cnt.unitInvL})')
+    ax.legend()
 
 def excitonBands(cnt):
     pass
