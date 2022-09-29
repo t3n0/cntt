@@ -101,18 +101,20 @@ def minVector2AtomUnitCell(l, k, n):
             return u, int(v)
 
 
-def findMinima(x,y):
+def findExtrema(x, y, which = 'max'):
     prime = np.gradient(y, x)
     second = np.gradient(prime, x)
-    # todo avoid dirac points in metallic cnts
     threshold = np.max(prime) - np.min(prime)
-    mask1 = (np.roll(prime, 1) < 0) * (prime > 0) # derivative change sign, might be minimum
+    if which == 'max':
+        mask1 = (np.roll(prime, 1) > 0) * (prime < 0) # derivative change sign, might be maximum
+    elif which == 'min':
+        mask1 = (np.roll(prime, 1) < 0) * (prime > 0) # derivative change sign, might be minimum
     mask2 = np.abs(np.roll(prime, 1) - prime) > 0.3*threshold # delta derivative too big, might be dirac point
     mask = mask1 & (~ mask2) # tilde is negation, not mask2
-    xMin = x[mask]
-    yMin = y[mask]
-    secondMin = second[mask]
-    return xMin, yMin, secondMin, mask
+    xExtrema = x[mask]
+    yExtrema = y[mask]
+    secondExtrema = second[mask]
+    return xExtrema, yExtrema, secondExtrema, mask
 
 
 def bzCuts(k1, k2, N, ksteps):
@@ -152,7 +154,7 @@ def tightBindingElectronBands(cnt, name, sym='hel', gamma=3.0, fermi=0.0):
         print(f'Cutlines "{sym}" not defined.')
 
 
-def effectiveMassExcitonBands(cnt, name, deltaK=10.0):
+def effectiveMassExcitonBands(cnt, name, deltaK = 10.0, bindEnergy = 0.0):
     pass
 
 def findMinDelta(vec, k1, k2):
