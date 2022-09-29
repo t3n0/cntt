@@ -18,6 +18,36 @@ import argparse
 import numpy as np
 
 
+# physical constants
+Ha2eV = 27.2113825435 # 1 Ha = 27.2 eV
+Ry2eV = 13.6056980659 # 1 Ry = 13.6 eV
+Bohr2nm = 0.0529177249 # 1 bohr = 0.053 nm
+Angstrom2nm = 0.1  # 1 A = 0.1 nm
+
+
+def unitFactors(cnt):
+    if cnt.unitE == 'eV': eFactor = 1
+    if cnt.unitE == 'Ha': eFactor = 1/Ha2eV
+    if cnt.unitE == 'Ry': eFactor = 1/Ry2eV
+    if cnt.unitL == 'nm':
+        lFactor = 1
+        invLFactor = 1
+    if cnt.unitL == 'bohr':
+        lFactor = 1/Bohr2nm
+        invLFactor = Bohr2nm
+    if cnt.unitL == 'angstrom':
+        lFactor = 1/Angstrom2nm
+        invLFactor = Angstrom2nm
+    return eFactor, lFactor, invLFactor
+
+
+def changeUnits(cnt, factor, *args):
+    newValues = []
+    for arg in args:
+        newValues.append(factor * getattr(cnt, arg))
+    return newValues
+
+
 def save_file(*args, path, header=""):
     data = []
     for arg in args:

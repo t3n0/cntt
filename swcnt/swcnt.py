@@ -48,28 +48,26 @@ class Swcnt(object):
         - absorption spectra;
         - and more (soon).
     """
-    def __init__(self, n, m):
+    def __init__(self, n, m, a0 = 0.2461):
         '''
         Constructor for the Swcnt class.
 
         Parameters:
         -----------
-            n (int): carbon nanotube n number
-            m (int): carbon nanotube m number
+            n (int):        carbon nanotube n number
+
+            m (int):        carbon nanotube m number
+
+            a0 (float):     carbon nanotube lattice constant (nm)
+                            optional, default = 0.2461 nm
         '''
         # units
         self.unitL = 'nm'
         self.unitE = 'eV'
         self.unitInvL = 'nm-1'
 
-        # physical constants
-        self.Ha2eV = 27.2113825435 # 1 Ha = 27.2 eV
-        self.Ry2eV = 13.6056980659 # 1 Ry = 13.6 eV
-        self.Bohr2nm = 0.0529177249 # 1 bohr = 0.053 nm
-        self.Angstrom2nm = 0.1  # 1 A = 0.1 nm
-
         # graphene constants
-        self.a0 = 0.2461  # nm
+        self.a0 = a0 # nm
         self.b0 = 4 * np.pi / np.sqrt(3) / self.a0 # nm-1
         self.ac = self.a0/np.sqrt(3)
         self.bc = self.b0/np.sqrt(3)
@@ -120,34 +118,31 @@ class Swcnt(object):
 
 
     def setUnits(self, energy, length):
+        '''
+        Set the energy and length unit of measure.
+        This is just a wrapper for the output.
+        The code performs all calculations in eV and nm.
+
+        Parameters:
+        -----------
+            energy (str):   energy units, either 'eV', 'Ha', 'Ry'
+
+            length (str):   length units, either 'nm', 'bohr', 'Angstrom'
+        '''
         self.unitE = energy
         self.unitL = length
         self.unitInvL = length + '-1'
 
 
-    def unitFactors(self):
-        if self.unitE == 'eV': eFactor = 1
-        if self.unitE == 'Ha': eFactor = 1/self.Ha2eV
-        if self.unitE == 'Ry': eFactor = 1/self.Ry2eV
-        if self.unitL == 'nm':
-            lFactor = 1
-            invLFactor = 1
-        if self.unitL == 'bohr':
-            lFactor = 1/self.Bohr2nm
-            invLFactor = self.Bohr2nm
-        if self.unitL == 'angstrom':
-            lFactor = 1/self.Angstrom2nm
-            invLFactor = self.Angstrom2nm
-        return eFactor, lFactor, invLFactor
-
-
-    def changeUnits(self, factor, *args):
-        newValues = []
-        for arg in args:
-            newValues.append(factor * getattr(self, arg))
-        return newValues
-
     def calculateCuttingLines(self, ksteps=51):
+        '''
+        Calculate the linear and helical cutting lines in the zone-folding scheme.
+
+        Parameters:
+        -----------
+            ksteps (int):   number of kpoints for the discretisation
+                            optional, default = 51
+        '''
         kstepsLin = ksteps
         kstepsHel = int(self.normHel / self.normLin * kstepsLin)
         self.bzCutsLin = utils.bzCuts(self.KT, self.KC, self.NU, kstepsLin)
@@ -155,6 +150,28 @@ class Swcnt(object):
 
 
     def calculateElectronBands(self, calc, name, sym, **kwargs):
+        '''
+        Calculate the electron bands energy dispersion using different methods.
+
+        Parameters:
+        -----------
+            calc (str):     specify the method for the band calculation
+                            can be either 'TB' or 'DFT' (more in the future)
+
+            name (str):     unique name to identify the resulting bands
+
+            sym (str):      linear or helical symmetry, either 'lin' or 'hel'
+
+            **kwargs:       key-value arguments depends on the calculation to
+                            be performed.
+
+                            TB calculation:
+                                gamma (float):      TB on-site parameter,
+                                                    optional, default = 3.0 eV
+                            
+                            DFT calculation:
+                                something, not yet defined
+        '''
         if calc == 'TB':
             utils.tightBindingElectronBands(self, name, sym, **kwargs)
         elif calc == 'DFT':
@@ -166,6 +183,23 @@ class Swcnt(object):
 
 
     def calculateExcitonBands(self, calc, name, **kwargs):
+        '''
+        Calculate the exciton bands energy dispersion using different methods.
+
+        Parameters:
+        -----------
+            calc (str):     specify the method for the band calculation
+                            can be either 'EffMass' or 'something' (more in the future)
+
+            name (str):     unique name to identify the resulting bands
+
+            **kwargs:       key-value arguments depend on the calculation to
+                            be performed.
+
+                            EffMass calculation:
+                                deltaK (float):     width of the exciton parabolic bands
+                                                    optional, default = 10 nm-1
+        '''
         if calc == 'EffMass' or calc == 'EM':
             utils.effectiveMassExcitonBands(self, name, **kwargs)
         elif calc == 'DFT':

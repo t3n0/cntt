@@ -3,9 +3,12 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.collections import PatchCollection
 from matplotlib.cm import get_cmap
+import swcnt.utils as utils
+
 
 def show():
     plt.show()
+
 
 def mycolors(i, n):
     x = np.linspace(0.1, 0.9, n)
@@ -13,15 +16,17 @@ def mycolors(i, n):
     rgba = cmap(x)
     return rgba[i]
 
+
 def mylabel(i, label):
     if i == 0:
         return label
     else:
         return '_'
 
+
 def dirLat(cnt, ax=None):
-    _, lfactor, _ = cnt.unitFactors()
-    C, T, t1, t2, a0 = cnt.changeUnits(lfactor, 'C', 'T', 't1', 't2', 'a0')
+    _, lfactor, _ = utils.unitFactors()
+    C, T, t1, t2, a0 = utils.changeUnits(lfactor, 'C', 'T', 't1', 't2', 'a0')
     if ax is None:
         fig = plt.figure(figsize=(5, 5))
         ax = fig.add_axes([0.05, 0.05, 0.9, 0.9])
@@ -48,8 +53,8 @@ def dirLat(cnt, ax=None):
     return ax
 
 def recLat(cnt, ax=None):
-    _, _, invLfactor = cnt.unitFactors()
-    KT, k1L, k2L, k1H, k2H, b0 = cnt.changeUnits(invLfactor, 'KT', 'k1L', 'k2L', 'k1H', 'k2H', 'b0')
+    _, _, invLfactor = utils.unitFactors()
+    KT, k1L, k2L, k1H, k2H, b0 = utils.changeUnits(invLfactor, 'KT', 'k1L', 'k2L', 'k1H', 'k2H', 'b0')
     if ax is None:
         fig = plt.figure(figsize=(5, 5))
         ax = fig.add_axes([0.05, 0.05, 0.9, 0.9])
@@ -92,7 +97,7 @@ def recLat(cnt, ax=None):
     return ax
 
 def electronBands(cnt, sym='hel', ax=None):
-    efactor, _, invLfactor = cnt.unitFactors()
+    efactor, _, invLfactor = utils.unitFactors()
     if ax is None:
         fig = plt.figure(figsize=(8, 5))
         ax = fig.add_axes([0.05, 0.05, 0.9, 0.9])
