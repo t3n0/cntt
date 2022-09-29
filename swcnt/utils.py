@@ -20,9 +20,6 @@ import matplotlib.patches as mpatches
 from matplotlib.collections import PatchCollection
 
 
-def changeUnits():
-    pass
-
 def save_file(*args, path, header=""):
     data = []
     for arg in args:

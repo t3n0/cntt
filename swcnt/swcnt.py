@@ -29,13 +29,17 @@ class Swcnt(object):
         self.unitE = 'eV'
         self.unitInvL = 'nm-1'
 
+        # physical constants
+        self.Ha2eV = 27.2113825435 # 1 Ha = 27.2 eV
+        self.Ry2eV = 13.6056980659 # 1 Ry = 13.6 eV
+        self.Bohr2nm = 0.0529177249 # 1 bohr = 0.053 nm
+        self.Angstrom2nm = 0.1  # 1 A = 0.1 nm
+
         # graphene constants
         self.a0 = 0.2461  # nm
         self.b0 = 4 * np.pi / np.sqrt(3) / self.a0 # nm-1
         self.ac = self.a0/np.sqrt(3)
         self.bc = self.b0/np.sqrt(3)
-        # self.a0 = 2.461 # Angstrom
-        # self.a0 = 4.6511 # bohr'
 
         # carbon nanotube parameters
         self.n, self.m = n, m
@@ -87,6 +91,28 @@ class Swcnt(object):
         self.unitL = length
         self.unitInvL = length + '-1'
 
+
+    def unitFactors(self):
+        if self.unitE == 'eV': eFactor = 1
+        if self.unitE == 'Ha': eFactor = 1/self.Ha2eV
+        if self.unitE == 'Ry': eFactor = 1/self.Ry2eV
+        if self.unitL == 'nm':
+            lFactor = 1
+            invLFactor = 1
+        if self.unitL == 'bohr':
+            lFactor = 1/self.Bohr2nm
+            invLFactor = self.Bohr2nm
+        if self.unitL == 'angstrom':
+            lFactor = 1/self.Angstrom2nm
+            invLFactor = self.Angstrom2nm
+        return eFactor, lFactor, invLFactor
+
+
+    def changeUnits(self, factor, *args):
+        newValues = []
+        for arg in args:
+            newValues.append(factor * getattr(self, arg))
+        return newValues
 
     def calculateCuttingLines(self, ksteps=51):
         kstepsLin = ksteps

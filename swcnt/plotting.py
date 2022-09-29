@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.collections import PatchCollection
 from matplotlib.cm import get_cmap
+import swcnt.utils as utils
 
 def show():
     plt.show()
@@ -20,20 +21,22 @@ def mylabel(i, label):
         return '_'
 
 def dirLat(cnt, ax=None):
+    _, lfactor, _ = cnt.unitFactors()
+    C, T, t1, t2, a0 = cnt.changeUnits(lfactor, 'C', 'T', 't1', 't2', 'a0')
     if ax is None:
         fig = plt.figure(figsize=(5, 5))
         ax = fig.add_axes([0.05, 0.05, 0.9, 0.9])
     # hexagons
-    boundVectors = cnt.C, cnt.T, cnt.C + cnt.T, cnt.t1, cnt.t1 + cnt.T, cnt.t2, cnt.t2 + cnt.C / cnt.D
+    boundVectors = C, T, C + T, t1, t1 + T, t2, t2 + C / cnt.D
     minx, maxx, miny, maxy = boundingRectangle(*boundVectors)
-    hexs = dirHexPatches(minx, maxx, miny, maxy, cnt.a0)
+    hexs = dirHexPatches(minx, maxx, miny, maxy, a0)
     # cells
-    unitCell_la = np.array([[0.0, 0.0], cnt.C, cnt.C + cnt.T, cnt.T])
-    unitCell_lh = np.array([[0.0, 0.0], cnt.t1, cnt.t1 + cnt.T, cnt.T])
-    unitCell_ha = np.array([[0.0, 0.0], cnt.C / cnt.D, cnt.C / cnt.D + cnt.t2, cnt.t2])
+    unitCell_la = np.array([[0.0, 0.0], C, C + T, T])
+    unitCell_lh = np.array([[0.0, 0.0], t1, t1 + T, T])
+    unitCell_ha = np.array([[0.0, 0.0], C / cnt.D, C / cnt.D + t2, t2])
     unitCells = cellPatches([unitCell_la, unitCell_ha, unitCell_lh], ["g", "b", "r"])
     # lattice vectors
-    latVecs = arrowPatches(cnt.C, cnt.T, cnt.t1, cnt.t2, color='grey')
+    latVecs = arrowPatches(C, T, t1, t2, color='grey')
     # plot
     ax.add_collection(hexs)
     ax.add_collection(unitCells)
@@ -46,35 +49,38 @@ def dirLat(cnt, ax=None):
     return ax
 
 def recLat(cnt, ax=None):
+    _, _, invLfactor = cnt.unitFactors()
+    KT, k1L, k2L, k1H, k2H, b0 = cnt.changeUnits(invLfactor, 'KT', 'k1L', 'k2L', 'k1H', 'k2H', 'b0')
     if ax is None:
         fig = plt.figure(figsize=(5, 5))
-        ax = fig.add_axes([0.08, 0.05, 0.9, 0.9])
+        ax = fig.add_axes([0.05, 0.05, 0.9, 0.9])
     # hexagons
-    boundVectors = cnt.k1L - 0.5*cnt.KT, \
-        cnt.k1L + cnt.k2L- cnt.KT, cnt.k2L- 0.5*cnt.KT, \
-        cnt.k1H + 0.5*cnt.NU/cnt.D*cnt.KT, \
-        cnt.k1H + cnt.k2H + cnt.NU/cnt.D*cnt.KT, \
-        cnt.k2H + 0.5*cnt.NU/cnt.D*cnt.KT
+    boundVectors = k1L - 0.5*KT, \
+        k1L + k2L- KT, k2L- 0.5*KT, \
+        k1H + 0.5*cnt.NU/cnt.D*KT, \
+        k1H + k2H + cnt.NU/cnt.D*KT, \
+        k2H + 0.5*cnt.NU/cnt.D*KT
     minx, maxx, miny, maxy = boundingRectangle(*boundVectors)
-    hexs = recHexPatches(minx, maxx, miny, maxy, cnt.b0)
+    hexs = recHexPatches(minx, maxx, miny, maxy, b0)
     # cells
-    recCell_lh = np.array([[0.0, 0.0], cnt.k1L, cnt.k1L + cnt.k2L, cnt.k2L]) - 0.5*cnt.KT
-    recCell_ha = np.array([[0.0, 0.0], cnt.k1H, cnt.k1H + cnt.k2H, cnt.k2H]) + 0.5*cnt.NU/cnt.D*cnt.KT
+    recCell_lh = np.array([[0.0, 0.0], k1L, k1L + k2L, k2L]) - 0.5*KT
+    recCell_ha = np.array([[0.0, 0.0], k1H, k1H + k2H, k2H]) + 0.5*cnt.NU/cnt.D*KT
     recCells = cellPatches([recCell_lh, recCell_ha], ["r", "b"])
     # lattice vectors
     #latVecs = arrowPatches(cnt.k1L, cnt.k2L, cnt.k1H, cnt.k2H, color='grey', d= cnt.KT)
     if hasattr(cnt, 'bzCutsLin') and hasattr(cnt, 'bzCutsHel'):
         # plot linear cutting lines
-        cuts = cnt.bzCutsLin
+        cuts = invLfactor * cnt.bzCutsLin
         cutsPatches = linePatches(cuts[:, 0, 0], cuts[:, 0, 1], cuts[:, -1, 0] - cuts[:, 0, 0], cuts[:, -1, 1] - cuts[:, 0, 1], ec="r")
         ax.add_collection(cutsPatches)
         # plot helical cutting lines
-        cuts = cnt.bzCutsHel
+        cuts = invLfactor * cnt.bzCutsHel
         cutsPatches = linePatches(cuts[:, 0, 0], cuts[:, 0, 1], cuts[:, -1, 0] - cuts[:, 0, 0], cuts[:, -1, 1] - cuts[:, 0, 1], ec="b")
         ax.add_collection(cutsPatches)
     if hasattr(cnt, 'bandMinXy'):
-        for mu in range(0, len(cnt.bandMinXy)):
-            ax.plot(*cnt.bandMinXy[mu].T, "r.")
+        bandMinXy = invLfactor * cnt.bandMinXy
+        for mu in range(0, len(bandMinXy)):
+            ax.plot(*bandMinXy[mu].T, "r.")
     # plot
     ax.add_collection(hexs)
     ax.add_collection(recCells)
@@ -87,15 +93,16 @@ def recLat(cnt, ax=None):
     return ax
 
 def electronBands(cnt, sym='hel', ax=None):
+    efactor, _, invLfactor = cnt.unitFactors()
     if ax is None:
         fig = plt.figure(figsize=(8, 5))
-        ax = fig.add_axes([0.08, 0.05, 0.9, 0.9])
+        ax = fig.add_axes([0.05, 0.05, 0.9, 0.9])
     dicBands = getattr(cnt, f'electronBands{sym.capitalize()}')
     NN = len(dicBands)
     for i, key in enumerate(dicBands):
         bands = dicBands[key]
         for mu in range(0, len(bands)):
-            ax.plot(bands[mu,0,:], bands[mu,1,:], color=mycolors(i,NN), label=mylabel(mu,key))
+            ax.plot(invLfactor*bands[mu,0,:], efactor*bands[mu,1,:], color=mycolors(i,NN), label=mylabel(mu,key))
             ax.set_ylabel(f'Energy ({cnt.unitE})')
             ax.set_xlabel(f'k ({cnt.unitInvL})')
     ax.legend()

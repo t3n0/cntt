@@ -32,6 +32,12 @@ cnt1.calculateElectronBands('TB', 'TB3.5', sym='hel', gamma=3.5)
 # cnt1.plot()
 # plt.show()
 
-# plt.dirLat(cnt1)
-plt.electronBands(cnt1)
+plt.recLat(cnt1)
+# plt.electronBands(cnt1)
+# plt.show()
+
+cnt1.setUnits('Ry', 'bohr')
+
+plt.recLat(cnt1)
+# plt.electronBands(cnt1)
 plt.show()
