@@ -1,18 +1,34 @@
-#
-# Copyright (c) 2021-2022 Stefano Dal Forno.
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+'''
+swcnt-bands
+-----------
+
+swcnt-bands is a software for computing, displaying and manipulating
+the physical properties of single-walled carbon nanotubes (SWCNTs).
+
+CONTACTS:
+---------
+
+email: tenobaldi@gmail.com
+github: https://github.com/t3n0/swcnt-bands
+
+LICENSE:
+--------
+
+Copyright (c) 2021-2022 Stefano Dal Forno.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+'''
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -22,8 +38,25 @@ import os
 
 
 class Swcnt(object):
+    """
+    Base class for computing the physical properties
+    of single-walled carbon nanotubes (SWCNTs).
+    Properties include:
+        - direct and reciprocal lattice structure;
+        - electron, phonon and exciton energy dispersions;
+        - density of states (DOS) and joint density of states (JDOS);
+        - absorption spectra;
+        - and more (soon).
+    """
     def __init__(self, n, m):
+        '''
+        Constructor for the Swcnt class.
 
+        Parameters:
+        -----------
+            n (int): carbon nanotube n number
+            m (int): carbon nanotube m number
+        '''
         # units
         self.unitL = 'nm'
         self.unitE = 'eV'
@@ -121,9 +154,20 @@ class Swcnt(object):
         self.bzCutsHel = utils.bzCuts(self.k2H, self.k1H / self.D, self.D, kstepsHel)
 
 
-    def calculateElectronBands(self, calc, name, **kwargs):
+    def calculateElectronBands(self, calc, name, sym, **kwargs):
         if calc == 'TB':
-            utils.tightBindingElectronBands(self, name, **kwargs)
+            utils.tightBindingElectronBands(self, name, sym, **kwargs)
+        elif calc == 'DFT':
+            pass
+        elif calc == 'something else':
+            pass
+        else:
+            print(f'Calculation {calc} not implemented.')
+
+
+    def calculateExcitonBands(self, calc, name, **kwargs):
+        if calc == 'EffMass' or calc == 'EM':
+            utils.effectiveMassExcitonBands(self, name, **kwargs)
         elif calc == 'DFT':
             pass
         elif calc == 'something else':
@@ -237,9 +281,9 @@ class Swcnt(object):
         
         ax3.set_title("Linear")
         ax4.set_title("Helical")
-        ax3.get_shared_y_axes().join(ax3, ax4) # matplotlib fai ribrezzo ai popoli del mondo!
-        ax4.set_yticklabels([])
-        ax4.set_ylabel('')
+        ax3.get_shared_y_axes().join(ax3, ax4) # "Matplotlib fai ribrezzo ai popoli del mondo!"
+        ax4.set_yticklabels([])                # "Tu metti in subbuglio il mio sistema di donna sensibile!"
+        ax4.set_ylabel('')                     # (Alida Valli)
 
         # # ax6 plot excitons
         # for i,k in enumerate(self.excParaBands):
