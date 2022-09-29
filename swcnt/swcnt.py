@@ -132,15 +132,6 @@ class Swcnt(object):
             print(f'Calculation {calc} not implemented.')
 
 
-    def _calculateElectronBands(self, ksteps=20):        
-        kstepsLin = ksteps
-        kstepsHel = int(self.normHel / self.normLin * kstepsLin)
-        self.bzCutsLin, self.bandLin = utils.subBands(self.KT, self.KC, self.a1, self.a2, self.NU, kstepsLin)
-        self.bzCutsHel, self.bandHel = utils.subBands(self.k2H, self.k1H / self.D, self.a1, self.a2, self.D, kstepsHel)
-        self.bandLin[:,1,:] = self.bandLin[:,1,:] * self.gamma
-        self.bandHel[:,1,:] = self.bandHel[:,1,:] * self.gamma
-
-
     def _calculateExcitonBands(self, bindEnergy = 0.05, deltak = 10.0, kstep = 20):
         # CNT band minima, energies and masses
         self.bandMinHel = []

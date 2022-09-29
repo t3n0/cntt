@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.collections import PatchCollection
 from matplotlib.cm import get_cmap
-import swcnt.utils as utils
 
 def show():
     plt.show()
