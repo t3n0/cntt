@@ -5,7 +5,7 @@ setup(name='swcnt-bands',
       description='Single-walled carbon nanotubes bandstructure tool (swcnt-bands)',
       author='Stefano Dal Forno',
       author_email='tenobaldi@gmail.com',
-      url='https://github.com/t3n0/transfer-matrix-method',
+      url='https://github.com/t3n0/swcnt-bands',
       classifiers=[
           'Development Status :: 4 - Beta',
 
