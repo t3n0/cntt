@@ -113,9 +113,9 @@ class Swcnt(object):
         # CNT data containers for electron and exciton bands, DOS, JDOS, etc
         self.electronBandsLin = {}
         self.electronBandsHel = {}
-        self.excitonBands = {}
         self.electronDOS = {}
-
+        self.excitonBands = {}
+        self.excitonDOS = {}
 
     def setUnits(self, energy, length):
         '''
@@ -168,6 +168,10 @@ class Swcnt(object):
                             TB calculation:
                                 gamma (float):      TB on-site parameter,
                                                     optional, default = 3.0 eV
+                                
+                                fermi (float):      position of the Fermi energy
+                                                    wrt the graphene Fermi level
+                                                    optional, default = 0.0 eV
                             
                             DFT calculation:
                                 something, not yet defined
@@ -208,6 +212,36 @@ class Swcnt(object):
             pass
         else:
             print(f'Calculation {calc} not implemented.')
+
+
+    def calculateDOS(self, which, ensteps=1000):
+        '''
+        Calcualte the density of states for a given particle energy dispersion.
+        By default, the DOS is calculated on the helical symmetry.
+
+        Parameters:
+        -----------
+            which (str):    particle, either 'el', 'ex', 'ph'
+
+            enesteps (int): energy steps for the discretisation
+                            optional, default = 1000
+        '''
+        pass
+
+
+    def calculateJDOS(self, which, ensteps=1000):
+        '''
+        Calcualte the joint density of states for a given particle energy dispersion.
+        By default, the JDOS is calculated on the helical symmetry.
+
+        Parameters:
+        -----------
+            which (str):    particle, either 'el', 'ex', 'ph'
+
+            enesteps (int): energy steps for the discretisation
+                            optional, default = 1000
+        '''
+        pass
 
 
     def _calculateExcitonBands(self, bindEnergy = 0.05, deltak = 10.0, kstep = 20):
@@ -257,7 +291,7 @@ class Swcnt(object):
                             self.excDarkBands[f"{mu}.{nu}.{i}.{j}"] = utils.excBands(helPos, invMass, energy, deltak, kstep)
 
 
-    def saveData(self, dirpath):
+    def saveToDirectory(self, dirpath):
         for mu in range(0, self.NU):
             path = os.path.join(dirpath, f"bandLin{mu:03d}.txt")
             utils.save_file(self.bandLin[mu][0], self.bandLin[mu][1], path=path)
@@ -275,24 +309,23 @@ class Swcnt(object):
             utils.save_file(*self.excDarkBands[k], path=path)
 
 
-    def textParams(self):
-        text = (
-            f"n, m = {self.n},{self.m}\n"
-            f"Diameter = {np.linalg.norm(self.C)/np.pi:.2f} nm\n"
-            f"C = {self.n:+d} a1 {self.m:+d} a2\n"
-            f"T = {self.p:+d} a1 {self.q:+d} a2\n"
-            f"t1 = {self.u1:+d} a1 {self.v1:+d} a2\n"
-            f"t2 = {self.u2:+d} a1 {self.v2:+d} a2\n"
-            f"NU = {self.NU}\n"
-            f"D = {self.D}\n"
-            f"BZ_lin = {self.normLin:.2f} nm-1\n"
-            f"BZ_hel = {self.normHel:.2f} nm-1\n"
-            f"K_ort = {self.normOrt:.2f} nm-1"
-        )
-        return text
-
-
     def plot(self, path=None):
+        '''
+        Plots all relevant quantities and properties of the nanotube object.
+
+        This is a *convenience* function that displays the carbon nanotube
+        parameters, direct and reciprocal lattices, K and K' valley minima,
+        linear and helical electron bands, and the helical exciton and
+        phonon bands.
+
+        For more versatile plotting routines, the user might want to import
+        the `swcnt.plotting` module.
+
+        Parameters:
+        -----------
+            path (str):     destination path where to save the figure
+                            optional, default = shows the figure
+        '''
         if path == None:
             fig = plt.figure(figsize=(16, 9))
         else:
@@ -372,6 +405,8 @@ class Swcnt(object):
         # ax6.legend(loc=(-0.2, 0.0))
 
         # save if path is not None
-        if path != None:
+        if path == None:
+            plt.show()
+        else:
             fig.savefig(path)
             plt.close()

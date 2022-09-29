@@ -25,8 +25,8 @@ def mylabel(i, label):
 
 
 def dirLat(cnt, ax=None):
-    _, lfactor, _ = utils.unitFactors()
-    C, T, t1, t2, a0 = utils.changeUnits(lfactor, 'C', 'T', 't1', 't2', 'a0')
+    _, lfactor, _ = utils.unitFactors(cnt)
+    C, T, t1, t2, a0 = utils.changeUnits(cnt, lfactor, 'C', 'T', 't1', 't2', 'a0')
     if ax is None:
         fig = plt.figure(figsize=(5, 5))
         ax = fig.add_axes([0.05, 0.05, 0.9, 0.9])
@@ -53,8 +53,8 @@ def dirLat(cnt, ax=None):
     return ax
 
 def recLat(cnt, ax=None):
-    _, _, invLfactor = utils.unitFactors()
-    KT, k1L, k2L, k1H, k2H, b0 = utils.changeUnits(invLfactor, 'KT', 'k1L', 'k2L', 'k1H', 'k2H', 'b0')
+    _, _, invLfactor = utils.unitFactors(cnt)
+    KT, k1L, k2L, k1H, k2H, b0 = utils.changeUnits(cnt, invLfactor, 'KT', 'k1L', 'k2L', 'k1H', 'k2H', 'b0')
     if ax is None:
         fig = plt.figure(figsize=(5, 5))
         ax = fig.add_axes([0.05, 0.05, 0.9, 0.9])
@@ -97,7 +97,7 @@ def recLat(cnt, ax=None):
     return ax
 
 def electronBands(cnt, sym='hel', ax=None):
-    efactor, _, invLfactor = utils.unitFactors()
+    efactor, _, invLfactor = utils.unitFactors(cnt)
     if ax is None:
         fig = plt.figure(figsize=(8, 5))
         ax = fig.add_axes([0.05, 0.05, 0.9, 0.9])

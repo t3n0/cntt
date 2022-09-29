@@ -48,6 +48,23 @@ def changeUnits(cnt, factor, *args):
     return newValues
 
 
+def textParams(cnt):
+    text = (
+        f"n, m = {cnt.n},{cnt.m}\n"
+        f"Diameter = {np.linalg.norm(cnt.C)/np.pi:.2f} nm\n"
+        f"C = {cnt.n:+d} a1 {cnt.m:+d} a2\n"
+        f"T = {cnt.p:+d} a1 {cnt.q:+d} a2\n"
+        f"t1 = {cnt.u1:+d} a1 {cnt.v1:+d} a2\n"
+        f"t2 = {cnt.u2:+d} a1 {cnt.v2:+d} a2\n"
+        f"NU = {cnt.NU}\n"
+        f"D = {cnt.D}\n"
+        f"BZ_lin = {cnt.normLin:.2f} nm-1\n"
+        f"BZ_hel = {cnt.normHel:.2f} nm-1\n"
+        f"K_ort = {cnt.normOrt:.2f} nm-1"
+    )
+    return text
+
+
 def save_file(*args, path, header=""):
     data = []
     for arg in args:
@@ -108,16 +125,16 @@ def bzCuts(k1, k2, N, ksteps):
     return np.array(cuts)
 
 
-def grapheneTBBands(cuts, a1, a2, gamma=3.0):
+def grapheneTBBands(cuts, a1, a2, gamma=3.0, fermi=0.0):
     bands = []
     for cut in cuts:
         band = gamma * np.sqrt(3 + 2 * np.cos(np.dot(cut, a1)) + 2 * np.cos(np.dot(cut, a2)) + 2 * np.cos(np.dot(cut, (a2 - a1))))
-        bands.append(band)
-        bands.append(-band)
+        bands.append(band - fermi)
+        bands.append(-band - fermi)
     return np.array(bands)
 
 
-def tightBindingElectronBands(cnt, name, sym='hel', gamma=3.0):
+def tightBindingElectronBands(cnt, name, sym='hel', gamma=3.0, fermi=0.0):
     attrCuts = f'bzCuts{sym.capitalize()}'
     attrNorm = f'norm{sym.capitalize()}'
     attrBands = f'electronBands{sym.capitalize()}'
@@ -126,7 +143,7 @@ def tightBindingElectronBands(cnt, name, sym='hel', gamma=3.0):
         bzNorm = getattr(cnt, attrNorm)
         subN, ksteps, _ = bzCuts.shape
         bz = np.linspace(-0.5, 0.5, ksteps) * bzNorm
-        bands = grapheneTBBands(bzCuts, cnt.a1, cnt.a2, gamma)
+        bands = grapheneTBBands(bzCuts, cnt.a1, cnt.a2, gamma, fermi)
         data = np.zeros((2*subN, 2, ksteps))
         data[:,0,:] = bz
         data[:,1,:] = bands
@@ -134,6 +151,9 @@ def tightBindingElectronBands(cnt, name, sym='hel', gamma=3.0):
     else:
         print(f'Cutlines "{sym}" not defined.')
 
+
+def effectiveMassExcitonBands(cnt, name, deltaK=10.0):
+    pass
 
 def findMinDelta(vec, k1, k2):
     norm = np.linalg.norm(vec)
