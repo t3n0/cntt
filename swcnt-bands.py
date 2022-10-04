@@ -20,25 +20,29 @@
 
 from swcnt.swcnt import Swcnt
 import swcnt.plotting as plt
+import swcnt.utils as utils
 
 cnt1 = Swcnt(4,2)
-#cnt2 = Swcnt(4,3)
 
-cnt1.calculateCuttingLines(31)
-cnt1.calculateElectronBands('TB', 'TB5+2', 'hel', gamma=2.0, fermi=2.0)
-cnt1.calculateElectronBands('TB', 'TB2', 'hel', gamma=2.0)
-cnt1.calculateElectronBands('TB', 'TB3.5', 'hel', gamma=3.5)
+cnt1.calculateCuttingLines(11)
+cnt1.calculateElectronBands('TB', 'TB2+2', 'hel', gamma=2.0, fermi=1.0)
+#cnt1.calculateElectronBands('TB', 'TB2', 'lin', gamma=2.0)
 
-cnt1.setUnits('Ry', 'bohr')
+vale, cond = utils.condValeBands(cnt1.electronBandsHel['TB2+2'])
+print(cond)
+
+x, y, yy, mask = utils.findFunctionListExtrema(cond,'min')
+print(x, mask)
 
 cnt1.plot()
-# plt.show()
 
-# plt.recLat(cnt1)
-# plt.electronBands(cnt1)
-# # plt.show()
+#cnt1.setUnits('Ry', 'bohr')
 
-# cnt1.setUnits('Ry', 'bohr')
+#plt.recLat(cnt1)
+#plt.electronBands(cnt1)
+#plt.show()
+
+
 
 # plt.recLat(cnt1)
 # plt.electronBands(cnt1)

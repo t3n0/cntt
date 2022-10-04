@@ -113,6 +113,8 @@ class Swcnt(object):
         # CNT data containers for electron and exciton bands, DOS, JDOS, etc
         self.electronBandsLin = {}
         self.electronBandsHel = {}
+        self.condKpointValleys = {}
+        self.valeKpointValleys = {}
         self.electronDOS = {}
         self.excitonBands = {}
         self.excitonDOS = {}
@@ -186,9 +188,43 @@ class Swcnt(object):
             print(f'Calculation {calc} not implemented.')
 
 
-    def calculateExcitonBands(self, calc, name, **kwargs):
+    def calculateKpointValleys(self, which=None):
+        '''
+        Calculate the (kx,ky) position of the minima and maxima of the electron band dispersion.
+
+        Note! The K valley extrema are calculated in the helical coordinate system.
+
+        Parameters:
+        -----------
+            which (str)     name of the helical electron band to use for the calculation
+                            optional, default = all
+        '''
+        if which == None:
+            keys = self.electronBandsHel.keys()
+        else:
+            keys = [which]
+        bzCuts = self.bzCutsHel
+        for key in keys:
+            condXY = []
+            valeXY = []
+            bands = self.electronBandsHel[key]
+            vale, cond = utils.condValeBands(bands)
+            _, _, _, condMasks = utils.findFunctionListExtrema(cond, 'min')
+            _, _, _, valeMasks = utils.findFunctionListExtrema(vale, 'max')
+            for condMask, cut in zip(condMasks, bzCuts):
+                condXY.append( cut[condMask] )
+            for Mask, cut in zip(condMasks, bzCuts):
+                condXY.append( cut[condMask] )
+
+
+
+
+    def calculateExcitonBands(self, calc, name, which, **kwargs):
         '''
         Calculate the exciton bands energy dispersion using different methods.
+        
+        Note! Excitons are always computed in helical coordinates. This means
+        that the underlying electron bands should also have helical symmetry.
 
         Parameters:
         -----------
@@ -196,6 +232,8 @@ class Swcnt(object):
                             can be either 'EffMass' or 'something' (more in the future)
 
             name (str):     unique name to identify the resulting bands
+
+            which (str):    name of the helical electron band to use for the calculation
 
             **kwargs:       key-value arguments depend on the calculation to
                             be performed.
@@ -205,7 +243,7 @@ class Swcnt(object):
                                                     optional, default = 10 nm-1
         '''
         if calc == 'EffMass' or calc == 'EM':
-            utils.effectiveMassExcitonBands(self, name, **kwargs)
+            utils.effectiveMassExcitonBands(self, name, which, **kwargs)
         elif calc == 'DFT':
             pass
         elif calc == 'something else':
@@ -339,7 +377,7 @@ class Swcnt(object):
         ax4 = fig.add_axes([0.25, 0.25, 0.58, 0.3])
         ax5 = fig.add_axes([0.83, 0.25, 0.15, 0.3])
         ax6 = fig.add_axes([0.25, 0.05, 0.58, 0.2])
-        ax7 = fig.add_axes([0.83, 0.05, 0.15, 0.2])
+        #ax7 = fig.add_axes([0.83, 0.05, 0.15, 0.2])
 
         plotting.dirLat(self, ax1)
         plotting.recLat(self, ax2)
@@ -351,6 +389,7 @@ class Swcnt(object):
         ax3.get_shared_y_axes().join(ax3, ax4) # "Matplotlib fai ribrezzo ai popoli del mondo!"
         ax4.set_yticklabels([])                # "Tu metti in subbuglio il mio sistema di donna sensibile!"
         ax4.set_ylabel('')                     # (Alida Valli)
+        ax4.get_shared_x_axes().join(ax4, ax6)
 
         # # ax6 plot excitons
         # for i,k in enumerate(self.excParaBands):
@@ -386,7 +425,7 @@ class Swcnt(object):
         ax5.set_yticklabels([])
         ax4.set_xticklabels([])
         ax5.set_xticklabels([])
-        ax7.set_yticklabels([])
+        #ax7.set_yticklabels([])
         # plt.text(0.05, 0.9, self.textParams(), ha="left", va="top", transform=fig.transFigure)
 
         # minElEn, maxElEn = 1.1 * np.min(-self.bandHel), 1.1 * np.max(self.bandHel)

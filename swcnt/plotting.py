@@ -81,10 +81,12 @@ def recLat(cnt, ax=None):
         cuts = invLfactor * cnt.bzCutsHel
         cutsPatches = linePatches(cuts[:, 0, 0], cuts[:, 0, 1], cuts[:, -1, 0] - cuts[:, 0, 0], cuts[:, -1, 1] - cuts[:, 0, 1], ec="b")
         ax.add_collection(cutsPatches)
-    if hasattr(cnt, 'bandMinXy'):
-        bandMinXy = invLfactor * cnt.bandMinXy
-        for mu in range(0, len(bandMinXy)):
-            ax.plot(*bandMinXy[mu].T, "r.")
+    # if hasattr(cnt, 'bandMinXy'):
+    #     bandMinXy = invLfactor * cnt.bandMinXy
+    #     for mu in range(0, len(bandMinXy)):
+    #         ax.plot(*bandMinXy[mu].T, "r.")
+    for key in cnt.condKpointValley:
+        xy = cnt.condKpointsValley[key]
     # plot
     ax.add_collection(hexs)
     ax.add_collection(recCells)

@@ -15,7 +15,9 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import argparse
+from email.policy import default
 import numpy as np
+import warnings
 
 
 # physical constants
@@ -101,20 +103,56 @@ def minVector2AtomUnitCell(l, k, n):
             return u, int(v)
 
 
-def findExtrema(x, y, which = 'max'):
-    prime = np.gradient(y, x)
-    second = np.gradient(prime, x)
-    threshold = np.max(prime) - np.min(prime)
-    if which == 'max':
-        mask1 = (np.roll(prime, 1) > 0) * (prime < 0) # derivative change sign, might be maximum
-    elif which == 'min':
-        mask1 = (np.roll(prime, 1) < 0) * (prime > 0) # derivative change sign, might be minimum
-    mask2 = np.abs(np.roll(prime, 1) - prime) > 0.3*threshold # delta derivative too big, might be dirac point
-    mask = mask1 & (~ mask2) # tilde is negation, not mask2
-    xExtrema = x[mask]
-    yExtrema = y[mask]
-    secondExtrema = second[mask]
-    return xExtrema, yExtrema, secondExtrema, mask
+def findFunctionExtrema(x, y, which = 'max'):
+    '''
+    Finds the extrema of a given function y = f(x).
+    Cusp points, like the Dirac point, are ignored.
+
+    Parameters:
+    -----------
+        x (float)       array, x values
+
+        y (float)       array, y = f(x) values
+
+        which (str)     'max' or 'min'
+    
+    Returns:
+    --------
+        xExt (float)    array, the x values of extrema
+
+        yExt (float)    array, the y values at the extrema points
+
+        secExt (float)  array, the second derivative of y at the extrema points
+
+        mask (bool)     array, boolean mask with True value at the extrema
+    '''
+    with warnings.catch_warnings(record=True) as caught_warnings:
+        prime = np.gradient(y, x)
+        second = np.gradient(prime, x)
+        threshold = np.max(prime) - np.min(prime)
+        if which == 'max':
+            mask1 = (np.roll(prime, 1) > 0) * (prime < 0) # derivative change sign, might be maximum
+        elif which == 'min':
+            mask1 = (np.roll(prime, 1) < 0) * (prime > 0) # derivative change sign, might be minimum
+        mask2 = np.abs(np.roll(prime, 1) - prime) > 0.3*threshold # delta derivative too big, might be dirac point
+        mask = mask1 & (~ mask2) # tilde is negation, not mask2
+        xExt = x[mask]
+        yExt = y[mask]
+        secExt = second[mask]
+        # print(caught_warnings) # when masks with np.nan are generated, there can be some RuntimeWarnings
+        return xExt, yExt, secExt, mask
+
+
+def findFunctionListExtrema(bands, which='min'):
+    xs, ys, yys, masks = [], [], [], []
+    for b in bands:
+        x, y, yy, mask = findFunctionExtrema(b[0], b[1], which)
+        if not len(x) == 0:
+            xs.append(x)
+            ys.append(y)
+            yys.append(yy)
+            masks.append(mask)
+    return xs, ys, yys, masks
 
 
 def bzCuts(k1, k2, N, ksteps):
@@ -154,8 +192,39 @@ def tightBindingElectronBands(cnt, name, sym='hel', gamma=3.0, fermi=0.0):
         print(f'Cutlines "{sym}" not defined.')
 
 
-def effectiveMassExcitonBands(cnt, name, deltaK = 10.0, bindEnergy = 0.0):
-    pass
+def condValeBands(bands):
+    condBands = []
+    valeBands = []
+    for band in bands:
+        cond = np.where(band[1]>0, band, np.nan)
+        vale = np.where(band[1]<0, band, np.nan)
+        if not np.all(np.isnan(cond)): # skip if there are no states at this energy
+            condBands.append( cond )
+        if not np.all(np.isnan(vale)): # skip if there are no states at this energy
+            valeBands.append( vale )
+    condBands = np.array(condBands)
+    valeBands = np.array(valeBands)
+    return valeBands, condBands
+
+
+# def effectiveMassExcitonBands(cnt, name, which, deltaK = 10.0, bindEnergy = 0.0):
+#     elBands = cnt.electronBandsHel[which]
+#     valeBands, condBands = condValeBands(elBands)
+#     xMax, yMax, secondMax, maskMax = findMinMax(valeBands, 'max')
+#     xMin, yMin, secondMin, maskMin = findMinMax(condBands, 'min')
+#     if len(xMin) > 0:
+#         self.bandMinHel.append(xMin)
+#         self.bandInvMasses.append(secondMin)
+#         self.bandEnergy.append(yMin)
+#         self.bandMinXy.append(self.bzCutsHel[mu][mask])
+#     if len(self.bandMinHel) > 0:
+#         self.bandMinHel = np.array(self.bandMinHel)
+#         self.bandInvMasses = np.array(self.bandInvMasses)
+#         self.bandEnergy = np.array(self.bandEnergy)
+#         self.bandMinXy = np.array(self.bandMinXy)
+#     else:
+#         print('No excitons found.')
+#         return
 
 def findMinDelta(vec, k1, k2):
     norm = np.linalg.norm(vec)
