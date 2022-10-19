@@ -22,17 +22,19 @@ from swcnt.swcnt import Swcnt
 import swcnt.plotting as plt
 import swcnt.utils as utils
 
-cnt1 = Swcnt(4,2)
+cnt1 = Swcnt(6,5)
 
-cnt1.calculateCuttingLines(11)
+cnt1.calculateCuttingLines(5)
 cnt1.calculateElectronBands('TB', 'TB2+2', 'hel', gamma=2.0, fermi=1.0)
-#cnt1.calculateElectronBands('TB', 'TB2', 'lin', gamma=2.0)
+cnt1.calculateElectronBands('TB', 'TB2', 'hel', gamma=2.0)
 
-vale, cond = utils.condValeBands(cnt1.electronBandsHel['TB2+2'])
-print(cond)
+cnt1.calculateKpointValleys()
 
-x, y, yy, mask = utils.findFunctionListExtrema(cond,'min')
-print(x, mask)
+#vale, cond = utils.condValeBands(cnt1.electronBandsHel['TB2+2'])
+#print(cond)
+
+#x, y, yy, mask = utils.findFunctionListExtrema(cond,'min')
+#print(x, mask)
 
 cnt1.plot()
 

@@ -43,9 +43,9 @@ class Swcnt(object):
     of single-walled carbon nanotubes (SWCNTs).
     Properties include:
         - direct and reciprocal lattice structure;
-        - electron, phonon and exciton energy dispersions;
+        - electron and exciton energy dispersions;
         - density of states (DOS) and joint density of states (JDOS);
-        - absorption spectra;
+        - absorption spectra (soon);
         - and more (soon).
     """
     def __init__(self, n, m, a0 = 0.2461):
@@ -204,18 +204,17 @@ class Swcnt(object):
         else:
             keys = [which]
         bzCuts = self.bzCutsHel
-        for key in keys:
-            condXY = []
-            valeXY = []
+        for key in keys: # band names
             bands = self.electronBandsHel[key]
-            vale, cond = utils.condValeBands(bands)
-            _, _, _, condMasks = utils.findFunctionListExtrema(cond, 'min')
-            _, _, _, valeMasks = utils.findFunctionListExtrema(vale, 'max')
-            for condMask, cut in zip(condMasks, bzCuts):
-                condXY.append( cut[condMask] )
-            for Mask, cut in zip(condMasks, bzCuts):
-                condXY.append( cut[condMask] )
-
+            subN, _, _, _ = bands.shape
+            self.condKpointValleys[key] = []
+            self.valeKpointValleys[key] = []
+            for mu in range(0, subN): # angular momentum
+                vale, cond = utils.valeCondBands(bands[mu])
+                _, _, _, condMasks = utils.findFunctionListExtrema(cond, 'min')
+                _, _, _, valeMasks = utils.findFunctionListExtrema(vale, 'max')
+                self.condKpointValleys[key].append( bzCuts[mu][tuple(condMasks)] )
+                self.valeKpointValleys[key].append( bzCuts[mu][tuple(valeMasks)] )
 
 
 

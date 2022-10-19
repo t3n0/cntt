@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.collections import PatchCollection
+from matplotlib.markers import MarkerStyle
 from matplotlib.cm import get_cmap
 import swcnt.utils as utils
 
@@ -81,12 +82,15 @@ def recLat(cnt, ax=None):
         cuts = invLfactor * cnt.bzCutsHel
         cutsPatches = linePatches(cuts[:, 0, 0], cuts[:, 0, 1], cuts[:, -1, 0] - cuts[:, 0, 0], cuts[:, -1, 1] - cuts[:, 0, 1], ec="b")
         ax.add_collection(cutsPatches)
-    # if hasattr(cnt, 'bandMinXy'):
-    #     bandMinXy = invLfactor * cnt.bandMinXy
-    #     for mu in range(0, len(bandMinXy)):
-    #         ax.plot(*bandMinXy[mu].T, "r.")
-    for key in cnt.condKpointValley:
-        xy = cnt.condKpointsValley[key]
+    # KpointValleys
+    for key in cnt.condKpointValleys:
+        for xys in cnt.condKpointValleys[key]:
+            for xy in xys:
+                ax.scatter(xy[0], xy[1], s=50, c='white', edgecolor='black', marker=MarkerStyle("o", fillstyle="right"))
+    for key in cnt.valeKpointValleys:
+        for xys in cnt.valeKpointValleys[key]:
+            for xy in xys:
+                ax.scatter(xy[0], xy[1], s=50, c='white', edgecolor='black', marker=MarkerStyle("o", fillstyle="left"))
     # plot
     ax.add_collection(hexs)
     ax.add_collection(recCells)
@@ -106,11 +110,15 @@ def electronBands(cnt, sym='hel', ax=None):
     dicBands = getattr(cnt, f'electronBands{sym.capitalize()}')
     NN = len(dicBands)
     for i, key in enumerate(dicBands):
+        label = key
         bands = dicBands[key]
-        for mu in range(0, len(bands)):
-            ax.plot(invLfactor*bands[mu,0,:], efactor*bands[mu,1,:], color=mycolors(i,NN), label=mylabel(mu,key))
-            ax.set_ylabel(f'Energy ({cnt.unitE})')
-            ax.set_xlabel(f'k ({cnt.unitInvL})')
+        subN, bandN, _, _ = bands.shape
+        for mu in range(0, subN): # loop over the cuts
+            for n in range(0, bandN): # loop over the bands for the given cut
+                ax.plot(invLfactor*bands[mu, n, 0, :], efactor*bands[mu,n,1,:], color=mycolors(i,NN), label=label)
+                ax.set_ylabel(f'Energy ({cnt.unitE})')
+                ax.set_xlabel(f'k ({cnt.unitInvL})')
+                label = '_'
     ax.legend()
 
 def excitonBands(cnt):

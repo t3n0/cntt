@@ -165,13 +165,9 @@ def bzCuts(k1, k2, N, ksteps):
     return np.array(cuts)
 
 
-def grapheneTBBands(cuts, a1, a2, gamma=3.0, fermi=0.0):
-    bands = []
-    for cut in cuts:
-        band = gamma * np.sqrt(3 + 2 * np.cos(np.dot(cut, a1)) + 2 * np.cos(np.dot(cut, a2)) + 2 * np.cos(np.dot(cut, (a2 - a1))))
-        bands.append(band - fermi)
-        bands.append(-band - fermi)
-    return np.array(bands)
+def grapheneTBBands(k, a1, a2, gamma=3.0):
+    band = gamma * np.sqrt(3 + 2 * np.cos(np.dot(k, a1)) + 2 * np.cos(np.dot(k, a2)) + 2 * np.cos(np.dot(k, (a2 - a1))))
+    return band
 
 
 def tightBindingElectronBands(cnt, name, sym='hel', gamma=3.0, fermi=0.0):
@@ -183,16 +179,19 @@ def tightBindingElectronBands(cnt, name, sym='hel', gamma=3.0, fermi=0.0):
         bzNorm = getattr(cnt, attrNorm)
         subN, ksteps, _ = bzCuts.shape
         bz = np.linspace(-0.5, 0.5, ksteps) * bzNorm
-        bands = grapheneTBBands(bzCuts, cnt.a1, cnt.a2, gamma, fermi)
-        data = np.zeros((2*subN, 2, ksteps))
-        data[:,0,:] = bz
-        data[:,1,:] = bands
-        getattr(cnt, attrBands)[name] = data
+        bands = np.zeros( (subN, 2, 2, ksteps) ) # bands = E_n^mu(k), bands[mu index, n index, k or energy index, grid]
+        bands[:,:,0,:] = bz
+        for mu, cut in enumerate(bzCuts):
+            upperBand = grapheneTBBands(cut, cnt.a1, cnt.a2, gamma) - fermi
+            lowerBand = -grapheneTBBands(cut, cnt.a1, cnt.a2, gamma) - fermi
+            bands[mu, 0, 1, :] = lowerBand
+            bands[mu, 1, 1, :] = upperBand
+        getattr(cnt, attrBands)[name] = bands
     else:
         print(f'Cutlines "{sym}" not defined.')
 
 
-def condValeBands(bands):
+def valeCondBands(bands):
     condBands = []
     valeBands = []
     for band in bands:
@@ -243,12 +242,9 @@ def excBands(helPos, invMass, energy, deltak, kstep):
     return kmesh-helPos, band
 
 
-def opt_mat_elems(k, a1, a2, n, m):
-    N = n ** 2 + n * m + m ** 2
-    elem = (((n - m) * np.cos(np.dot(k, (a2 - a1))) - (2 * n + m) * np.cos(np.dot(k, a1)) + (n + 2 * m) * np.cos(np.dot(k, a2))) / 2 / np.sqrt(N) / _bands(k, a1, a2))
-    return elem
+# def opt_mat_elems(k, a1, a2, n, m):
+#     N = n ** 2 + n * m + m ** 2
+#     elem = (((n - m) * np.cos(np.dot(k, (a2 - a1))) - (2 * n + m) * np.cos(np.dot(k, a1)) + (n + 2 * m) * np.cos(np.dot(k, a2))) / 2 / np.sqrt(N) / _bands(k, a1, a2))
+#     return elem
 
 
-def _bands(k, a1, a2):
-    band = np.sqrt(3 + 2 * np.cos(np.dot(k, a1)) + 2 * np.cos(np.dot(k, a2)) + 2 * np.cos(np.dot(k, (a2 - a1))))
-    return band
