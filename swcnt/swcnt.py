@@ -113,8 +113,17 @@ class Swcnt(object):
         # CNT data containers for electron and exciton bands, DOS, JDOS, etc
         self.electronBandsLin = {}
         self.electronBandsHel = {}
+
         self.condKpointValleys = {}
+        self.condEnergyZeros = {}
+        self.condKpointZeros = {}
+        self.condInvMasses = {}
+
         self.valeKpointValleys = {}
+        self.valeEnergyZeros = {}
+        self.valeKpointZeros = {}
+        self.valeInvMasses = {}
+
         self.excitonBands = {}
         self.excitonDOS = {}
         self.electronDOS = {}
@@ -201,17 +210,56 @@ class Swcnt(object):
         bzCuts = self.bzCutsHel
         bands = self.electronBandsHel[which]
         subN, _, _, _ = bands.shape
+
         self.condKpointValleys[which] = []
+        self.condInvMasses[which] = []
+        self.condEnergyZeros[which] = []
+        self.condKpointZeros[which] = []
+
         self.valeKpointValleys[which] = []
+        self.valeInvMasses[which] = []
+        self.valeEnergyZeros[which] = []
+        self.valeKpointZeros[which] = []
+
         for mu in range(0, subN): # angular momentum
-            vale, cond = utils.valeCondBands(bands[mu])
-            condMasks = utils.findFunctionListExtrema(cond, 'min')
-            valeMasks = utils.findFunctionListExtrema(vale, 'max')
+            vales, conds = utils.valeCondBands(bands[mu])
+            condMasks = utils.findFunctionListExtrema(conds, 'min')
+            valeMasks = utils.findFunctionListExtrema(vales, 'max')
             cuts = bzCuts[mu]
-            for condMask in condMasks:
-                self.condKpointValleys[which].append( cuts[condMask] )
-            for valeMask in valeMasks:
-                self.valeKpointValleys[which].append( cuts[valeMask] )
+            
+            # valence band properties
+            energyZeros = []
+            kpointZeros = []
+            invMasses = []
+            kValley = []
+            for vale, mask in zip(vales, valeMasks):
+                prime = np.gradient(vale[1], vale[0])
+                second = np.gradient(prime, vale[0])
+                energyZeros.append( vale[1][mask] )
+                kpointZeros.append( vale[0][mask] )
+                invMasses.append( second[mask] )
+                kValley.append( cuts[mask] )
+            self.valeKpointValleys[which].append( kValley )
+            self.valeEnergyZeros[which].append( energyZeros )
+            self.valeKpointZeros[which].append( kpointZeros )
+            self.valeInvMasses[which].append( invMasses )
+            
+            # conduction band properties
+            energyZeros = []
+            kpointZeros = []
+            invMasses = []
+            kValley = []
+            for cond, mask in zip(conds, condMasks):
+                prime = np.gradient(cond[1], cond[0])
+                second = np.gradient(prime, cond[0])
+                energyZeros.append( cond[1][mask] )
+                kpointZeros.append( cond[0][mask] )
+                invMasses.append( second[mask] )
+                kValley.append( cuts[mask] )
+            self.condKpointValleys[which].append( kValley )
+            self.condEnergyZeros[which].append( energyZeros )
+            self.condKpointZeros[which].append( kpointZeros )
+            self.condInvMasses[which].append( invMasses )
 
 
     def calculateExcitonBands(self, calc, name, which, **kwargs):

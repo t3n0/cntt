@@ -83,14 +83,16 @@ def recLat(cnt, ax=None):
         cutsPatches = linePatches(cuts[:, 0, 0], cuts[:, 0, 1], cuts[:, -1, 0] - cuts[:, 0, 0], cuts[:, -1, 1] - cuts[:, 0, 1], ec="b")
         ax.add_collection(cutsPatches)
     # KpointValleys
-    for key in cnt.condKpointValleys:
-        for xys in cnt.condKpointValleys[key]:
-            for xy in xys:
-                ax.scatter(xy[0], xy[1], s=50, c='white', edgecolor='black', marker=MarkerStyle("o", fillstyle="right"))
+    for key in cnt.condKpointValleys:           # name of the calculation
+        for cuts in cnt.condKpointValleys[key]: # mu index
+            for xys in cuts:                    # band index
+                for xy in xys:                  # extrema index
+                    ax.scatter(xy[0], xy[1], s=50, c='white', edgecolor='black', marker=MarkerStyle("o", fillstyle="right"))
     for key in cnt.valeKpointValleys:
-        for xys in cnt.valeKpointValleys[key]:
-            for xy in xys:
-                ax.scatter(xy[0], xy[1], s=50, c='white', edgecolor='black', marker=MarkerStyle("o", fillstyle="left"))
+        for cuts in cnt.valeKpointValleys[key]:
+            for xys in cuts:
+                for xy in xys:
+                    ax.scatter(xy[0], xy[1], s=50, c='white', edgecolor='black', marker=MarkerStyle("o", fillstyle="left"))
     # plot
     ax.add_collection(hexs)
     ax.add_collection(recCells)

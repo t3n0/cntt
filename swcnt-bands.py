@@ -29,7 +29,9 @@ cnt1.calculateElectronBands('TB', 'TB2+1', 'hel', gamma=2.0, fermi=1.0)
 #cnt1.calculateElectronBands('TB', 'TB2', 'hel', gamma=2.0)
 
 cnt1.calculateKpointValleys('TB2+1')
-cnt1.calculateExcitonBands('EM','pollo','TB2+1')
+
+print(cnt1.valeEnergyZeros['TB2+1'][1])
+#cnt1.calculateExcitonBands('EM','pollo','TB2+1')
 #vale, cond = utils.condValeBands(cnt1.electronBandsHel['TB2+2'])
 #print(cond)
 
