@@ -119,6 +119,7 @@ def electronBands(cnt, sym='hel', ax=None):
                 ax.set_ylabel(f'Energy ({cnt.unitE})')
                 ax.set_xlabel(f'k ({cnt.unitInvL})')
                 label = '_'
+    ax.axhline(0,ls='--',c='grey')
     ax.legend()
 
 def excitonBands(cnt):

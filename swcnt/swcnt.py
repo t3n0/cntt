@@ -115,9 +115,9 @@ class Swcnt(object):
         self.electronBandsHel = {}
         self.condKpointValleys = {}
         self.valeKpointValleys = {}
-        self.electronDOS = {}
         self.excitonBands = {}
         self.excitonDOS = {}
+        self.electronDOS = {}
 
     def setUnits(self, energy, length):
         '''
@@ -188,7 +188,7 @@ class Swcnt(object):
             print(f'Calculation {calc} not implemented.')
 
 
-    def calculateKpointValleys(self, which=None):
+    def calculateKpointValleys(self, which):
         '''
         Calculate the (kx,ky) position of the minima and maxima of the electron band dispersion.
 
@@ -197,25 +197,21 @@ class Swcnt(object):
         Parameters:
         -----------
             which (str)     name of the helical electron band to use for the calculation
-                            optional, default = all
         '''
-        if which == None:
-            keys = self.electronBandsHel.keys()
-        else:
-            keys = [which]
         bzCuts = self.bzCutsHel
-        for key in keys: # band names
-            bands = self.electronBandsHel[key]
-            subN, _, _, _ = bands.shape
-            self.condKpointValleys[key] = []
-            self.valeKpointValleys[key] = []
-            for mu in range(0, subN): # angular momentum
-                vale, cond = utils.valeCondBands(bands[mu])
-                _, _, _, condMasks = utils.findFunctionListExtrema(cond, 'min')
-                _, _, _, valeMasks = utils.findFunctionListExtrema(vale, 'max')
-                self.condKpointValleys[key].append( bzCuts[mu][tuple(condMasks)] )
-                self.valeKpointValleys[key].append( bzCuts[mu][tuple(valeMasks)] )
-
+        bands = self.electronBandsHel[which]
+        subN, _, _, _ = bands.shape
+        self.condKpointValleys[which] = []
+        self.valeKpointValleys[which] = []
+        for mu in range(0, subN): # angular momentum
+            vale, cond = utils.valeCondBands(bands[mu])
+            condMasks = utils.findFunctionListExtrema(cond, 'min')
+            valeMasks = utils.findFunctionListExtrema(vale, 'max')
+            cuts = bzCuts[mu]
+            for condMask in condMasks:
+                self.condKpointValleys[which].append( cuts[condMask] )
+            for valeMask in valeMasks:
+                self.valeKpointValleys[which].append( cuts[valeMask] )
 
 
     def calculateExcitonBands(self, calc, name, which, **kwargs):
@@ -239,7 +235,12 @@ class Swcnt(object):
 
                             EffMass calculation:
                                 deltaK (float):     width of the exciton parabolic bands
-                                                    optional, default = 10 nm-1
+                                                    optional, default = 10.0 nm-1
+                                
+                                bindEnergy
+                                        (float):    binding energy between electron and
+                                                    hole states
+                                                    optional, default = 0.0 eV
         '''
         if calc == 'EffMass' or calc == 'EM':
             utils.effectiveMassExcitonBands(self, name, which, **kwargs)

@@ -22,14 +22,14 @@ from swcnt.swcnt import Swcnt
 import swcnt.plotting as plt
 import swcnt.utils as utils
 
-cnt1 = Swcnt(6,5)
+cnt1 = Swcnt(4,2)
 
-cnt1.calculateCuttingLines(5)
-cnt1.calculateElectronBands('TB', 'TB2+2', 'hel', gamma=2.0, fermi=1.0)
-cnt1.calculateElectronBands('TB', 'TB2', 'hel', gamma=2.0)
+cnt1.calculateCuttingLines(15)
+cnt1.calculateElectronBands('TB', 'TB2+1', 'hel', gamma=2.0, fermi=1.0)
+#cnt1.calculateElectronBands('TB', 'TB2', 'hel', gamma=2.0)
 
-cnt1.calculateKpointValleys()
-
+cnt1.calculateKpointValleys('TB2+1')
+cnt1.calculateExcitonBands('EM','pollo','TB2+1')
 #vale, cond = utils.condValeBands(cnt1.electronBandsHel['TB2+2'])
 #print(cond)
 
