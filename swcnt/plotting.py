@@ -61,10 +61,17 @@ def recLat(cnt, ax=None):
         ax = fig.add_axes([0.05, 0.05, 0.9, 0.9])
     # hexagons
     boundVectors = k1L - 0.5*KT, \
-        k1L + k2L- KT, k2L- 0.5*KT, \
+        k1L + k2L - KT, k2L - 0.5*KT, \
         k1H + 0.5*cnt.NU/cnt.D*KT, \
         k1H + k2H + cnt.NU/cnt.D*KT, \
-        k2H + 0.5*cnt.NU/cnt.D*KT
+        k2H + 0.5*cnt.NU/cnt.D*KT, \
+        0.5*cnt.NU/cnt.D*KT, \
+        k1H - 0.5*cnt.NU/cnt.D*KT
+    # boundVectors = k1L - 0.5*KT, \
+    #     k1L + k2L - KT, k2L - 0.5*KT, \
+    #     k1H , \
+    #     k1H + k2H , \
+    #     k2H 
     minx, maxx, miny, maxy = boundingRectangle(*boundVectors)
     hexs = recHexPatches(minx, maxx, miny, maxy, b0)
     # cells
