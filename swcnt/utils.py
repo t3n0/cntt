@@ -210,37 +210,50 @@ def effectiveMassExcitonBands(cnt, name, which, deltaK = 10.0, bindEnergy = 0.0)
     '''
     Calculates the exciton energy dispersion in the effective mass approximation.
     '''
-    bands = cnt.electronBandsHel[which]
-    subN, _, _, _ = bands.shape
-    for mu in range(0, subN): # angular momentum
-        print(mu)
-        vales, conds = valeCondBands(bands[mu])
-        condMasks = findFunctionListExtrema(conds, 'min')
-        valeMasks = findFunctionListExtrema(vales, 'max')
-        for vale in vales:
-            print(vale[1])
-            prime = np.gradient(vale[1], vale[0])
-            second = np.gradient(prime, vale[0])
-            print(prime)
-            print(second)
+    
+    condValleys = cnt.condKpointValleys[which]
+    condInvMasses = cnt.condInvMasses[which]
+    condEnergyZeros = cnt.condEnergyZeros[which]
+    condKpointZeros = cnt.condKpointZeros[which]
 
-    # elBands = cnt.electronBandsHel[which]
-    # valeBands, condBands = valeCondBands(elBands)
-    # xMax, yMax, secondMax, maskMax = findFunctionExtrema(valeBands, 'max')
-    # xMin, yMin, secondMin, maskMin = findFunctionExtrema(condBands, 'min')
-    # if len(xMin) > 0:
-    #     self.bandMinHel.append(xMin)
-    #     self.bandInvMasses.append(secondMin)
-    #     self.bandEnergy.append(yMin)
-    #     self.bandMinXy.append(self.bzCutsHel[mu][mask])
-    # if len(self.bandMinHel) > 0:
-    #     self.bandMinHel = np.array(self.bandMinHel)
-    #     self.bandInvMasses = np.array(self.bandInvMasses)
-    #     self.bandEnergy = np.array(self.bandEnergy)
-    #     self.bandMinXy = np.array(self.bandMinXy)
-    # else:
-    #     print('No excitons found.')
-    #     return
+    valeValleys = cnt.valeKpointValleys[which]
+    valeInvMasses = cnt.valeInvMasses[which]
+    valeEnergyZeros = cnt.valeEnergyZeros[which]
+    valeKpointZeros = cnt.valeKpointZeros[which]
+
+    for mu in range(len(condInvMasses)):
+        for n in range(len(condInvMasses[mu])):
+            for i in range(len(condInvMasses[mu][n])):
+                condInvMass = abs( condInvMasses[mu][n][i] )
+                condEnergy = condEnergyZeros[mu][n][i]
+                condKpoint = condKpointZeros[mu][n][i]
+                condValley = condValleys[mu][n][i]
+                for nu in range(len(valeInvMasses)):
+                    for m in range(len(valeInvMasses[nu])):
+                        for j in range(len(valeInvMasses[nu][m])):
+                            valeInvMass = abs( valeInvMasses[nu][m][j] )
+                            valeEnergy = valeEnergyZeros[nu][m][j]
+                            valeKpoint = valeKpointZeros[nu][m][j]
+                            valeValley = valeValleys[nu][m][j]
+
+                            print(mu,n,i,nu,m,j, condEnergy, valeEnergy)
+
+                            deltaNorm = minimumPbcNorm(condValley - valeValley, cnt.k1H, cnt.k2H)
+                            kpoint = (condKpoint - valeKpoint + cnt.normHel / 2) % cnt.normHel - cnt.normHel / 2
+                            invMass = condInvMass * valeInvMass / (condInvMass + valeInvMass)
+                            energy = condEnergy - valeEnergy - bindEnergy
+
+                            if deltaNorm < 1e-4:
+                                # parallel excitons
+                                cnt.excitonBands[f"{name}.para.{mu}.{n}.{i}.{nu}.{m}.{j}"] = excBands(kpoint, invMass, energy, deltaK, 20)
+                            elif 0.6*cnt.normKC < deltaNorm < 1.4*cnt.normKC:
+                                # perpendicular excitons
+                                cnt.excitonBands[f"{name}.perp.{mu}.{n}.{i}.{nu}.{m}.{j}"] = excBands(kpoint, invMass, energy, deltaK, 20)
+                            else:
+                                # dark excitons
+                                cnt.excitonBands[f"{name}.dark.{mu}.{n}.{i}.{nu}.{m}.{j}"] = excBands(kpoint, invMass, energy, deltaK, 20)
+
+
 
 def minimumPbcNorm(vec, k1, k2):
     '''

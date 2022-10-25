@@ -67,11 +67,6 @@ def recLat(cnt, ax=None):
         k2H + 0.5*cnt.NU/cnt.D*KT, \
         0.5*cnt.NU/cnt.D*KT, \
         k1H - 0.5*cnt.NU/cnt.D*KT
-    # boundVectors = k1L - 0.5*KT, \
-    #     k1L + k2L - KT, k2L - 0.5*KT, \
-    #     k1H , \
-    #     k1H + k2H , \
-    #     k2H 
     minx, maxx, miny, maxy = boundingRectangle(*boundVectors)
     hexs = recHexPatches(minx, maxx, miny, maxy, b0)
     # cells
@@ -131,8 +126,12 @@ def electronBands(cnt, sym='hel', ax=None):
     ax.axhline(0,ls='--',c='grey')
     ax.legend()
 
-def excitonBands(cnt):
-    pass
+def excitonBands(cnt, ax=None):
+    if ax is None:
+        fig = plt.figure(figsize=(8, 5))
+        ax = fig.add_axes([0.05, 0.05, 0.9, 0.9])
+    for k in cnt.excitonBands:
+        ax.plot(*cnt.excitonBands[k])
 
 def boundingRectangle(*args):
     vecs = [[0.0, 0.0]]
