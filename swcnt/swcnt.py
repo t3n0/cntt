@@ -386,7 +386,7 @@ class Swcnt(object):
         ax4 = fig.add_axes([0.25, 0.25, 0.58, 0.3])
         ax5 = fig.add_axes([0.83, 0.25, 0.15, 0.3])
         ax6 = fig.add_axes([0.25, 0.05, 0.58, 0.2])
-        #ax7 = fig.add_axes([0.83, 0.05, 0.15, 0.2])
+        ax7 = fig.add_axes([0.83, 0.05, 0.15, 0.2])
 
         plotting.dirLat(self, ax1)
         plotting.recLat(self, ax2)
@@ -416,19 +416,15 @@ class Swcnt(object):
         ax5.set_yticklabels([])
         ax4.set_xticklabels([])
         ax5.set_xticklabels([])
-        #ax7.set_yticklabels([])
-        # plt.text(0.05, 0.9, self.textParams(), ha="left", va="top", transform=fig.transFigure)
+        ax7.set_yticklabels([])
+        plt.text(0.05, 0.9, utils.textParams(self), ha="left", va="top", transform=fig.transFigure)
 
-        # minElEn, maxElEn = 1.1 * np.min(-self.bandHel), 1.1 * np.max(self.bandHel)
-        # minBzHel, maxBzHel = 1.1 * np.min(self.bzHel), 1.1 * np.max(self.bzHel)
-        # for ax in [ax4, ax6]:
-        #     ax.set_xlim(minBzHel, maxBzHel)
-        #     ax.locator_params(axis='x', nbins=20)
-        # for ax in [ax3, ax4, ax5]:
-        #     ax.set_ylim(minElEn, maxElEn)
-        #     ax.locator_params(axis='y', nbins=10)
-        # for ax in [ax3, ax4, ax5, ax6, ax7]:    
-        #     ax.grid(linestyle='--')
+        for ax in [ax4, ax6]:
+            ax.locator_params(axis='x', nbins=10)
+        for ax in [ax3, ax4, ax5]:
+            ax.locator_params(axis='y', nbins=6)
+        for ax in [ax3, ax4, ax5, ax6, ax7]:    
+            ax.grid(linestyle='--')
 
 
         # save if path is not None

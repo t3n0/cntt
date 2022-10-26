@@ -50,18 +50,19 @@ def changeUnits(cnt, factor, *args):
 
 
 def textParams(cnt):
+    eFactor, lFactor, invLFactor = unitFactors(cnt)
     text = (
         f"n, m = {cnt.n},{cnt.m}\n"
-        f"Diameter = {np.linalg.norm(cnt.C)/np.pi:.2f} nm\n"
+        f"Diameter = {lFactor * np.linalg.norm(cnt.C)/np.pi:.2f} {cnt.unitL}\n"
         f"C = {cnt.n:+d} a1 {cnt.m:+d} a2\n"
         f"T = {cnt.p:+d} a1 {cnt.q:+d} a2\n"
         f"t1 = {cnt.u1:+d} a1 {cnt.v1:+d} a2\n"
         f"t2 = {cnt.u2:+d} a1 {cnt.v2:+d} a2\n"
         f"NU = {cnt.NU}\n"
         f"D = {cnt.D}\n"
-        f"BZ_lin = {cnt.normLin:.2f} nm-1\n"
-        f"BZ_hel = {cnt.normHel:.2f} nm-1\n"
-        f"K_ort = {cnt.normOrt:.2f} nm-1"
+        f"BZ_lin = {invLFactor * cnt.normLin:.2f} {cnt.unitInvL}\n"
+        f"BZ_hel = {invLFactor * cnt.normHel:.2f} {cnt.unitInvL}\n"
+        f"K_ort = {invLFactor * cnt.normOrt:.2f} {cnt.unitInvL}"
     )
     return text
 
