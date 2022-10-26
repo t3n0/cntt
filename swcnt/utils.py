@@ -179,7 +179,7 @@ def tightBindingElectronBands(cnt, name, sym='hel', gamma=3.0, fermi=0.0):
         bzNorm = getattr(cnt, attrNorm)
         subN, ksteps, _ = bzCuts.shape
         bz = np.linspace(-0.5, 0.5, ksteps) * bzNorm
-        bands = np.zeros( (subN, 2, 2, ksteps) ) # bands = E_n^mu(k), bands[mu index, n index, k or energy index, grid]
+        bands = np.zeros( (subN, 2, 2, ksteps) ) # bands = E_n^mu(k), bands[mu index, n index, k or energy index, grid index]
         bands[:,:,0,:] = bz
         for mu, cut in enumerate(bzCuts):
             upperBand =   grapheneTBBands(cut, cnt.a1, cnt.a2, gamma) - fermi
@@ -221,22 +221,29 @@ def effectiveMassExcitonBands(cnt, name, which, deltaK = 10.0, bindEnergy = 0.0)
     valeEnergyZeros = cnt.valeEnergyZeros[which]
     valeKpointZeros = cnt.valeKpointZeros[which]
 
-    for mu in range(len(condInvMasses)):
-        for n in range(len(condInvMasses[mu])):
-            for i in range(len(condInvMasses[mu][n])):
+    counter = 0
+    excBands = {}
+
+    kSteps = int(deltaK / cnt.normLin * cnt.kStepsLin)
+
+    for mu in range(len(condInvMasses)):                # cut index
+        for n in range(len(condInvMasses[mu])):         # band index
+            for i in range(len(condInvMasses[mu][n])):  # valley index
                 condInvMass = abs( condInvMasses[mu][n][i] )
                 condEnergy = condEnergyZeros[mu][n][i]
                 condKpoint = condKpointZeros[mu][n][i]
                 condValley = condValleys[mu][n][i]
-                for nu in range(len(valeInvMasses)):
-                    for m in range(len(valeInvMasses[nu])):
-                        for j in range(len(valeInvMasses[nu][m])):
+                for nu in range(len(valeInvMasses)):                # cut index
+                    for m in range(len(valeInvMasses[nu])):         # band index
+                        for j in range(len(valeInvMasses[nu][m])):  # valley index
                             valeInvMass = abs( valeInvMasses[nu][m][j] )
                             valeEnergy = valeEnergyZeros[nu][m][j]
                             valeKpoint = valeKpointZeros[nu][m][j]
                             valeValley = valeValleys[nu][m][j]
 
-                            print(mu,n,i,nu,m,j, condEnergy, valeEnergy)
+                            counter += 1
+
+                            print(counter, mu,n,i,nu,m,j, condEnergy, valeEnergy)
 
                             deltaNorm = minimumPbcNorm(condValley - valeValley, cnt.k1H, cnt.k2H)
                             kpoint = (condKpoint - valeKpoint + cnt.normHel / 2) % cnt.normHel - cnt.normHel / 2
@@ -245,13 +252,14 @@ def effectiveMassExcitonBands(cnt, name, which, deltaK = 10.0, bindEnergy = 0.0)
 
                             if deltaNorm < 1e-4:
                                 # parallel excitons
-                                cnt.excitonBands[f"{name}.para.{mu}.{n}.{i}.{nu}.{m}.{j}"] = excBands(kpoint, invMass, energy, deltaK, 20)
+                                excBands[f"para.{mu}.{n}.{i}.{nu}.{m}.{j}"] = excitonBandDispersion(kpoint, invMass, energy, deltaK, kSteps)
                             elif 0.6*cnt.normKC < deltaNorm < 1.4*cnt.normKC:
                                 # perpendicular excitons
-                                cnt.excitonBands[f"{name}.perp.{mu}.{n}.{i}.{nu}.{m}.{j}"] = excBands(kpoint, invMass, energy, deltaK, 20)
+                                excBands[f"perp.{mu}.{n}.{i}.{nu}.{m}.{j}"] = excitonBandDispersion(kpoint, invMass, energy, deltaK, kSteps)
                             else:
                                 # dark excitons
-                                cnt.excitonBands[f"{name}.dark.{mu}.{n}.{i}.{nu}.{m}.{j}"] = excBands(kpoint, invMass, energy, deltaK, 20)
+                                excBands[f"dark.{mu}.{n}.{i}.{nu}.{m}.{j}"] = excitonBandDispersion(kpoint, invMass, energy, deltaK, kSteps)
+    cnt.excitonBands[name] = excBands
 
 
 
@@ -270,7 +278,7 @@ def minimumPbcNorm(vec, k1, k2):
     return norm
 
 
-def excBands(helPos, invMass, energy, deltak, kstep):
+def excitonBandDispersion(helPos, invMass, energy, deltak, kstep):
     kmesh = np.linspace(-0.5*deltak, 0.5*deltak, kstep)
     band = 0.5 * invMass * kmesh ** 2 + energy
     return kmesh-helPos, band

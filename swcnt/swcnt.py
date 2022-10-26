@@ -154,10 +154,10 @@ class Swcnt(object):
             ksteps (int):   number of kpoints for the discretisation
                             optional, default = 51
         '''
-        kstepsLin = ksteps
-        kstepsHel = int(self.normHel / self.normLin * kstepsLin)
-        self.bzCutsLin = utils.bzCuts(self.KT, self.KC, self.NU, kstepsLin)
-        self.bzCutsHel = utils.bzCuts(self.k2H, self.k1H / self.D, self.D, kstepsHel)
+        self.kStepsLin = ksteps
+        self.kStepsHel = int(self.normHel / self.normLin * self.kStepsLin)
+        self.bzCutsLin = utils.bzCuts(self.KT, self.KC, self.NU, self.kStepsLin)
+        self.bzCutsHel = utils.bzCuts(self.k2H, self.k1H / self.D, self.D, self.kStepsHel)
 
 
     def calculateElectronBands(self, calc, name, sym, **kwargs):

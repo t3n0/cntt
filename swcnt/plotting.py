@@ -126,12 +126,22 @@ def electronBands(cnt, sym='hel', ax=None):
     ax.axhline(0,ls='--',c='grey')
     ax.legend()
 
+
 def excitonBands(cnt, ax=None):
+    efactor, _, invLfactor = utils.unitFactors(cnt)
     if ax is None:
         fig = plt.figure(figsize=(8, 5))
         ax = fig.add_axes([0.05, 0.05, 0.9, 0.9])
-    for k in cnt.excitonBands:
-        ax.plot(*cnt.excitonBands[k])
+    NN = len(cnt.excitonBands)
+    for i, name in enumerate(cnt.excitonBands):
+        label = name
+        for key in cnt.excitonBands[name]:
+            ax.plot(invLfactor*cnt.excitonBands[name][key][0], efactor*cnt.excitonBands[name][key][1], color=mycolors(i,NN), label=label)
+            ax.set_ylabel(f'Energy ({cnt.unitE})')
+            ax.set_xlabel(f'k ({cnt.unitInvL})')
+            label = '_'
+    ax.legend()
+
 
 def boundingRectangle(*args):
     vecs = [[0.0, 0.0]]

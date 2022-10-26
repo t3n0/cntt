@@ -25,16 +25,17 @@ import swcnt.utils as utils
 cnt1 = Swcnt(4,2)
 
 cnt1.calculateCuttingLines(25)
-cnt1.calculateElectronBands('TB', 'TB2+1', 'hel', gamma=2.0, fermi=0.0)
-#cnt1.calculateElectronBands('TB', 'TB2', 'hel', gamma=2.0)
+cnt1.calculateElectronBands('TB', 'TB2+1', 'hel', gamma=2.0, fermi=1.9)
+cnt1.calculateElectronBands('TB', 'TB2', 'hel', gamma=2.0)
 
 cnt1.calculateKpointValleys('TB2+1')
+cnt1.calculateKpointValleys('TB2')
 
-
-cnt1.calculateExcitonBands('EM','pollo','TB2+1', deltaK=5)
+cnt1.calculateExcitonBands('EM','pollo1','TB2+1', deltaK=10)
+cnt1.calculateExcitonBands('EM','pollo2','TB2', deltaK=5, bindEnergy=0.5)
 
 plt.excitonBands(cnt1)
-plt.show()
+# plt.show()
 #vale, cond = utils.condValeBands(cnt1.electronBandsHel['TB2+2'])
 #print(cond)
 
