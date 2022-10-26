@@ -131,15 +131,22 @@ def excitonBands(cnt, ax=None):
     efactor, _, invLfactor = utils.unitFactors(cnt)
     if ax is None:
         fig = plt.figure(figsize=(8, 5))
-        ax = fig.add_axes([0.05, 0.05, 0.9, 0.9])
+        ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
     NN = len(cnt.excitonBands)
+    maxEnergy = 0.0
     for i, name in enumerate(cnt.excitonBands):
         label = name
         for key in cnt.excitonBands[name]:
+            newMax = np.max(cnt.excitonBands[name][key][1])
+            if newMax > maxEnergy: maxEnergy = newMax
             ax.plot(invLfactor*cnt.excitonBands[name][key][0], efactor*cnt.excitonBands[name][key][1], color=mycolors(i,NN), label=label)
             ax.set_ylabel(f'Energy ({cnt.unitE})')
             ax.set_xlabel(f'k ({cnt.unitInvL})')
             label = '_'
+    ax.set_ylim(0.0, efactor*maxEnergy)
+    ax.set_xlim(-cnt.normHel/2, cnt.normHel/2)
+    ax.vlines(cnt.normOrt,0,efactor*maxEnergy,linestyles ="dashed", colors ="k")
+    ax.vlines(-cnt.normOrt,0,efactor*maxEnergy,linestyles ="dashed", colors ="k")
     ax.legend()
 
 

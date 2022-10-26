@@ -197,7 +197,7 @@ class Swcnt(object):
             print(f'Calculation {calc} not implemented.')
 
 
-    def calculateKpointValleys(self, which):
+    def calculateKpointValleys(self, which='all'):
         '''
         Calculate the (kx,ky) position of the minima and maxima of the electron band dispersion.
 
@@ -206,63 +206,70 @@ class Swcnt(object):
         Parameters:
         -----------
             which (str)     name of the helical electron band to use for the calculation
+                            optional, defalut = all
         '''
-        bzCuts = self.bzCutsHel
-        bands = self.electronBandsHel[which]
-        subN, _, _, _ = bands.shape
+        if which == 'all':
+            keys = self.electronBandsHel.keys()
+        else:
+            keys = [which]
+        
+        for which in keys:
+            bzCuts = self.bzCutsHel
+            bands = self.electronBandsHel[which]
+            subN, _, _, _ = bands.shape
 
-        self.condKpointValleys[which] = []
-        self.condInvMasses[which] = []
-        self.condEnergyZeros[which] = []
-        self.condKpointZeros[which] = []
+            self.condKpointValleys[which] = []
+            self.condInvMasses[which] = []
+            self.condEnergyZeros[which] = []
+            self.condKpointZeros[which] = []
 
-        self.valeKpointValleys[which] = []
-        self.valeInvMasses[which] = []
-        self.valeEnergyZeros[which] = []
-        self.valeKpointZeros[which] = []
+            self.valeKpointValleys[which] = []
+            self.valeInvMasses[which] = []
+            self.valeEnergyZeros[which] = []
+            self.valeKpointZeros[which] = []
 
-        for mu in range(0, subN): # angular momentum
-            vales, conds = utils.valeCondBands(bands[mu])
-            condMasks = utils.findFunctionListExtrema(conds, 'min')
-            valeMasks = utils.findFunctionListExtrema(vales, 'max')
-            cuts = bzCuts[mu]
-            
-            # valence band properties
-            energyZeros = []
-            kpointZeros = []
-            invMasses = []
-            kValley = []
-            for vale, mask in zip(vales, valeMasks):
-                prime = np.gradient(vale[1], vale[0])
-                second = np.gradient(prime, vale[0])
-                energyZeros.append( vale[1][mask] )
-                kpointZeros.append( vale[0][mask] )
-                invMasses.append( second[mask] )
-                kValley.append( cuts[mask] )
-            self.valeKpointValleys[which].append( kValley )
-            self.valeEnergyZeros[which].append( energyZeros )
-            self.valeKpointZeros[which].append( kpointZeros )
-            self.valeInvMasses[which].append( invMasses )
-            
-            # conduction band properties
-            energyZeros = []
-            kpointZeros = []
-            invMasses = []
-            kValley = []
-            for cond, mask in zip(conds, condMasks):
-                prime = np.gradient(cond[1], cond[0])
-                second = np.gradient(prime, cond[0])
-                energyZeros.append( cond[1][mask] )
-                kpointZeros.append( cond[0][mask] )
-                invMasses.append( second[mask] )
-                kValley.append( cuts[mask] )
-            self.condKpointValleys[which].append( kValley )
-            self.condEnergyZeros[which].append( energyZeros )
-            self.condKpointZeros[which].append( kpointZeros )
-            self.condInvMasses[which].append( invMasses )
+            for mu in range(0, subN): # angular momentum
+                vales, conds = utils.valeCondBands(bands[mu])
+                condMasks = utils.findFunctionListExtrema(conds, 'min')
+                valeMasks = utils.findFunctionListExtrema(vales, 'max')
+                cuts = bzCuts[mu]
+                
+                # valence band properties
+                energyZeros = []
+                kpointZeros = []
+                invMasses = []
+                kValley = []
+                for vale, mask in zip(vales, valeMasks):
+                    prime = np.gradient(vale[1], vale[0])
+                    second = np.gradient(prime, vale[0])
+                    energyZeros.append( vale[1][mask] )
+                    kpointZeros.append( vale[0][mask] )
+                    invMasses.append( second[mask] )
+                    kValley.append( cuts[mask] )
+                self.valeKpointValleys[which].append( kValley )
+                self.valeEnergyZeros[which].append( energyZeros )
+                self.valeKpointZeros[which].append( kpointZeros )
+                self.valeInvMasses[which].append( invMasses )
+                
+                # conduction band properties
+                energyZeros = []
+                kpointZeros = []
+                invMasses = []
+                kValley = []
+                for cond, mask in zip(conds, condMasks):
+                    prime = np.gradient(cond[1], cond[0])
+                    second = np.gradient(prime, cond[0])
+                    energyZeros.append( cond[1][mask] )
+                    kpointZeros.append( cond[0][mask] )
+                    invMasses.append( second[mask] )
+                    kValley.append( cuts[mask] )
+                self.condKpointValleys[which].append( kValley )
+                self.condEnergyZeros[which].append( energyZeros )
+                self.condKpointZeros[which].append( kpointZeros )
+                self.condInvMasses[which].append( invMasses )
 
 
-    def calculateExcitonBands(self, calc, name, which, **kwargs):
+    def calculateExcitonBands(self, calc, which, name=None, **kwargs):
         '''
         Calculate the exciton bands energy dispersion using different methods.
         
@@ -272,11 +279,12 @@ class Swcnt(object):
         Parameters:
         -----------
             calc (str):     specify the method for the band calculation
-                            can be either 'EffMass' or 'something' (more in the future)
-
-            name (str):     unique name to identify the resulting bands
+                            can be either 'EffMass' or 'something else' (more in the future)
 
             which (str):    name of the helical electron band to use for the calculation
+
+            name (str):     unique name to identify the resulting bands
+                            optional, default = same as which
 
             **kwargs:       key-value arguments depend on the calculation to
                             be performed.
@@ -291,7 +299,7 @@ class Swcnt(object):
                                                     optional, default = 0.0 eV
         '''
         if calc == 'EffMass' or calc == 'EM':
-            utils.effectiveMassExcitonBands(self, name, which, **kwargs)
+            utils.effectiveMassExcitonBands(self, which, name, **kwargs)
         elif calc == 'DFT':
             pass
         elif calc == 'something else':
@@ -300,7 +308,7 @@ class Swcnt(object):
             print(f'Calculation {calc} not implemented.')
 
 
-    def calculateDOS(self, which, ensteps=1000):
+    def calculateDOS(self, which, enSteps=1000):
         '''
         Calcualte the density of states for a given particle energy dispersion.
         By default, the DOS is calculated on the helical symmetry.
@@ -315,7 +323,7 @@ class Swcnt(object):
         pass
 
 
-    def calculateJDOS(self, which, ensteps=1000):
+    def calculateJDOS(self, which, enSteps=1000):
         '''
         Calcualte the joint density of states for a given particle energy dispersion.
         By default, the JDOS is calculated on the helical symmetry.
@@ -328,53 +336,6 @@ class Swcnt(object):
                             optional, default = 1000
         '''
         pass
-
-
-    def _calculateExcitonBands(self, bindEnergy = 0.05, deltak = 10.0, kstep = 20):
-        # CNT band minima, energies and masses
-        self.bandMinHel = []
-        self.bandMinXy = []
-        self.bandInvMasses = []
-        self.bandEnergy = []
-        for mu in range(0, self.D):
-            band = self.bandHel[mu]
-            xMin, yMin, secondMin, mask = utils.findMinima(band[0], band[1])
-            if len(xMin) > 0:
-                self.bandMinHel.append(xMin)
-                self.bandInvMasses.append(secondMin)
-                self.bandEnergy.append(yMin)
-                self.bandMinXy.append(self.bzCutsHel[mu][mask])
-        if len(self.bandMinHel) > 0:
-            self.bandMinHel = np.array(self.bandMinHel)
-            self.bandInvMasses = np.array(self.bandInvMasses)
-            self.bandEnergy = np.array(self.bandEnergy)
-            self.bandMinXy = np.array(self.bandMinXy)
-        else:
-            print('No excitons found.')
-            return
-
-        # dic = [bz, band]
-        self.excParaBands = {}
-        self.excPerpBands = {}
-        self.excDarkBands = {}
-        nMu, nMin = self.bandMinHel.shape
-        for mu in range(nMu):
-            for nu in range(nMu):
-                for i in range(nMin):
-                    for j in range(nMin):
-                        deltaNorm = utils.findMinDelta(self.bandMinXy[mu, i] - self.bandMinXy[nu, j], self.k1H, self.k2H)
-                        helPos = (self.bandMinHel[mu, i] - self.bandMinHel[nu, j] + self.normHel / 2) % self.normHel - self.normHel / 2
-                        invMass = self.bandInvMasses[mu, i] * self.bandInvMasses[nu, j] / (self.bandInvMasses[mu, i] + self.bandInvMasses[nu, j])
-                        energy = self.bandEnergy[mu, i] + self.bandEnergy[nu, j] - bindEnergy
-                        if deltaNorm < 1e-4:
-                            # parallel excitons
-                            self.excParaBands[f"{mu}.{i}.{j}"] = utils.excBands(helPos, invMass, energy, deltak, kstep)
-                        elif 0.6*self.normKC < deltaNorm < 1.4*self.normKC:
-                            # perpendicular excitons
-                            self.excPerpBands[f"{mu}.{nu}.{i}.{j}"] = utils.excBands(helPos, invMass, energy, deltak, kstep)
-                        else:
-                            # dark excitons
-                            self.excDarkBands[f"{mu}.{nu}.{i}.{j}"] = utils.excBands(helPos, invMass, energy, deltak, kstep)
 
 
     def saveToDirectory(self, dirpath):
@@ -431,6 +392,7 @@ class Swcnt(object):
         plotting.recLat(self, ax2)
         plotting.electronBands(self, 'lin', ax3)
         plotting.electronBands(self, 'hel', ax4)
+        plotting.excitonBands(self, ax6)
         
         ax3.set_title("Linear")
         ax4.set_title("Helical")
@@ -439,26 +401,7 @@ class Swcnt(object):
         ax4.set_ylabel('')                     # (Alida Valli)
         ax4.get_shared_x_axes().join(ax4, ax6)
 
-        # # ax6 plot excitons
-        # for i,k in enumerate(self.excParaBands):
-        #     if i == 0:
-        #         label='Para'
-        #     else:
-        #         label='_'
-        #     ax6.plot(*self.excParaBands[k],'r', label=label)
-        # for i,k in enumerate(self.excPerpBands):
-        #     if i == 0:
-        #         label='Perp'
-        #     else:
-        #         label='_'
-        #     ax6.plot(*self.excPerpBands[k],'y', label=label)
-        # for i,k in enumerate(self.excDarkBands):
-        #     if i == 0:
-        #         label='Dark'
-        #     else:
-        #         label='_'
-        #     ax6.plot(*self.excDarkBands[k],'grey', label=label)
-
+        
         # ax5 ax7 plot DOS and absorption
         # todo
 
@@ -487,9 +430,6 @@ class Swcnt(object):
         # for ax in [ax3, ax4, ax5, ax6, ax7]:    
         #     ax.grid(linestyle='--')
 
-        # ax6.vlines(self.normOrt,0,6,linestyles ="dashed", colors ="k")
-        # ax6.vlines(-self.normOrt,0,6,linestyles ="dashed", colors ="k")
-        # ax6.legend(loc=(-0.2, 0.0))
 
         # save if path is not None
         if path == None:

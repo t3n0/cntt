@@ -206,11 +206,12 @@ def valeCondBands(bands):
     return valeBands, condBands
 
 
-def effectiveMassExcitonBands(cnt, name, which, deltaK = 10.0, bindEnergy = 0.0):
+def effectiveMassExcitonBands(cnt, which, name=None, deltaK = 10.0, bindEnergy = 0.0):
     '''
     Calculates the exciton energy dispersion in the effective mass approximation.
     '''
-    
+    if name == None:
+        name = which
     condValleys = cnt.condKpointValleys[which]
     condInvMasses = cnt.condInvMasses[which]
     condEnergyZeros = cnt.condEnergyZeros[which]
@@ -243,7 +244,7 @@ def effectiveMassExcitonBands(cnt, name, which, deltaK = 10.0, bindEnergy = 0.0)
 
                             counter += 1
 
-                            print(counter, mu,n,i,nu,m,j, condEnergy, valeEnergy)
+                            #print(counter, mu,n,i,nu,m,j, condEnergy, valeEnergy)
 
                             deltaNorm = minimumPbcNorm(condValley - valeValley, cnt.k1H, cnt.k2H)
                             kpoint = (condKpoint - valeKpoint + cnt.normHel / 2) % cnt.normHel - cnt.normHel / 2
