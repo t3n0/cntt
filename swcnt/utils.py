@@ -194,8 +194,8 @@ def findFunctionZeros(y):
 
 
 def densityOfStates(bands, energySteps):
-    energyMin = 1.1 * np.min(bands[:,1])
-    energyMax = 1.1 * np.max(bands[:,1])
+    energyMin = np.min(bands[:,1]) - 0.1*abs(np.min(bands[:,1]))
+    energyMax = np.max(bands[:,1]) + 0.1*abs(np.max(bands[:,1]))
     energyGrid = np.linspace(energyMin, energyMax, energySteps)
     dos = np.zeros(len(energyGrid))
     for n in range(len(bands)):

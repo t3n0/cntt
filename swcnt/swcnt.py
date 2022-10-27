@@ -336,6 +336,19 @@ class Swcnt(object):
                 cutIdx, bandIdx, axIdx, gridIdx = bands.shape
                 en, dos = utils.densityOfStates(bands.reshape((cutIdx * bandIdx, axIdx, gridIdx)), enSteps)
                 self.electronDOS[name] = [en, dos/self.normHel]
+        elif which == 'ex' or which == 'exciton':
+            if name == 'all':
+                bandNames = self.excitonBands.keys()
+            else:
+                bandNames = [name]
+            for name in bandNames:
+                bands = self.excitonBands[name]
+                allBands = []
+                for key in bands:
+                    allBands.append(bands[key])
+                allBands = np.array(allBands)
+                en, dos = utils.densityOfStates(allBands, enSteps)
+                self.excitonDOS[name] = [en, dos]
         else:
             print(f'Particle {which} not recognized.')
         
@@ -413,6 +426,7 @@ class Swcnt(object):
         plotting.electronBands(self, ax4, 'hel')
         plotting.excitonBands(self, ax6)
         plotting.electronDOS(self, ax5, True)
+        plotting.excitonDOS(self, ax7, True)
 
         # format some text and layout
         ax3.set_title("Linear")
@@ -427,11 +441,11 @@ class Swcnt(object):
         # "Tu metti in subbuglio il mio sistema di donna sensibile!"
         # (Alida Valli)
 
-        ax3.get_shared_y_axes().join(ax3, ax4, ax5) 
-        ax4.set_yticklabels([])                
-        ax4.set_ylabel('')                     
+        ax3.get_shared_y_axes().join(ax3, ax4, ax5)
+        ax6.get_shared_y_axes().join(ax6, ax7)                                   
         ax4.get_shared_x_axes().join(ax4, ax6)
         
+        ax4.set_yticklabels([]) 
         ax5.set_yticklabels([])
         ax4.set_xticklabels([])
         ax5.set_xticklabels([])

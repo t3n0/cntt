@@ -34,7 +34,10 @@ cnt1.calculateElectronBands('TB', 'TB3', 'hel', gamma=3.0, fermi=0.0)
 cnt1.calculateKpointValleys()
 
 cnt1.calculateExcitonBands('EM','TB3', deltaK=10, bindEnergy=0.5)
+cnt1.calculateExcitonBands('EM','TB3+1.5', deltaK=10, bindEnergy=0.4)
 
 cnt1.calculateDOS('electron', enSteps=100)
+
+cnt1.calculateDOS('exciton', enSteps=100)
 
 cnt1.plot()

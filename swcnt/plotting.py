@@ -175,6 +175,27 @@ def electronDOS(cnt, ax=None, swapAxes=False):
     ax.legend()
 
 
+def excitonDOS(cnt, ax=None, swapAxes=False):
+    efactor, _, _ = utils.unitFactors(cnt)
+    if ax is None:
+        fig = plt.figure(figsize=(8, 5))
+        ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
+    NN = len(cnt.excitonDOS)
+    for i, name in enumerate(cnt.excitonDOS.keys()):
+        en = cnt.excitonDOS[name][0]
+        dos = cnt.excitonDOS[name][1]
+        #integral = np.trapz(dos, en)
+        #print(name, integral)
+        if swapAxes:
+            ax.plot(dos, efactor * en, color=mycolors(i,NN), label=name)
+            ax.set_xlabel(f'DOS')
+            ax.set_ylabel(f'Energy ({cnt.unitE})')
+        else:
+            ax.plot(efactor * en, dos, color=mycolors(i,NN), label=name)
+            ax.set_ylabel(f'DOS')
+            ax.set_xlabel(f'Energy ({cnt.unitE})')
+    ax.legend()
+
 def boundingRectangle(*args):
     vecs = [[0.0, 0.0]]
     for arg in args:
