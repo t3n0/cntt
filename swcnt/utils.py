@@ -27,6 +27,22 @@ Angstrom2nm = 0.1  # 1 A = 0.1 nm
 
 
 def unitFactors(cnt):
+    '''
+    Provides the conversion (multiplicative) factors for the unit of measures.
+
+    Parameters:
+    -----------
+        cnt (swcnt):    cnt object
+
+    Returns:
+    --------
+        eFactor
+            (float):    energy conversion factor
+        lFactor
+            (float):    length conversion factor
+        invLFactor
+            (float):    inverse length conversion factor
+    '''
     if cnt.unitE == 'eV': eFactor = 1
     if cnt.unitE == 'Ha': eFactor = 1/Ha2eV
     if cnt.unitE == 'Ry': eFactor = 1/Ry2eV
@@ -43,6 +59,10 @@ def unitFactors(cnt):
 
 
 def changeUnits(cnt, factor, *args):
+    '''
+    Convinence function to convert the values of a set of data to different
+    unit of measure.
+    '''
     newValues = []
     for arg in args:
         newValues.append(factor * getattr(cnt, arg))
@@ -50,6 +70,18 @@ def changeUnits(cnt, factor, *args):
 
 
 def textParams(cnt):
+    '''
+    Returns a text with the main physical properties and parameters
+    of a given carbon nanotube.
+
+    Parameters:
+    -----------
+        cnt (swcnt):    cnt object
+
+    Returns:
+    --------
+        text (str):     physical properties and parameters
+    '''
     eFactor, lFactor, invLFactor = unitFactors(cnt)
     text = (
         f"n, m = {cnt.n},{cnt.m}\n"
@@ -156,6 +188,25 @@ def findFunctionListExtrema(funcList, which='max'):
     return masks
 
 
+def findFunctionZeros(y):
+    mask = (np.roll(y, 1) * y) < 0
+    return mask
+
+
+def densityOfStates(bands, energySteps):
+    energyMin = 1.1 * np.min(bands[:,1])
+    energyMax = 1.1 * np.max(bands[:,1])
+    energyGrid = np.linspace(energyMin, energyMax, energySteps)
+    dos = np.zeros(len(energyGrid))
+    for n in range(len(bands)):
+        prime = np.gradient(bands[n,1], bands[n,0])
+        for i, energy in enumerate(energyGrid):
+            maskZeros = findFunctionZeros(bands[n,1] - energy)
+            primeZeros = prime[maskZeros]
+            dos[i] += np.sum( 1 / np.abs(primeZeros) )
+    return energyGrid, dos
+
+
 def bzCuts(k1, k2, N, ksteps):
     kmesh = np.linspace(-0.5, 0.5, ksteps)
     k1grid = np.outer(kmesh, k1)
@@ -167,7 +218,8 @@ def bzCuts(k1, k2, N, ksteps):
 
 
 def grapheneTBBands(k, a1, a2, gamma=3.0):
-    band = gamma * np.sqrt(3 + 2 * np.cos(np.dot(k, a1)) + 2 * np.cos(np.dot(k, a2)) + 2 * np.cos(np.dot(k, (a2 - a1))))
+    band = gamma * np.sqrt(3 + 2 * np.cos(np.dot(k, a1)) + 2 * np.cos(np.dot(k, a2)) + 2 * np.cos(np.dot(k, (a2 - a1))) + 1e-6)
+    # 1e-6 to avoid sqrt of negative number (maybe some subtraction cancelation is happening)
     return band
 
 
@@ -180,7 +232,7 @@ def tightBindingElectronBands(cnt, name, sym='hel', gamma=3.0, fermi=0.0):
         bzNorm = getattr(cnt, attrNorm)
         subN, ksteps, _ = bzCuts.shape
         bz = np.linspace(-0.5, 0.5, ksteps) * bzNorm
-        bands = np.zeros( (subN, 2, 2, ksteps) ) # bands = E_n^mu(k), bands[mu index, n index, k or energy index, grid index]
+        bands = np.zeros( (subN, 2, 2, ksteps) ) # bands = E_n^mu(k), bands[mu index, n index, k/energy index, grid index]
         bands[:,:,0,:] = bz
         for mu, cut in enumerate(bzCuts):
             upperBand =   grapheneTBBands(cut, cnt.a1, cnt.a2, gamma) - fermi

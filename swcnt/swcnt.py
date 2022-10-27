@@ -71,6 +71,8 @@ class Swcnt(object):
         self.b0 = 4 * np.pi / np.sqrt(3) / self.a0 # nm-1
         self.ac = self.a0/np.sqrt(3)
         self.bc = self.b0/np.sqrt(3)
+        self.cellVolume = self.a0**2 * np.sqrt(3) / 2
+        self.bzVolume   = self.b0**2 * np.sqrt(3) / 2
 
         # carbon nanotube parameters
         self.n, self.m = n, m
@@ -105,6 +107,7 @@ class Swcnt(object):
         self.k2H = -self.NU / self.D * self.KT
 
         # CNT linear and helical BZs
+        self.normKT = np.linalg.norm(self.KT)
         self.normKC = np.linalg.norm(self.KC)
         self.normLin = np.linalg.norm(self.KT)
         self.normHel = np.linalg.norm(self.k2H)
@@ -308,19 +311,34 @@ class Swcnt(object):
             print(f'Calculation {calc} not implemented.')
 
 
-    def calculateDOS(self, which, enSteps=1000):
+    def calculateDOS(self, which, name = 'all', enSteps=1000):
         '''
         Calcualte the density of states for a given particle energy dispersion.
         By default, the DOS is calculated on the helical symmetry.
 
         Parameters:
         -----------
-            which (str):    particle, either 'el', 'ex', 'ph'
+            which (str):    particle, either 'electron', 'exciton', 'phonon'
 
-            enesteps (int): energy steps for the discretisation
+            name (str):     name of the specific band to use for DOS
+                            optional, default = all
+
+            enSteps (int):  energy steps for the discretisation
                             optional, default = 1000
         '''
-        pass
+        if which == 'el' or which == 'electron':
+            if name == 'all':
+                bandNames = self.electronBandsHel.keys()
+            else:
+                bandNames = [name]
+            for name in bandNames:
+                bands = self.electronBandsHel[name]
+                cutIdx, bandIdx, axIdx, gridIdx = bands.shape
+                en, dos = utils.densityOfStates(bands.reshape((cutIdx * bandIdx, axIdx, gridIdx)), enSteps)
+                self.electronDOS[name] = [en, dos/self.normHel]
+        else:
+            print(f'Particle {which} not recognized.')
+        
 
 
     def calculateJDOS(self, which, enSteps=1000):
@@ -388,40 +406,46 @@ class Swcnt(object):
         ax6 = fig.add_axes([0.25, 0.05, 0.58, 0.2])
         ax7 = fig.add_axes([0.83, 0.05, 0.15, 0.2])
 
+        # plot all axes
         plotting.dirLat(self, ax1)
         plotting.recLat(self, ax2)
-        plotting.electronBands(self, 'lin', ax3)
-        plotting.electronBands(self, 'hel', ax4)
+        plotting.electronBands(self, ax3, 'lin')
+        plotting.electronBands(self, ax4, 'hel')
         plotting.excitonBands(self, ax6)
-        
+        plotting.electronDOS(self, ax5, True)
+
+        # format some text and layout
         ax3.set_title("Linear")
         ax4.set_title("Helical")
-        ax3.get_shared_y_axes().join(ax3, ax4) # "Matplotlib fai ribrezzo ai popoli del mondo!"
-        ax4.set_yticklabels([])                # "Tu metti in subbuglio il mio sistema di donna sensibile!"
-        ax4.set_ylabel('')                     # (Alida Valli)
-        ax4.get_shared_x_axes().join(ax4, ax6)
-
-        
-        # ax5 ax7 plot DOS and absorption
-        # todo
-
-        # -------------------------------------------------
-        # labels, ticks, range, grids, legends, texts
-        
-        
         ax5.set_title("DOS")
-        ax6.set_ylabel("Energy (eV)")
-        ax6.set_xlabel("k (nm-1)")
+        for ax in [ax4, ax5, ax7]:
+            ax.set_ylabel('')
+        for ax in [ax4, ax5]:
+            ax.set_xlabel('')
+
+        # "Matplotlib fai ribrezzo ai popoli del mondo!"
+        # "Tu metti in subbuglio il mio sistema di donna sensibile!"
+        # (Alida Valli)
+
+        ax3.get_shared_y_axes().join(ax3, ax4, ax5) 
+        ax4.set_yticklabels([])                
+        ax4.set_ylabel('')                     
+        ax4.get_shared_x_axes().join(ax4, ax6)
         
         ax5.set_yticklabels([])
         ax4.set_xticklabels([])
         ax5.set_xticklabels([])
         ax7.set_yticklabels([])
+
+        # cnt parameters text
         plt.text(0.05, 0.9, utils.textParams(self), ha="left", va="top", transform=fig.transFigure)
 
+        # ticks locators and grids
         for ax in [ax4, ax6]:
             ax.locator_params(axis='x', nbins=10)
         for ax in [ax3, ax4, ax5]:
+            ax.locator_params(axis='y', nbins=6)
+        for ax in [ax6, ax7]:
             ax.locator_params(axis='y', nbins=6)
         for ax in [ax3, ax4, ax5, ax6, ax7]:    
             ax.grid(linestyle='--')

@@ -106,7 +106,7 @@ def recLat(cnt, ax=None):
     ax.set_ylim(miny, maxy)
     return ax
 
-def electronBands(cnt, sym='hel', ax=None):
+def electronBands(cnt, ax=None, sym='hel'):
     efactor, _, invLfactor = utils.unitFactors(cnt)
     if ax is None:
         fig = plt.figure(figsize=(8, 5))
@@ -133,7 +133,7 @@ def excitonBands(cnt, ax=None):
         fig = plt.figure(figsize=(8, 5))
         ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
     NN = len(cnt.excitonBands)
-    maxEnergy = 0.0
+    maxEnergy = 1.0
     for i, name in enumerate(cnt.excitonBands):
         label = name
         for key in cnt.excitonBands[name]:
@@ -150,6 +150,31 @@ def excitonBands(cnt, ax=None):
     ax.legend()
 
 
+def electronDOS(cnt, ax=None, swapAxes=False):
+    efactor, _, _ = utils.unitFactors(cnt)
+    if ax is None:
+        fig = plt.figure(figsize=(8, 5))
+        ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
+    NN = len(cnt.electronDOS)
+    for i, name in enumerate(cnt.electronDOS.keys()):
+        en = cnt.electronDOS[name][0]
+        dos = cnt.electronDOS[name][1]
+        maxDos = np.max(dos)
+        #integral = np.trapz(dos, en)
+        #print(name, integral)
+        if swapAxes:
+            ax.plot(dos, efactor * en, color=mycolors(i,NN), label=name)
+            ax.set_xlabel(f'DOS')
+            ax.set_ylabel(f'Energy ({cnt.unitE})')
+            ax.hlines(0,0, maxDos, linestyles ="dashed", colors ="grey")
+        else:
+            ax.plot(efactor * en, dos, color=mycolors(i,NN), label=name)
+            ax.set_ylabel(f'DOS')
+            ax.set_xlabel(f'Energy ({cnt.unitE})')
+            ax.vlines(0,0, maxDos, linestyles ="dashed", colors ="grey")
+    ax.legend()
+
+
 def boundingRectangle(*args):
     vecs = [[0.0, 0.0]]
     for arg in args:
@@ -160,6 +185,7 @@ def boundingRectangle(*args):
     miny = np.min(vecs[:, 1])
     maxy = np.max(vecs[:, 1])
     return minx, maxx, miny, maxy
+
 
 def arrowPatches(*vec,color):
     patches = []

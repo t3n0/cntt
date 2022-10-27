@@ -26,10 +26,8 @@ def main():
     cnt = Swcnt(n, m)
 
     cnt.calculateCuttingLines(31)
-    cnt.calculateElectronBands('TB', 'TB5', sym='hel', gamma=5.0)
-    cnt.calculateElectronBands('TB', 'TB2', sym='hel', gamma=2.0)
-    cnt.calculateElectronBands('TB', 'TB3.5', sym='lin', gamma=3.5)
-    #cnt.calculateExcitonBands()
+    cnt.calculateElectronBands('TB', 'TB3', sym='hel', gamma=3.0)
+    cnt.calculateElectronBands('TB', 'TB3', sym='lin', gamma=3.0)
 
     if args.outdir:
         WORK_DIR = os.getcwd()
@@ -42,7 +40,7 @@ def main():
 
         out_figure = os.path.join(OUT_DIR, f'cnt({n},{m}).png')
         cnt.plot(out_figure)
-        cnt.saveData(OUT_DIR)
+        cnt.saveToDirectory(OUT_DIR)
     else:
         cnt.plot()
         show()
