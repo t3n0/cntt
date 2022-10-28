@@ -2,40 +2,53 @@
 
 [![GitHub Release Date](https://img.shields.io/github/release-date/t3n0/cntt)](https://github.com/t3n0/cntt/releases/latest)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/t3n0/cntt)](https://github.com/t3n0/cntt/releases/latest)
-[![GitHub all releases](https://img.shields.io/github/downloads/t3n0/cntt/total)](https://github.com/t3n0/cntt/releases/download/v0.1/swcnt-bands-v0.1.zip)
+[![GitHub all releases](https://img.shields.io/github/downloads/t3n0/cntt/total)](https://github.com/t3n0/cntt/releases/download/v0.2/swcnt-bands-v0.2.zip)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-![swcnt42](./docs/readme-pics/logo-wide.png)
+![logo-wide](./docs/readme-pics/logo-wide.png)
 
-Utility to compute the electronic band structure of single-walled carbon nanotubes (SWCNTs). It uses the well known tight binding approximation of CNTs and displays the band structure in linear and helical coordinates.
+**CNTT**, also spelled **C-entity**, is a utility to compute, display and manipulate electronic and optical properties of single-walled carbon nanotubes (SWCNTs). CNTT is an acronym for **Carbon NanoTube Tool**.
 
-## Installation with `pip`
+At the current state of developement, this tool is capable of computing the electronic and excitonic band structure of SWCNTs, along with the electron and exciton Density of States (DOS). This is done in a very efficient way by exploiting the **helical symmetry** of SWCNTs. Results are then displayed in helical coordinates. In this way, most of the optical properties of SWCNTs become apparent by simply inspecting the [helical bandstructure](./docs/readme-pics/cnt(4,2).png).
 
-Simply download [.zip file](https://github.com/t3n0/swcnt-bands/releases/download/v0.1/swcnt-bands-v0.1.zip), extract it at your favourite location and run
+## Installation
+
+Simply download [.zip file](https://github.com/t3n0/swcnt-bands/releases/download/v0.2/swcnt-bands-v0.2.zip), extract it at your favourite location and run
 ```
 pip install .
 ```
-This will install the system-wide command `swcnt-bands` and the python package `swcnt`.
+This will install the system-wide command `cntt` and the python package `cntt`.
 
-## Usage: command line
+## Usage (1): command line
 
 For a basic usage of the tool, simply type in the terminal
 ```
-swcnt-bands 4 2
+cntt 4 2
 ```
-This will display the linear and helical band structure of a [(4,2) single-walled carbon nanotube](./example42/cnt(4,2).png), along with the most important physical parameters, unit cells and Brillouin zones.
+This will display the linear and helical band structure of a [(4,2) single-walled carbon nanotube](./docs/readme-pics/cnt(4,2).png), the (singlet, bright and dark) exciton energy dispersions and the most important physical parameters, unit cells and Brillouin zones.
 
-Also, typing `swcnt-bands -h` provide a help dialoge for advanced usage.
+Also, typing `cntt -h` provide a help dialoge for advanced usage.
 
-## Usage: package
+## Usage (2): package
 
-From a pyhton interpreter, import the `Swcnt` class. For a basic usage, just copy the following snippet:
+From a pyhton interpreter, import the base `Swcnt` class. For a basic usage, just copy the following snippet:
 ```
-import swcnt.swcnt as Swcnt
+from cntt.swcnt import Swcnt
 
 mycnt = Swcnt(4,2)
-mycnt.calculateElectronBands()
-mycnt.calculateExcitonBands()
+
+mycnt.calculateCuttingLines()
+
+mycnt.calculateElectronBands('TB', 'TB', 'lin')
+mycnt.calculateElectronBands('TB', 'TB', 'hel')
+
+mycnt.calculateKpointValleys()
+
+mycnt.calculateExcitonBands('EM','TB', deltaK=10, bindEnergy=0.2)
+
+mycnt.calculateDOS('electron')
+mycnt.calculateDOS('exciton')
+
 mycnt.plot()
 ```
 ## Support
@@ -44,21 +57,27 @@ For any problems, questions or suggestions, please contact me at tenobaldi@gmail
 
 ## Roadmap
 
-Currently the project only supports:
+Currently, this project provides:
  - plotting the unit cells in three different configurations (the cnt supercell N-atom flake, the linear 2-atom cell and the helical 2-atom cell);
  - visualizing the corresponding graphene-like Brillouin zones;
  - computing and displaying the carbon nanotube band structure from the tight-binding zone-folding approximation;
  - computing and displaying the dispersion relation of bright and dark singlet excitons;
+ - computing and displaying the DOS of electron and excitons;
+ - simultaneous band plotting for comparison;
+ - basic doping capabilities (fermi level and binding energy can be tuned and will influence the exciton dispersion);
 
 Future developments will include:
-- optical matrix elements;
-- density of states;
+- DFT calculation of electronic bands;
+- joint density of states (JDOS);
+- improved tight-binding methods;
+- phonon calculations;
+- output of the 3D carbon atoms coordinates;
 - exciton absorption spectrum;
-- output of the 3D carbon atoms coordinates.
+- optical matrix elements;
 
 ## Authors and acknowledgment
 
-The development of SWCNT is proudly powered by [me](https://github.com/t3n0).
+The development of CNTT is proudly powered by [me](https://github.com/t3n0).
 Also, please consider citing the relevant literature if you are going to use this tool:
  - [Carbon 186, 465-474 (2022)](https://doi.org/10.1016/j.carbon.2021.10.048)
 
