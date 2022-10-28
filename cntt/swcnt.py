@@ -2,14 +2,14 @@
 CNTT / C-entity
 -----------
 
-CNTT, also spelled C-entity, is a software for computing, displaying and manipulating
-the physical properties of single-walled carbon nanotubes (SWCNTs).
+CNTT, also spelled C-entity, is a software for computing, displaying and
+manipulating the physical properties of single-walled carbon nanotubes (SWCNTs).
 
 CONTACTS:
 ---------
 
 email: tenobaldi@gmail.com
-github: https://github.com/t3n0/swcnt-bands
+github: https://github.com/t3n0/cntt
 
 LICENSE:
 --------
@@ -29,6 +29,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 '''
+
 
 import matplotlib.pyplot as plt
 import numpy as np
