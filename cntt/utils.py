@@ -220,6 +220,12 @@ def densityOfStates(bands, energySteps):
         for i, energy in enumerate(energyGrid):
             maskZeros = findFunctionZeros(bands[n,1] - energy)
             primeZeros = prime[maskZeros]
+            if 0.0 in primeZeros:
+                mask = np.where(primeZeros == 0.0)
+                # todo add verbosity when we manually rescale the divergencies
+                #print('Divide by zero in van hove, set it to 1000, lol')
+                # van Hove singularities set to 1000, because, why not!? lol
+                primeZeros[mask] = 1/1000
             dos[i] += np.sum( 1 / np.abs(primeZeros) )
     return energyGrid, dos
 
