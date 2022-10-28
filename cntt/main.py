@@ -32,6 +32,24 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
 def main():
+    '''
+    Main function of CNTT.
+    It displays the basic properties of a given carbon nanotube.
+
+    USAGE: call from terminal
+    -------------------------
+
+        After installing CNTT via `pip install .` simply type from a terminal:
+
+        ~$ cntt 4 2
+
+        This will produce a plot with lattice, BZ, electron and exciton bands,
+        density of states and exciton peaks of a (4,2) carbon nanotube.
+    
+        For a more detailed help, type:
+
+        ~$ cntt -h
+    '''
     import cntt.utils as utils
     from cntt.swcnt import Swcnt
     import os
