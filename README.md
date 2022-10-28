@@ -2,7 +2,7 @@
 
 [![GitHub Release Date](https://img.shields.io/github/release-date/t3n0/cntt)](https://github.com/t3n0/cntt/releases/latest)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/t3n0/cntt)](https://github.com/t3n0/cntt/releases/latest)
-[![GitHub all releases](https://img.shields.io/github/downloads/t3n0/cntt/total)](https://github.com/t3n0/cntt/releases/download/v0.2/swcnt-bands-v0.2.zip)
+[![GitHub all releases](https://img.shields.io/github/downloads/t3n0/cntt/total)](https://github.com/t3n0/cntt/releases/download/v0.2/cntt-v0.2.zip)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 ![logo-wide](./docs/readme-pics/logo-wide.png)
@@ -13,7 +13,7 @@ At the current state of developement, this tool is capable of computing the elec
 
 ## Installation
 
-Simply download [.zip file](https://github.com/t3n0/swcnt-bands/releases/download/v0.2/swcnt-bands-v0.2.zip), extract it at your favourite location and run
+Simply download [.zip file](https://github.com/t3n0/cntt/releases/download/v0.2/cntt-v0.2.zip), extract it at your favourite location and run
 ```
 pip install .
 ```
