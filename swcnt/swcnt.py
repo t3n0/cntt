@@ -1,8 +1,8 @@
 '''
-swcnt-bands
+CNTT / C-entity
 -----------
 
-swcnt-bands is a software for computing, displaying and manipulating
+CNTT, also spelled C-entity, is a software for computing, displaying and manipulating
 the physical properties of single-walled carbon nanotubes (SWCNTs).
 
 CONTACTS:
