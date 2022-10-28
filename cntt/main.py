@@ -32,7 +32,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
 def main():
-    from matplotlib.pyplot import show
     import cntt.utils as utils
     from cntt.swcnt import Swcnt
     import os
@@ -69,4 +68,3 @@ def main():
         #cnt.saveToDirectory(OUT_DIR)
     else:
         cnt.plot()
-        show()
