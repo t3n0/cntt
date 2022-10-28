@@ -40,24 +40,33 @@ def main():
     args = utils.getArgs()
 
     n, m = args.n, args.m
-    cnt = Swcnt(n, m)
 
-    cnt.calculateCuttingLines(31)
-    cnt.calculateElectronBands('TB', 'TB3', sym='hel', gamma=3.0)
-    cnt.calculateElectronBands('TB', 'TB3', sym='lin', gamma=3.0)
+    cnt = Swcnt(n, m)
+    cnt.calculateCuttingLines()
+
+    cnt.calculateElectronBands('TB', 'TB', 'lin')
+    cnt.calculateElectronBands('TB', 'TB', 'hel')
+
+    cnt.calculateKpointValleys()
+
+    cnt.calculateExcitonBands('EM','TB', deltaK=10, bindEnergy=0.2)
+
+    cnt.calculateDOS('electron')
+    cnt.calculateDOS('exciton')
+
 
     if args.outdir:
         WORK_DIR = os.getcwd()
         OUT_DIR = os.path.join(WORK_DIR, args.outdir)
-        print(f'Current working directory:\n\t{WORK_DIR}')
+        print(f'Current working directory: {WORK_DIR}')
 
         if not os.path.exists(OUT_DIR):
             os.makedirs(OUT_DIR)
-        print(f'Output directoriy:\n\t{OUT_DIR}')
+        print(f'Output directoriy: {OUT_DIR}')
 
         out_figure = os.path.join(OUT_DIR, f'cnt({n},{m}).png')
         cnt.plot(out_figure)
-        cnt.saveToDirectory(OUT_DIR)
+        #cnt.saveToDirectory(OUT_DIR)
     else:
         cnt.plot()
         show()

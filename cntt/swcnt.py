@@ -398,7 +398,7 @@ class Swcnt(object):
         phonon bands.
 
         For more versatile plotting routines, the user might want to import
-        the `swcnt.plotting` module.
+        the `cntt.plotting` module.
 
         Parameters:
         -----------

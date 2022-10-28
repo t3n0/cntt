@@ -129,10 +129,10 @@ def save_file(*args, path, header=""):
 
 
 def getArgs():
-    parser = argparse.ArgumentParser(description="Calculate the direct space, reciprocal space and band structure of a given (n,m) CNT")
+    parser = argparse.ArgumentParser(description="Calculate the direct space, reciprocal space, electron and exciton band structure of a given (n,m) CNT")
     group = parser.add_mutually_exclusive_group()
-    group.add_argument("-v", "--verbose", action="store_true")
-    group.add_argument("-q", "--quiet", action="store_true")
+    #group.add_argument("-v", "--verbose", action="store_true")
+    #group.add_argument("-q", "--quiet", action="store_true")
     parser.add_argument("n", help="(n,m) carbon nanotube n paramenter", type=int)
     parser.add_argument("m", help="(n,m) carbon nanotube m paramenter", type=int)
     parser.add_argument("-o", "--outdir", help="output destination folder")
