@@ -1,11 +1,11 @@
 from setuptools import setup, find_packages
 
-setup(name='swcnt-bands',
-      version='0.1',
-      description='Single-walled carbon nanotubes bandstructure tool (swcnt-bands)',
+setup(name='cntt',
+      version='0.2',
+      description='CNTT, also C-entity, computes, displays and manipulates carbon nanotubes properties.',
       author='Stefano Dal Forno',
       author_email='tenobaldi@gmail.com',
-      url='https://github.com/t3n0/swcnt-bands',
+      url='https://github.com/t3n0/cntt',
       classifiers=[
           'Development Status :: 4 - Beta',
 
@@ -22,8 +22,8 @@ setup(name='swcnt-bands',
       ],
       keywords=['swcnt', 'cnt', 'band', 'bandstructure', 'carbon', 'nanotubes'],
       #packages=find_packages(),
-      packages = ['swcnt'],
+      packages = ['cntt'],
       python_requires=">=3.5",
       install_requires=[],
-      entry_points={ "console_scripts": [ "swcnt-bands=swcnt.main:main" ],},
+      entry_points={ "console_scripts": [ "cntt=cntt.main:main" ],},
       )
