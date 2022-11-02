@@ -7,7 +7,7 @@
 
 ![logo-wide](./docs/readme-pics/logo-wide.png)
 
-**CNTT**, also spelled **C-entity**, is a utility to compute, display and manipulate electronic and optical properties of single-walled carbon nanotubes (SWCNTs). CNTT is an acronym for **Carbon NanoTube Tool**.
+**CNTT**, also spelled **C-entity**, is an utility to compute, display and manipulate electronic and optical properties of single-walled carbon nanotubes (SWCNTs). CNTT is an acronym for **Carbon NanoTube Tool**.
 
 At the current state of developement, this tool is capable of computing the electronic and excitonic band structure of SWCNTs, along with the electron and exciton Density of States (DOS). This is done in a very efficient way by exploiting the **helical symmetry** of SWCNTs. Results are then displayed in helical coordinates. In this way, most of the optical properties of SWCNTs become apparent by simply inspecting the [helical bandstructure](./docs/readme-pics/cnt(4,2).png).
 
@@ -43,7 +43,7 @@ mycnt = Swcnt(4,2)
 
 mycnt.calculateCuttingLines()
 
-# tight-binding calculation with onset energy 3.0eV and Fermi level at 0.0eV
+# tight-binding calculation with onsite energy 3.0eV and Fermi level at 0.0eV
 mycnt.calculateElectronBands('TB', 'TB', 'lin', gamma = 3.0, fermi = 0.0)
 mycnt.calculateElectronBands('TB', 'TB0', 'hel', gamma = 3.0, fermi = 0.0)
 

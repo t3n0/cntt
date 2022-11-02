@@ -37,7 +37,7 @@ import matplotlib.patches as mpatches
 from matplotlib.collections import PatchCollection
 from matplotlib.markers import MarkerStyle
 from matplotlib.cm import get_cmap
-import cntt.utils as utils
+import cntt.physics as physics
 
 
 def show():
@@ -59,8 +59,8 @@ def mylabel(i, label):
 
 
 def dirLat(cnt, ax=None):
-    _, lfactor, _ = utils.unitFactors(cnt)
-    C, T, t1, t2, a0 = utils.changeUnits(cnt, lfactor, 'C', 'T', 't1', 't2', 'a0')
+    _, lfactor, _ = physics.unitFactors(cnt)
+    C, T, t1, t2, a0 = physics.changeUnits(cnt, lfactor, 'C', 'T', 't1', 't2', 'a0')
     if ax is None:
         fig = plt.figure(figsize=(5, 5))
         ax = fig.add_axes([0.05, 0.05, 0.9, 0.9])
@@ -87,8 +87,8 @@ def dirLat(cnt, ax=None):
     return ax
 
 def recLat(cnt, ax=None):
-    _, _, invLfactor = utils.unitFactors(cnt)
-    KT, k1L, k2L, k1H, k2H, b0 = utils.changeUnits(cnt, invLfactor, 'KT', 'k1L', 'k2L', 'k1H', 'k2H', 'b0')
+    _, _, invLfactor = physics.unitFactors(cnt)
+    KT, k1L, k2L, k1H, k2H, b0 = physics.changeUnits(cnt, invLfactor, 'KT', 'k1L', 'k2L', 'k1H', 'k2H', 'b0')
     if ax is None:
         fig = plt.figure(figsize=(5, 5))
         ax = fig.add_axes([0.05, 0.05, 0.9, 0.9])
@@ -140,7 +140,7 @@ def recLat(cnt, ax=None):
     return ax
 
 def electronBands(cnt, ax=None, sym='hel'):
-    efactor, _, invLfactor = utils.unitFactors(cnt)
+    efactor, _, invLfactor = physics.unitFactors(cnt)
     if ax is None:
         fig = plt.figure(figsize=(8, 5))
         ax = fig.add_axes([0.05, 0.05, 0.9, 0.9])
@@ -161,7 +161,7 @@ def electronBands(cnt, ax=None, sym='hel'):
 
 
 def excitonBands(cnt, ax=None):
-    efactor, _, invLfactor = utils.unitFactors(cnt)
+    efactor, _, invLfactor = physics.unitFactors(cnt)
     if ax is None:
         fig = plt.figure(figsize=(8, 5))
         ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
@@ -184,7 +184,7 @@ def excitonBands(cnt, ax=None):
 
 
 def electronDOS(cnt, ax=None, swapAxes=False):
-    efactor, _, _ = utils.unitFactors(cnt)
+    efactor, _, _ = physics.unitFactors(cnt)
     if ax is None:
         fig = plt.figure(figsize=(8, 5))
         ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
@@ -209,7 +209,7 @@ def electronDOS(cnt, ax=None, swapAxes=False):
 
 
 def excitonDOS(cnt, ax=None, swapAxes=False):
-    efactor, _, _ = utils.unitFactors(cnt)
+    efactor, _, _ = physics.unitFactors(cnt)
     if ax is None:
         fig = plt.figure(figsize=(8, 5))
         ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])

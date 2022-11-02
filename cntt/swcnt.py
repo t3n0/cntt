@@ -33,9 +33,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import matplotlib.pyplot as plt
 import numpy as np
+import os
+
 import cntt.utils as utils
 import cntt.plotting as plotting
-import os
+import cntt.physics as physics
+import cntt.tightbinding as tightbinding
+import cntt.dft as dft
+import cntt.mathematics as mathematics
+
 
 
 class Swcnt(object):
@@ -92,10 +98,10 @@ class Swcnt(object):
         # CNT lattice vectors
         self.C = self.n * self.a1 + self.m * self.a2
         self.T = self.p * self.a1 + self.q * self.a2
-        self.u1, self.v1 = utils.minVector2AtomUnitCell(self.p, self.q, self.n)
+        self.u1, self.v1 = physics.minVector2AtomUnitCell(self.p, self.q, self.n)
         self.alpha = (self.n * self.R - 2 * self.N * self.u1) / (2 * self.m + self.n)
         self.t1 = self.u1 * self.a1 + self.v1 * self.a2
-        self.u2, self.v2 = utils.minVector2AtomUnitCell(self.n // self.D, self.m // self.D, self.p)
+        self.u2, self.v2 = physics.minVector2AtomUnitCell(self.n // self.D, self.m // self.D, self.p)
         self.beta = (self.D * (2 * self.m + self.n) / self.R / self.n + self.NU * self.u2 / self.n)
         self.t2 = self.u2 * self.a1 + self.v2 * self.a2
 
@@ -160,8 +166,8 @@ class Swcnt(object):
         '''
         self.kStepsLin = ksteps
         self.kStepsHel = int(self.normHel / self.normLin * self.kStepsLin)
-        self.bzCutsLin = utils.bzCuts(self.KT, self.KC, self.NU, self.kStepsLin)
-        self.bzCutsHel = utils.bzCuts(self.k2H, self.k1H / self.D, self.D, self.kStepsHel)
+        self.bzCutsLin = physics.bzCuts(self.KT, self.KC, self.NU, self.kStepsLin)
+        self.bzCutsHel = physics.bzCuts(self.k2H, self.k1H / self.D, self.D, self.kStepsHel)
 
 
     def calculateElectronBands(self, calc, name, sym, **kwargs):
@@ -192,7 +198,7 @@ class Swcnt(object):
                                 something, not yet defined
         '''
         if calc == 'TB':
-            utils.tightBindingElectronBands(self, name, sym, **kwargs)
+            tightbinding.tightBindingElectronBands(self, name, sym, **kwargs)
         elif calc == 'DFT':
             pass
         elif calc == 'something else':
@@ -233,9 +239,9 @@ class Swcnt(object):
             self.valeKpointZeros[which] = []
 
             for mu in range(0, subN): # angular momentum
-                vales, conds = utils.valeCondBands(bands[mu])
-                condMasks = utils.findFunctionListExtrema(conds, 'min')
-                valeMasks = utils.findFunctionListExtrema(vales, 'max')
+                vales, conds = physics.valeCondBands(bands[mu])
+                condMasks = mathematics.findFunctionListExtrema(conds, 'min')
+                valeMasks = mathematics.findFunctionListExtrema(vales, 'max')
                 cuts = bzCuts[mu]
                 
                 # valence band properties
@@ -303,7 +309,7 @@ class Swcnt(object):
                                                     optional, default = 0.0 eV
         '''
         if calc == 'EffMass' or calc == 'EM':
-            utils.effectiveMassExcitonBands(self, which, name, **kwargs)
+            physics.effectiveMassExcitonBands(self, which, name, **kwargs)
         elif calc == 'DFT':
             pass
         elif calc == 'something else':
@@ -335,7 +341,7 @@ class Swcnt(object):
             for name in bandNames:
                 bands = self.electronBandsHel[name]
                 cutIdx, bandIdx, axIdx, gridIdx = bands.shape
-                en, dos = utils.densityOfStates(bands.reshape((cutIdx * bandIdx, axIdx, gridIdx)), enSteps)
+                en, dos = physics.densityOfStates(bands.reshape((cutIdx * bandIdx, axIdx, gridIdx)), enSteps)
                 self.electronDOS[name] = [en, dos/self.normHel]
         elif which == 'ex' or which == 'exciton':
             if name == 'all':
@@ -348,7 +354,7 @@ class Swcnt(object):
                 for key in bands:
                     allBands.append(bands[key])
                 allBands = np.array(allBands)
-                en, dos = utils.densityOfStates(allBands, enSteps)
+                en, dos = physics.densityOfStates(allBands, enSteps)
                 self.excitonDOS[name] = [en, dos]
         else:
             print(f'Particle {which} not recognized.')

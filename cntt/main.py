@@ -41,10 +41,12 @@ def main():
 
         After installing CNTT via `pip install .` simply type from a terminal:
 
-        ~$ cntt 4 2
+        ~$ cntt <n> <m>
+
+        where <n>, <m> are integer values.
 
         This will produce a plot with lattice, BZ, electron and exciton bands,
-        density of states and exciton peaks of a (4,2) carbon nanotube.
+        density of states and exciton peaks of a (n,m) carbon nanotube.
     
         For a more detailed help, type:
 
