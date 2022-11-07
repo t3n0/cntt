@@ -103,6 +103,10 @@ def minVector2AtomUnitCell(l, k, n):
             return u, int(v)
 
 
+def atomicPositions():
+    pass
+
+
 def densityOfStates(bands, energySteps):
     energyMin = np.min(bands[:,1]) - 0.1*abs(np.min(bands[:,1]))
     energyMax = np.max(bands[:,1]) + 0.1*abs(np.max(bands[:,1]))

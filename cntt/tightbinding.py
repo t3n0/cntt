@@ -58,7 +58,7 @@ def grapheneTBBands(k, a1, a2, gamma=3.0):
     return band
 
 
-def tightBindingElectronBands(cnt, name, sym='hel', gamma=3.0, fermi=0.0):
+def tightBindingElectronBands(cnt, name, sym, gamma=3.0, fermi=0.0):
     '''
     Computes the band structure of the given CNT.
     '''

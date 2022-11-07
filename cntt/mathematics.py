@@ -117,3 +117,16 @@ def minimumPbcNorm(vec, k1, k2):
             if newnorm < norm:
                 norm = newnorm
     return norm
+
+
+def winding(point, polygon):
+    '''
+    Returns True is the point is inside the polygon.
+    '''
+    angle = 0
+    for i in range(len(polygon)):
+        aux1 = polygon[i]-point
+        aux2 = polygon[(i+1) % len(polygon)]-point
+        newangle = np.arctan2(aux1[0]*aux2[1]-aux1[1]*aux2[0], aux1[0]*aux2[0]+aux1[1]*aux2[1])
+        angle += newangle
+    return not -0.1<angle/2/np.pi<0.1

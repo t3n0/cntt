@@ -31,9 +31,16 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 '''
 
 
+from subprocess import run, PIPE
 import argparse
 import numpy as np
 from cntt.physics import unitFactors
+
+
+def runProcess(command, inputFile):
+    with open(inputFile) as inp:
+        process = run(command.split(), stdin=inp, stdout=PIPE, stderr=PIPE, shell=False, text=True)
+    return process
 
 
 def textParams(cnt):

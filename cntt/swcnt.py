@@ -104,6 +104,12 @@ class Swcnt(object):
         self.u2, self.v2 = physics.minVector2AtomUnitCell(self.n // self.D, self.m // self.D, self.p)
         self.beta = (self.D * (2 * self.m + self.n) / self.R / self.n + self.NU * self.u2 / self.n)
         self.t2 = self.u2 * self.a1 + self.v2 * self.a2
+        self.atomA = 1/3*(self.a1 + self.a2)
+        self.atomB = 2/3*(self.a1 + self.a2)
+        self.atomAlin = 1/3*(self.T + self.t1)
+        self.atomBlin = 2/3*(self.T + self.t1)
+        self.atomAhel = 1/3*(self.C/self.D + self.t2)
+        self.atomBhel = 2/3*(self.C/self.D + self.t2)
 
         # CNT reciprocal lattice vectors
         self.KC = (-self.q * self.b1 + self.p * self.b2) / self.NU
@@ -170,7 +176,7 @@ class Swcnt(object):
         self.bzCutsHel = physics.bzCuts(self.k2H, self.k1H / self.D, self.D, self.kStepsHel)
 
 
-    def calculateElectronBands(self, calc, name, sym, **kwargs):
+    def calculateElectronBands(self, calc, name, sym='hel', **kwargs):
         '''
         Calculate the electron bands energy dispersion using different methods.
 
@@ -182,9 +188,10 @@ class Swcnt(object):
             name (str):     unique name to identify the resulting bands
 
             sym (str):      linear or helical symmetry, either 'lin' or 'hel'
+                            optional, default = 'hel'
 
-            **kwargs:       key-value arguments depends on the calculation to
-                            be performed.
+            **kwargs:       Optional key-value arguments.
+                            They depends on the calculation to be performed.
 
                             TB calculation:
                                 gamma (float):      TB on-site parameter,
@@ -200,7 +207,7 @@ class Swcnt(object):
         if calc == 'TB':
             tightbinding.tightBindingElectronBands(self, name, sym, **kwargs)
         elif calc == 'DFT':
-            pass
+            dft.dftElectronBands(self, name, sym, **kwargs)
         elif calc == 'something else':
             pass
         else:
