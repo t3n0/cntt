@@ -111,6 +111,14 @@ class Swcnt(object):
         self.atomAhel = 1/3*(self.C/self.D + self.t2)
         self.atomBhel = 2/3*(self.C/self.D + self.t2)
 
+        # CNT crystallographic constants
+        self.normT  = np.linalg.norm(self.T)
+        self.normCD = np.linalg.norm(self.C)/self.D
+        self.normt1 = np.linalg.norm(self.t1)
+        self.normt2 = np.linalg.norm(self.t2)
+        self.cosTt1 = np.dot(self.T, self.t1)/self.normT/self.normt1
+        self.cosCt2 = np.dot(self.C/self.D, self.t2)/self.normCD/self.normt2
+
         # CNT reciprocal lattice vectors
         self.KC = (-self.q * self.b1 + self.p * self.b2) / self.NU
         self.KT = (self.m * self.b1 - self.n * self.b2) / self.NU

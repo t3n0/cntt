@@ -56,7 +56,11 @@ def pwInputFile(**kwargs):
     /
 
     &system
-        ibrav = 0,
+        ibrav = 12,
+        a = {kwargs['alat']}
+        b = {kwargs['blat']}
+        c = {kwargs['clat']}
+        cosAB = {kwargs['cosAB']}
         nat = 2,
         ntyp = 1,
         ecutwfc = {kwargs['ecutwfc']},
@@ -76,15 +80,11 @@ def pwInputFile(**kwargs):
     
     ATOMIC_SPECIES
         C  12.011  C.pbe-n-kjpaw_psl.1.0.0.UPF
-    
-    CELL_PARAMETERS (angstrom)
-        {10*kwargs['a1'][0]} {10*kwargs['a1'][1]} 0.0
-        {10*kwargs['a2'][0]} {10*kwargs['a2'][1]} 0.0
-        0.0 0.0 {kwargs['clat']}
 
-    ATOMIC_POSITIONS (angstrom)
-        C   {10*kwargs['A'][0]}    {10*kwargs['A'][1]}   0.0
-        C   {10*kwargs['B'][0]}    {10*kwargs['B'][1]}   0.0
+
+    ATOMIC_POSITIONS crystal
+        C   0.333333333333333    0.3333333333333333   0.0
+        C   0.666666666666666    0.6666666666666666   0.0
 
     '''
     
@@ -98,10 +98,10 @@ def pwInputFile(**kwargs):
     elif kwargs['calc'] == 'bands':
         FILE_NAME = os.path.join(WORK_DIR, DFT_DIR, '2-bands.in')
         kpoints = f'''\
-        K_POINTS tpiba_b
+        K_POINTS crystal_b
                 2
-                0.577350269 0.333333333 0.0 20
-                0.0         0.0         0.0 0
+                0.0000000000         0.000000000         0.000000000         {kwargs['kbands']}
+                0.0000000000         1.000000000         0.000000000         0
         '''
         text += dedent(kpoints)
 
@@ -113,15 +113,13 @@ def pwInputFile(**kwargs):
 
 def scfCalculation(cnt, name, sym, pseudo_dir = 'pseudo_dir', ecutwfc = 20, ecutrho = 200, nbnd = 8, clat = 10, kpoints = 5):
     if sym == 'hel':
-        a1 = cnt.C/cnt.D
-        a2 = cnt.t2
-        A = cnt.atomAhel
-        B = cnt.atomBhel
+        alat = 10 * cnt.normCD
+        blat = 10 * cnt.normt2
+        cosAB = cnt.cosCt2
     elif sym == 'lin':
-        a1 = cnt.T
-        a2 = cnt.t2
-        A = cnt.atomAlin
-        B = cnt.atomBlin
+        alat = 10 * cnt.normT
+        blat = 10 * cnt.normt1
+        cosAB = cnt.cosTt1
     else:
         print(f'Symmetry {sym} not recognised.')
     
@@ -131,16 +129,51 @@ def scfCalculation(cnt, name, sym, pseudo_dir = 'pseudo_dir', ecutwfc = 20, ecut
                 ecutwfc = ecutwfc,
                 ecutrho = ecutrho,
                 nbnd = nbnd,
-                a1 = a1,
-                a2 = a2,
+                alat = alat,
+                blat = blat,
                 clat = clat,
-                A = A,
-                B = B,
+                cosAB = cosAB,
                 kpoints = kpoints)
 
+    print('Start scf calculation: ... ', end='', flush=True)
     process = runProcess('mpirun -n 4 pw.x', inputFile)
-    print(process.stdout)
+    if process.returncode == 0:
+        print('DONE.')
+    else:
+        print(f'Failed with return code {process.returncode}.')
 
+def bandCalculation(cnt, name, sym, pseudo_dir = 'pseudo_dir', ecutwfc = 20, ecutrho = 200, nbnd = 8, clat = 10):
+    if sym == 'hel':
+        alat = 10 * cnt.normCD
+        blat = 10 * cnt.normt2
+        cosAB = cnt.cosCt2
+        kbands = len(cnt.bzCutsHel[0])
+    elif sym == 'lin':
+        alat = 10 * cnt.normT
+        blat = 10 * cnt.normt1
+        cosAB = cnt.cosTt1
+        kbands = len(cnt.bzCutsHel[0])
+    else:
+        print(f'Symmetry {sym} not recognised.')
+    
+    inputFile = pwInputFile(calc = 'bands',
+                flag = name,
+                pseudo_dir = pseudo_dir,
+                ecutwfc = ecutwfc,
+                ecutrho = ecutrho,
+                nbnd = nbnd,
+                alat = alat,
+                blat = blat,
+                clat = clat,
+                cosAB = cosAB,
+                kbands = kbands)
+    print('Start bands calculation: ... ', end='', flush=True)
+    process = runProcess('mpirun -n 4 pw.x', inputFile)
+    if process.returncode == 0:
+        print('DONE.')
+    else:
+        print(f'Failed with return code {process.returncode}.')
 
 def dftElectronBands(cnt, name, sym, **kwargs):
     scfCalculation(cnt, name, sym, **kwargs)
+    bandCalculation(cnt, name, sym, **kwargs)
