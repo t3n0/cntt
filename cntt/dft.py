@@ -32,35 +32,64 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
 from cntt.utils import runProcess
+from cntt.physics import Bohr2nm
 from textwrap import dedent
+import numpy as np
 import os
 
 
-def pwInputFile(**kwargs):
-
-    WORK_DIR   = os.getcwd()
-    DFT_DIR    = os.path.join(WORK_DIR, kwargs['flag'])
-    PSEUDO_DIR = os.path.join(WORK_DIR, kwargs['pseudo_dir'])
-    OUT_DIR    = os.path.join(WORK_DIR, DFT_DIR, 'outdir')
+def kPointsPathIbrav4(cnt, mu):
+    # maybe there is a more efficient/pythonic/elegant way to do this
+    # but i cannot be bothered, go to hell stupid brillouin zone!
+    n, m, D, u, v = cnt.n, cnt.m, cnt.D, cnt.u2, cnt.v2
+    k2 = np.array([v/D, u/D])
+    length = np.linalg.norm([n/D,m/D])
+    ksteps = cnt.kStepsHel
+    dk = length/ksteps
     
-    if not os.path.exists(DFT_DIR):
-        os.makedirs(DFT_DIR)
+    x1 = [i*m/n for i in range(n//D+1)]
+    x2 = [float(i) for i in range(m//D+1)]
+    xs = np.concatenate((x1,x2))
+    xs = np.sort(list(dict.fromkeys(xs)))
+    
+    y1 = [i*n/m for i in range(m//D+1)]
+    y2 = [float(i) for i in range(n//D+1)]
+    ys = np.concatenate((y1,y2))
+    ys = np.sort(list(dict.fromkeys(ys)))
+    
+    points = np.zeros((len(xs),2))
+    points[:,0] = xs
+    points[:,1] = ys
 
+    cuts = []
+    for i in range(len(points)-1):
+        cuts.append([points[i], points[i+1]])
+        delta = np.floor(points[i+1])
+        points = points - delta # Satan hides in here, DONT use -= operator!
+    cuts = np.array(cuts).reshape(-1,2) + k2 * mu
+
+    text = f'K_POINTS crystal_b\n    {len(cuts)}\n'
+    for i in range(0,len(cuts)-1,2):
+        segment = np.linalg.norm(cuts[i+1] - cuts[i])
+        text += f'    {cuts[i,0]} {cuts[i,1]} {0.0} {int(segment/dk)}\n    {cuts[i+1,0]} {cuts[i+1,1]} {0.0} {0}\n'
+    
+    return text
+
+
+def espressoBaseTxt(**kwargs):
     text = f'''\
     &control
         calculation = '{kwargs['calc']}'
         restart_mode = 'from_scratch',
         prefix = '{kwargs['flag']}',
-        pseudo_dir = '{PSEUDO_DIR}',
-        outdir = '{OUT_DIR}'
+        pseudo_dir = '{kwargs['pseudo_dir']}',
+        outdir = '{kwargs['outdir']}'
     /
 
     &system
-        ibrav = 12,
-        a = {kwargs['alat']}
-        b = {kwargs['blat']}
-        c = {kwargs['clat']}
-        cosAB = {kwargs['cosAB']}
+        ibrav = 4,
+        celldm(1) = {kwargs['alat']},
+        celldm(3) = {kwargs['clat']},
         nat = 2,
         ntyp = 1,
         ecutwfc = {kwargs['ecutwfc']},
@@ -77,7 +106,7 @@ def pwInputFile(**kwargs):
         mixing_beta = 0.7
         conv_thr = 1.0d-8
     /
-    
+
     ATOMIC_SPECIES
         C  12.011  C.pbe-n-kjpaw_psl.1.0.0.UPF
 
@@ -87,93 +116,89 @@ def pwInputFile(**kwargs):
         C   0.666666666666666    0.6666666666666666   0.0
 
     '''
-    
-    if kwargs['calc'] == 'scf':
-        FILE_NAME = os.path.join(WORK_DIR, DFT_DIR, '1-scf.in')
-        kpoints = f'''\
-        K_POINTS automatic
-                {kwargs['kpoints']} {kwargs['kpoints']} 1 0 0 0
-        '''
-        text += dedent(kpoints)
-    elif kwargs['calc'] == 'bands':
-        FILE_NAME = os.path.join(WORK_DIR, DFT_DIR, '2-bands.in')
-        kpoints = f'''\
-        K_POINTS crystal_b
-                2
-                0.0000000000         0.000000000         0.000000000         {kwargs['kbands']}
-                0.0000000000         1.000000000         0.000000000         0
-        '''
-        text += dedent(kpoints)
+    return dedent(text)
 
+
+def pwxInputFile(**kwargs):
+
+    WORK_DIR  = os.getcwd()
+    DFT_DIR   = os.path.join(WORK_DIR, kwargs['flag'])
+    FILE_NAME = os.path.join(WORK_DIR, DFT_DIR, kwargs['filename'])
+    if not os.path.exists(DFT_DIR):
+        os.makedirs(DFT_DIR)
+    kwargs['pseudo_dir'] = os.path.join(WORK_DIR, kwargs['pseudo_dir'])
+    kwargs['outdir']     = os.path.join(WORK_DIR, DFT_DIR, 'outdir')    
+    text = espressoBaseTxt(**kwargs) + kwargs['kpointCard']
     with open(FILE_NAME, 'w') as f:
-        f.write(dedent(text))
-    
+            f.write(text)
     return FILE_NAME
 
 
-def scfCalculation(cnt, name, sym, pseudo_dir = 'pseudo_dir', ecutwfc = 20, ecutrho = 200, nbnd = 8, clat = 10, kpoints = 5):
-    if sym == 'hel':
-        alat = 10 * cnt.normCD
-        blat = 10 * cnt.normt2
-        cosAB = cnt.cosCt2
-    elif sym == 'lin':
-        alat = 10 * cnt.normT
-        blat = 10 * cnt.normt1
-        cosAB = cnt.cosTt1
-    else:
-        print(f'Symmetry {sym} not recognised.')
+def bandsxInputFile(prefix, outdir, filband):
+    text = f'''\
+        &BANDS
+        prefix = '{prefix}',
+        outdir = '{outdir}',
+        filband = '{filband}'
+        /'''
+
+
+def scfCalculation(cnt, name, pseudo_dir = 'pseudo_dir', ecutwfc = 20, ecutrho = 200, nbnd = 8, clat = 10, kpoints = 5):
+
+    kpointCard = f'K_POINTS automatic\n    {kpoints} {kpoints} 1 0 0 0\n'
+
+    inputFile = pwxInputFile(
+        calc = 'scf',
+        flag = name,
+        filename = '1-scf.in',
+        pseudo_dir = pseudo_dir,
+        ecutwfc = ecutwfc,
+        ecutrho = ecutrho,
+        nbnd = nbnd,
+        alat = cnt.a0 / Bohr2nm,
+        clat = clat,
+        kpointCard = kpointCard)
+
+    # print('Start scf calculation: ... ', end='', flush=True)
+    # process = runProcess('mpirun -n 4 pw.x', inputFile)
+    # if process.returncode == 0:
+    #     print('DONE.')
+    # else:
+    #     print(f'Failed with return code {process.returncode}.')
+    # todo
+    # parse information (eg the fermi level) from the process.output
+    # print(process.stdout)
+    # print(process.stderr)
+
+
+def bandCalculation(cnt, name, pseudo_dir = 'pseudo_dir', ecutwfc = 20, ecutrho = 200, nbnd = 8, clat = 10, mu = 0):
     
-    inputFile = pwInputFile(calc = 'scf',
-                flag = name,
-                pseudo_dir = pseudo_dir,
-                ecutwfc = ecutwfc,
-                ecutrho = ecutrho,
-                nbnd = nbnd,
-                alat = alat,
-                blat = blat,
-                clat = clat,
-                cosAB = cosAB,
-                kpoints = kpoints)
+    kpointCard = kPointsPathIbrav4(cnt, mu)
 
-    print('Start scf calculation: ... ', end='', flush=True)
-    process = runProcess('mpirun -n 4 pw.x', inputFile)
-    if process.returncode == 0:
-        print('DONE.')
-    else:
-        print(f'Failed with return code {process.returncode}.')
+    inputFile = pwxInputFile(
+        calc = 'bands',
+        flag = name,
+        filename = f'2-bands-{mu:02d}.in',
+        pseudo_dir = pseudo_dir,
+        ecutwfc = ecutwfc,
+        ecutrho = ecutrho,
+        nbnd = nbnd,
+        alat = cnt.a0 / Bohr2nm,
+        clat = clat,
+        kpointCard = kpointCard)
 
-def bandCalculation(cnt, name, sym, pseudo_dir = 'pseudo_dir', ecutwfc = 20, ecutrho = 200, nbnd = 8, clat = 10):
-    if sym == 'hel':
-        alat = 10 * cnt.normCD
-        blat = 10 * cnt.normt2
-        cosAB = cnt.cosCt2
-        kbands = len(cnt.bzCutsHel[0])
-    elif sym == 'lin':
-        alat = 10 * cnt.normT
-        blat = 10 * cnt.normt1
-        cosAB = cnt.cosTt1
-        kbands = len(cnt.bzCutsHel[0])
-    else:
-        print(f'Symmetry {sym} not recognised.')
-    
-    inputFile = pwInputFile(calc = 'bands',
-                flag = name,
-                pseudo_dir = pseudo_dir,
-                ecutwfc = ecutwfc,
-                ecutrho = ecutrho,
-                nbnd = nbnd,
-                alat = alat,
-                blat = blat,
-                clat = clat,
-                cosAB = cosAB,
-                kbands = kbands)
-    print('Start bands calculation: ... ', end='', flush=True)
-    process = runProcess('mpirun -n 4 pw.x', inputFile)
-    if process.returncode == 0:
-        print('DONE.')
-    else:
-        print(f'Failed with return code {process.returncode}.')
+    # print('Start bands calculation: ... ', end='', flush=True)
+    # process = runProcess('mpirun -n 4 pw.x', inputFile)
+    # # process = runProcess('/home/tentacolo/quantum-espresso/qe-7.1-serial/bin/pw.x', inputFile)
+    # if process.returncode == 0:
+    #     print('DONE.')
+    # else:
+    #     print(f'Failed with return code {process.returncode}.')
+    # print(process.stdout)
+    # print(process.stderr)
 
-def dftElectronBands(cnt, name, sym, **kwargs):
-    scfCalculation(cnt, name, sym, **kwargs)
-    bandCalculation(cnt, name, sym, **kwargs)
+def dftElectronBands(cnt, name, **kwargs):
+
+    scfCalculation(cnt, name, **kwargs)
+    for mu in range(cnt.D):
+        bandCalculation(cnt, name, mu = mu, **kwargs)

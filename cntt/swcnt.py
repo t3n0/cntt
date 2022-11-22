@@ -215,7 +215,7 @@ class Swcnt(object):
         if calc == 'TB':
             tightbinding.tightBindingElectronBands(self, name, sym, **kwargs)
         elif calc == 'DFT':
-            dft.dftElectronBands(self, name, sym, **kwargs)
+            dft.dftElectronBands(self, name, **kwargs)
         elif calc == 'something else':
             pass
         else:

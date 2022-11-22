@@ -103,10 +103,6 @@ def minVector2AtomUnitCell(l, k, n):
             return u, int(v)
 
 
-def atomicPositions():
-    pass
-
-
 def densityOfStates(bands, energySteps):
     energyMin = np.min(bands[:,1]) - 0.1*abs(np.min(bands[:,1]))
     energyMax = np.max(bands[:,1]) + 0.1*abs(np.max(bands[:,1]))
@@ -127,8 +123,8 @@ def densityOfStates(bands, energySteps):
     return energyGrid, dos
 
 
-def bzCuts(k1, k2, N, ksteps):
-    kmesh = np.linspace(-0.5, 0.5, ksteps)
+def bzCuts(k1, k2, N, ksteps, min=-0.5, max=0.5):
+    kmesh = np.linspace(min, max, ksteps)
     k1grid = np.outer(kmesh, k1)
     cuts = []
     for mu in range(0, N):
