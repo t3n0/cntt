@@ -247,11 +247,13 @@ def dftElectronBands(cnt, name, pseudo_dir = 'pseudo_dir', ecutwfc = 20, ecutrho
     bands = np.zeros( (cnt.D, 2*deltan, 2, ksteps) ) # bands = E_n^mu(k), bands[mu index, n index, k/energy index, grid index]
     bands[:,:,0,:] = bz
 
-    fermi = scfCalculation(cnt, name, pseudo_dir = pseudo_dir, ecutwfc = ecutwfc, ecutrho = ecutrho, nbnd = nbnd, clat = clat, kpoints = kpoints)
+    # fermi = scfCalculation(cnt, name, pseudo_dir = pseudo_dir, ecutwfc = ecutwfc, ecutrho = ecutrho, nbnd = nbnd, clat = clat, kpoints = kpoints)
+    fermi = -3.3597
+    print(fermi)
     for mu in range(cnt.D):
-        bandCalculation(cnt, name, pseudo_dir = pseudo_dir, ecutwfc = ecutwfc, ecutrho = ecutrho, nbnd = nbnd, clat = clat, mu = mu)
-        band = bandsXCalculation(name, mu = mu)
-        #band = np.loadtxt(f'./mycnt/bands-{mu:02d}.txt.gnu').T
+        #bandCalculation(cnt, name, pseudo_dir = pseudo_dir, ecutwfc = ecutwfc, ecutrho = ecutrho, nbnd = nbnd, clat = clat, mu = mu)
+        #band = bandsXCalculation(name, mu = mu)
+        band = np.loadtxt(f'./{name}/bands-{mu:02d}.txt.gnu').T
         dftKgrid = band[0].reshape(nbnd,-1)[0]
         dftKgrid = (dftKgrid - np.max(dftKgrid)/2) * np.pi * 2 / cnt.a0
         if abs(dftKgrid[0]-bz[0]) + abs(dftKgrid[-1]-bz[-1]) > 1e-2:
