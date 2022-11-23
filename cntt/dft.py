@@ -242,28 +242,29 @@ def bandsXCalculation(name, mu = 0):
 def dftElectronBands(cnt, name, pseudo_dir = 'pseudo_dir', ecutwfc = 20, ecutrho = 200, nbnd = 8, clat = 1, kpoints = 12):
 
     attrBands = 'electronBandsHel'
+    subN, ksteps, _ = cnt.bzCutsHel.shape
+    bz = cnt.bzHel
     #fermi = scfCalculation(cnt, name, pseudo_dir = pseudo_dir, ecutwfc = ecutwfc, ecutrho = ecutrho, nbnd = nbnd, clat = clat, kpoints = kpoints)
     fermi = -3.3597
-    subN, ksteps, _ = cnt.bzCutsHel.shape
-    bz = np.linspace(-0.5, 0.5, ksteps) * cnt.normHel
-
-    # bands = np.zeros( (cnt.D, 2, 2, ksteps) ) # bands = E_n^mu(k), bands[mu index, n index, k/energy index, grid index]
-    # bands[:,:,0,:] = bz
+    bands = np.zeros( (cnt.D, 2, 2, ksteps) ) # bands = E_n^mu(k), bands[mu index, n index, k/energy index, grid index]
+    bands[:,:,0,:] = bz
 
     for mu in range(cnt.D):
         #bandCalculation(cnt, name, pseudo_dir = pseudo_dir, ecutwfc = ecutwfc, ecutrho = ecutrho, nbnd = nbnd, clat = clat, mu = mu)
         #band = bandsXCalculation(name, mu = mu)
         band = np.loadtxt(f'./mycnt/bands-{mu:02d}.txt.gnu').T
-        kgrids = band[0].reshape(nbnd,-1)
-        egrids = band[1].reshape(nbnd,-1)
-        newband = band.reshape((nbnd,2,-1))
-        newband[:,0,:] = (kgrids - max(kgrids[0])/2) * np.pi * 2 / cnt.a0
-        newband[:,1,:] = np.roll(egrids, len(egrids[0])//2, axis=1) - fermi
-        print(newband[0,0,0], newband[0,0,-1])
-        print(bz[0], bz[-1])
-        #getattr(cnt, attrBands)[name] = newband
-        # for i in range(3,5):
-        #     plt.plot(newband[i,0], newband[i,1])
-        # for i in range(2):
-        #     plt.plot(cnt.electronBandsHel['TB0'][mu,i,0,:], cnt.electronBandsHel['TB0'][mu,i,1,:])
-    # plt.show()
+        dftKgrid = band[0].reshape(nbnd,-1)[0]
+        dftKgrid = (dftKgrid - np.max(dftKgrid)/2) * np.pi * 2 / cnt.a0
+        if abs(dftKgrid[0]-bz[0]) + abs(dftKgrid[-1]-bz[-1]) > 1e-2:
+            print('Warning: dft BZ mismatch.')
+            print('    ', dftKgrid[0], bz[0], abs(dftKgrid[0]-bz[0]))
+            print('    ', dftKgrid[-1], bz[-1], abs(dftKgrid[-1]-bz[-1]))
+        dftKsteps = len(dftKgrid)
+        dftBz = np.linspace(bz[0], bz[-1], dftKsteps)
+        dftEgrids = band[1].reshape(nbnd,-1)
+        dftEgrids = np.roll(dftEgrids, len(dftEgrids[0])//2, axis=1) - fermi
+        for i in range(3,5):
+            egrid = np.interp(bz, dftBz, dftEgrids[i])
+            bands[mu,i-3,1,:] = egrid
+    getattr(cnt, attrBands)[name] = bands
+

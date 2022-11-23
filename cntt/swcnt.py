@@ -185,6 +185,7 @@ class Swcnt(object):
         self.bzLin = np.linspace(-0.5, 0.5, self.kStepsLin) * self.normLin
         self.bzHel = np.linspace(-0.5, 0.5, self.kStepsHel) * self.normHel
 
+
     def calculateElectronBands(self, calc, name, sym='hel', **kwargs):
         '''
         Calculate the electron bands energy dispersion using different methods.
