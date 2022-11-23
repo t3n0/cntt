@@ -169,20 +169,21 @@ class Swcnt(object):
         self.unitInvL = length + '-1'
 
 
-    def calculateCuttingLines(self, ksteps=51):
+    def calculateCuttingLines(self, ksteps=11):
         '''
         Calculate the linear and helical cutting lines in the zone-folding scheme.
 
         Parameters:
         -----------
             ksteps (int):   number of kpoints for the discretisation
-                            optional, default = 51
+                            optional, default = 11
         '''
         self.kStepsLin = ksteps
         self.kStepsHel = int(self.normHel / self.normLin * self.kStepsLin)
         self.bzCutsLin = physics.bzCuts(self.KT, self.KC, self.NU, self.kStepsLin)
         self.bzCutsHel = physics.bzCuts(self.k2H, self.k1H / self.D, self.D, self.kStepsHel)
-
+        self.bzLin = np.linspace(-0.5, 0.5, self.kStepsLin) * self.normLin
+        self.bzHel = np.linspace(-0.5, 0.5, self.kStepsHel) * self.normHel
 
     def calculateElectronBands(self, calc, name, sym='hel', **kwargs):
         '''

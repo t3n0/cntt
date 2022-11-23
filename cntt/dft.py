@@ -36,6 +36,14 @@ from cntt.physics import Bohr2nm
 from textwrap import dedent
 import numpy as np
 import os
+import matplotlib.pyplot as plt
+
+
+def parseScf(text: str):
+    for line in text.splitlines():
+        if 'the Fermi energy is' in line:
+            fermi = line.split()[-2]
+    return float(fermi)
 
 
 def kPointsPathIbrav4(cnt, mu):
@@ -112,8 +120,8 @@ def espressoBaseTxt(**kwargs):
 
 
     ATOMIC_POSITIONS crystal
-        C   0.333333333333333    0.3333333333333333   0.0
-        C   0.666666666666666    0.6666666666666666   0.0
+    C   0.6666666666666667    0.3333333333333333   0.0
+    C   0.3333333333333333    0.6666666666666667   0.0
 
     '''
     return dedent(text)
@@ -127,23 +135,36 @@ def pwxInputFile(**kwargs):
     if not os.path.exists(DFT_DIR):
         os.makedirs(DFT_DIR)
     kwargs['pseudo_dir'] = os.path.join(WORK_DIR, kwargs['pseudo_dir'])
-    kwargs['outdir']     = os.path.join(WORK_DIR, DFT_DIR, 'outdir')    
+    kwargs['outdir']     = os.path.join(WORK_DIR, DFT_DIR, 'outdir')
+
     text = espressoBaseTxt(**kwargs) + kwargs['kpointCard']
     with open(FILE_NAME, 'w') as f:
             f.write(text)
     return FILE_NAME
 
 
-def bandsxInputFile(prefix, outdir, filband):
+def bandsxInputFile(flag, filename, filebands):
+    WORK_DIR  = os.getcwd()
+    DFT_DIR   = os.path.join(WORK_DIR, flag)
+    FILE_NAME = os.path.join(WORK_DIR, DFT_DIR, filename)
+    OUT_FILE  = os.path.join(WORK_DIR, DFT_DIR, filebands)
+    OUTDIR    = os.path.join(WORK_DIR, DFT_DIR, 'outdir')
+    if not os.path.exists(DFT_DIR):
+        os.makedirs(DFT_DIR)
     text = f'''\
         &BANDS
-        prefix = '{prefix}',
-        outdir = '{outdir}',
-        filband = '{filband}'
-        /'''
+        prefix = '{flag}',
+        outdir = '{OUTDIR}',
+        filband = '{OUT_FILE}'
+        /
+    '''
+    
+    with open(FILE_NAME, 'w') as f:
+            f.write(dedent(text))
+    return FILE_NAME, OUT_FILE
 
 
-def scfCalculation(cnt, name, pseudo_dir = 'pseudo_dir', ecutwfc = 20, ecutrho = 200, nbnd = 8, clat = 10, kpoints = 5):
+def scfCalculation(cnt, name, pseudo_dir = 'pseudo_dir', ecutwfc = 20, ecutrho = 200, nbnd = 8, clat = 1, kpoints = 12):
 
     kpointCard = f'K_POINTS automatic\n    {kpoints} {kpoints} 1 0 0 0\n'
 
@@ -156,22 +177,24 @@ def scfCalculation(cnt, name, pseudo_dir = 'pseudo_dir', ecutwfc = 20, ecutrho =
         ecutrho = ecutrho,
         nbnd = nbnd,
         alat = cnt.a0 / Bohr2nm,
-        clat = clat,
+        clat = clat / Bohr2nm,
         kpointCard = kpointCard)
 
-    # print('Start scf calculation: ... ', end='', flush=True)
-    # process = runProcess('mpirun -n 4 pw.x', inputFile)
-    # if process.returncode == 0:
-    #     print('DONE.')
-    # else:
-    #     print(f'Failed with return code {process.returncode}.')
+    print('Start scf calculation: ... ', end='', flush=True)
+    process = runProcess('mpirun -n 4 pw.x', inputFile)
+    if process.returncode == 0:
+        print('DONE.')
+        fermi = parseScf(process.stdout)
+    else:
+        print(f'Failed with return code {process.returncode}.')
     # todo
     # parse information (eg the fermi level) from the process.output
     # print(process.stdout)
     # print(process.stderr)
+    return fermi
 
 
-def bandCalculation(cnt, name, pseudo_dir = 'pseudo_dir', ecutwfc = 20, ecutrho = 200, nbnd = 8, clat = 10, mu = 0):
+def bandCalculation(cnt, name, pseudo_dir = 'pseudo_dir', ecutwfc = 20, ecutrho = 200, nbnd = 8, clat = 1, mu = 0):
     
     kpointCard = kPointsPathIbrav4(cnt, mu)
 
@@ -184,21 +207,63 @@ def bandCalculation(cnt, name, pseudo_dir = 'pseudo_dir', ecutwfc = 20, ecutrho 
         ecutrho = ecutrho,
         nbnd = nbnd,
         alat = cnt.a0 / Bohr2nm,
-        clat = clat,
+        clat = clat / Bohr2nm,
         kpointCard = kpointCard)
 
-    # print('Start bands calculation: ... ', end='', flush=True)
-    # process = runProcess('mpirun -n 4 pw.x', inputFile)
-    # # process = runProcess('/home/tentacolo/quantum-espresso/qe-7.1-serial/bin/pw.x', inputFile)
-    # if process.returncode == 0:
-    #     print('DONE.')
-    # else:
-    #     print(f'Failed with return code {process.returncode}.')
+    print('Start bands calculation: ... ', end='', flush=True)
+    process = runProcess('mpirun -n 4 pw.x', inputFile)
+    if process.returncode == 0:
+        print('DONE.')
+    else:
+        print(f'Failed with return code {process.returncode}.')
     # print(process.stdout)
     # print(process.stderr)
 
-def dftElectronBands(cnt, name, **kwargs):
 
-    scfCalculation(cnt, name, **kwargs)
+def bandsXCalculation(name, mu = 0):
+
+    inputFile, bandFile = bandsxInputFile(
+        name,
+        filename = f'3-bandsx-{mu:02d}.in',
+        filebands = f'bands-{mu:02d}.txt')
+
+    print(f'Start mu={mu} k-path calculation: ... ', end='', flush=True)
+    process = runProcess('mpirun -n 4 bands.x', inputFile)
+    if process.returncode == 0:
+        print('DONE.')
+    else:
+        print(f'Failed with return code {process.returncode}.')
+    # print(process.stdout)
+    # print(process.stderr)
+
+    return np.loadtxt(bandFile + '.gnu').T
+
+
+def dftElectronBands(cnt, name, pseudo_dir = 'pseudo_dir', ecutwfc = 20, ecutrho = 200, nbnd = 8, clat = 1, kpoints = 12):
+
+    attrBands = 'electronBandsHel'
+    #fermi = scfCalculation(cnt, name, pseudo_dir = pseudo_dir, ecutwfc = ecutwfc, ecutrho = ecutrho, nbnd = nbnd, clat = clat, kpoints = kpoints)
+    fermi = -3.3597
+    subN, ksteps, _ = cnt.bzCutsHel.shape
+    bz = np.linspace(-0.5, 0.5, ksteps) * cnt.normHel
+
+    # bands = np.zeros( (cnt.D, 2, 2, ksteps) ) # bands = E_n^mu(k), bands[mu index, n index, k/energy index, grid index]
+    # bands[:,:,0,:] = bz
+
     for mu in range(cnt.D):
-        bandCalculation(cnt, name, mu = mu, **kwargs)
+        #bandCalculation(cnt, name, pseudo_dir = pseudo_dir, ecutwfc = ecutwfc, ecutrho = ecutrho, nbnd = nbnd, clat = clat, mu = mu)
+        #band = bandsXCalculation(name, mu = mu)
+        band = np.loadtxt(f'./mycnt/bands-{mu:02d}.txt.gnu').T
+        kgrids = band[0].reshape(nbnd,-1)
+        egrids = band[1].reshape(nbnd,-1)
+        newband = band.reshape((nbnd,2,-1))
+        newband[:,0,:] = (kgrids - max(kgrids[0])/2) * np.pi * 2 / cnt.a0
+        newband[:,1,:] = np.roll(egrids, len(egrids[0])//2, axis=1) - fermi
+        print(newband[0,0,0], newband[0,0,-1])
+        print(bz[0], bz[-1])
+        #getattr(cnt, attrBands)[name] = newband
+        # for i in range(3,5):
+        #     plt.plot(newband[i,0], newband[i,1])
+        # for i in range(2):
+        #     plt.plot(cnt.electronBandsHel['TB0'][mu,i,0,:], cnt.electronBandsHel['TB0'][mu,i,1,:])
+    # plt.show()

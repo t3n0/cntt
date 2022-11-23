@@ -63,13 +63,12 @@ def tightBindingElectronBands(cnt, name, sym, gamma=3.0, fermi=0.0):
     Computes the band structure of the given CNT.
     '''
     attrCuts = f'bzCuts{sym.capitalize()}'
-    attrNorm = f'norm{sym.capitalize()}'
+    attrBz = f'bz{sym.capitalize()}'
     attrBands = f'electronBands{sym.capitalize()}'
     if hasattr(cnt, attrCuts):
         bzCuts = getattr(cnt, attrCuts)
-        bzNorm = getattr(cnt, attrNorm)
+        bz = getattr(cnt, attrBz)
         subN, ksteps, _ = bzCuts.shape
-        bz = np.linspace(-0.5, 0.5, ksteps) * bzNorm
         bands = np.zeros( (subN, 2, 2, ksteps) ) # bands = E_n^mu(k), bands[mu index, n index, k/energy index, grid index]
         bands[:,:,0,:] = bz
         for mu, cut in enumerate(bzCuts):
