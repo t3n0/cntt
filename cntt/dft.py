@@ -131,23 +131,27 @@ def pwxInputFile(**kwargs):
 
     WORK_DIR  = os.getcwd()
     DFT_DIR   = os.path.join(WORK_DIR, kwargs['flag'])
-    FILE_NAME = os.path.join(WORK_DIR, DFT_DIR, kwargs['filename'])
+    FILE_IN = os.path.join(WORK_DIR, DFT_DIR, kwargs['filename']+'.in')
+    FILE_OUT  = os.path.join(WORK_DIR, DFT_DIR, kwargs['filename']+'.out')
+    FILE_ERR = os.path.join(WORK_DIR, DFT_DIR, kwargs['filename']+'.err')
     if not os.path.exists(DFT_DIR):
         os.makedirs(DFT_DIR)
     kwargs['pseudo_dir'] = os.path.join(WORK_DIR, kwargs['pseudo_dir'])
     kwargs['outdir']     = os.path.join(WORK_DIR, DFT_DIR, 'outdir')
 
     text = espressoBaseTxt(**kwargs) + kwargs['kpointCard']
-    with open(FILE_NAME, 'w') as f:
+    with open(FILE_IN, 'w') as f:
             f.write(text)
-    return FILE_NAME
+    return FILE_IN, FILE_OUT, FILE_ERR
 
 
 def bandsxInputFile(flag, filename, filebands):
     WORK_DIR  = os.getcwd()
     DFT_DIR   = os.path.join(WORK_DIR, flag)
-    FILE_NAME = os.path.join(WORK_DIR, DFT_DIR, filename)
-    OUT_FILE  = os.path.join(WORK_DIR, DFT_DIR, filebands)
+    FILE_IN = os.path.join(WORK_DIR, DFT_DIR, filename+'.in')
+    FILE_OUT = os.path.join(WORK_DIR, DFT_DIR, filename+'.out')
+    FILE_ERR = os.path.join(WORK_DIR, DFT_DIR, filename+'.err')
+    FILE_BANDS  = os.path.join(WORK_DIR, DFT_DIR, filebands)
     OUTDIR    = os.path.join(WORK_DIR, DFT_DIR, 'outdir')
     if not os.path.exists(DFT_DIR):
         os.makedirs(DFT_DIR)
@@ -155,23 +159,23 @@ def bandsxInputFile(flag, filename, filebands):
         &BANDS
         prefix = '{flag}',
         outdir = '{OUTDIR}',
-        filband = '{OUT_FILE}'
+        filband = '{FILE_BANDS}'
         /
     '''
     
-    with open(FILE_NAME, 'w') as f:
+    with open(FILE_IN, 'w') as f:
             f.write(dedent(text))
-    return FILE_NAME, OUT_FILE
+    return FILE_IN, FILE_BANDS, FILE_OUT, FILE_ERR
 
 
 def scfCalculation(cnt, name, pseudo_dir = 'pseudo_dir', ecutwfc = 20, ecutrho = 200, nbnd = 8, clat = 1, kpoints = 12, nprocs = 1):
 
     kpointCard = f'K_POINTS automatic\n    {kpoints} {kpoints} 1 0 0 0\n'
 
-    inputFile = pwxInputFile(
+    inputFile, outputFile, errFile = pwxInputFile(
         calc = 'scf',
         flag = name,
-        filename = '1-scf.in',
+        filename = '1-scf',
         pseudo_dir = pseudo_dir,
         ecutwfc = ecutwfc,
         ecutrho = ecutrho,
@@ -187,10 +191,11 @@ def scfCalculation(cnt, name, pseudo_dir = 'pseudo_dir', ecutwfc = 20, ecutrho =
         fermi = parseScf(process.stdout)
     else:
         print(f'Failed with return code {process.returncode}.')
-    # todo
-    # parse information (eg the fermi level) from the process.output
-    # print(process.stdout)
-    # print(process.stderr)
+        with open(errFile, 'w') as f:
+            f.write(dedent(process.stderr))
+    with open(outputFile, 'w') as f:
+            f.write(dedent(process.stdout))
+    
     return fermi
 
 
@@ -198,10 +203,10 @@ def bandCalculation(cnt, name, pseudo_dir = 'pseudo_dir', ecutwfc = 20, ecutrho 
     
     kpointCard = kPointsPathIbrav4(cnt, mu)
 
-    inputFile = pwxInputFile(
+    inputFile, outputFile, errFile = pwxInputFile(
         calc = 'bands',
         flag = name,
-        filename = f'2-bands-{mu:02d}.in',
+        filename = f'2-bands-{mu:02d}',
         pseudo_dir = pseudo_dir,
         ecutwfc = ecutwfc,
         ecutrho = ecutrho,
@@ -210,21 +215,23 @@ def bandCalculation(cnt, name, pseudo_dir = 'pseudo_dir', ecutwfc = 20, ecutrho 
         clat = clat / Bohr2nm,
         kpointCard = kpointCard)
 
-    print('Start bands calculation: ... ', end='', flush=True)
+    print(f'Start mu={mu} bands calculation: ... ', end='', flush=True)
     process = runProcess(f'mpirun -n {nprocs} pw.x', inputFile)
     if process.returncode == 0:
         print('DONE.')
     else:
         print(f'Failed with return code {process.returncode}.')
-    # print(process.stdout)
-    # print(process.stderr)
+        with open(errFile, 'w') as f:
+            f.write(dedent(process.stderr))
+    with open(outputFile, 'w') as f:
+            f.write(dedent(process.stdout))
 
 
 def bandsXCalculation(name, mu = 0, nprocs = 1):
 
-    inputFile, bandFile = bandsxInputFile(
+    inputFile, bandFile, outputFile, errFile = bandsxInputFile(
         name,
-        filename = f'3-bandsx-{mu:02d}.in',
+        filename = f'3-bandsx-{mu:02d}',
         filebands = f'bands-{mu:02d}.txt')
 
     print(f'Start mu={mu} k-path calculation: ... ', end='', flush=True)
@@ -233,8 +240,10 @@ def bandsXCalculation(name, mu = 0, nprocs = 1):
         print('DONE.')
     else:
         print(f'Failed with return code {process.returncode}.')
-    # print(process.stdout)
-    # print(process.stderr)
+        with open(errFile, 'w') as f:
+            f.write(dedent(process.stderr))
+    with open(outputFile, 'w') as f:
+            f.write(dedent(process.stdout))
 
     return np.loadtxt(bandFile + '.gnu').T
 
@@ -248,7 +257,11 @@ def dftElectronBands(cnt, name, from_file = False, pseudo_dir = 'pseudo_dir', ec
     bands[:,:,0,:] = bz
 
     if from_file:
-        fermi = -3.3597
+        WORK_DIR  = os.getcwd()
+        outputFile  = os.path.join(WORK_DIR, name, f'1-scf.out')
+        with open(outputFile, 'r') as f:
+            text = f.read()
+        fermi = parseScf(text)
     else:
         fermi = scfCalculation(cnt, name, pseudo_dir = pseudo_dir, ecutwfc = ecutwfc, ecutrho = ecutrho, nbnd = nbnd, clat = clat, kpoints = kpoints, nprocs = nprocs)
     for mu in range(cnt.D):
