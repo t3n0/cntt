@@ -164,7 +164,7 @@ def bandsxInputFile(flag, filename, filebands):
     return FILE_NAME, OUT_FILE
 
 
-def scfCalculation(cnt, name, pseudo_dir = 'pseudo_dir', ecutwfc = 20, ecutrho = 200, nbnd = 8, clat = 1, kpoints = 12):
+def scfCalculation(cnt, name, pseudo_dir = 'pseudo_dir', ecutwfc = 20, ecutrho = 200, nbnd = 8, clat = 1, kpoints = 12, nprocs = 1):
 
     kpointCard = f'K_POINTS automatic\n    {kpoints} {kpoints} 1 0 0 0\n'
 
@@ -181,7 +181,7 @@ def scfCalculation(cnt, name, pseudo_dir = 'pseudo_dir', ecutwfc = 20, ecutrho =
         kpointCard = kpointCard)
 
     print('Start scf calculation: ... ', end='', flush=True)
-    process = runProcess('mpirun -n 4 pw.x', inputFile)
+    process = runProcess(f'mpirun -n {nprocs} pw.x', inputFile)
     if process.returncode == 0:
         print('DONE.')
         fermi = parseScf(process.stdout)
@@ -194,7 +194,7 @@ def scfCalculation(cnt, name, pseudo_dir = 'pseudo_dir', ecutwfc = 20, ecutrho =
     return fermi
 
 
-def bandCalculation(cnt, name, pseudo_dir = 'pseudo_dir', ecutwfc = 20, ecutrho = 200, nbnd = 8, clat = 1, mu = 0):
+def bandCalculation(cnt, name, pseudo_dir = 'pseudo_dir', ecutwfc = 20, ecutrho = 200, nbnd = 8, clat = 1, mu = 0, nprocs = 1):
     
     kpointCard = kPointsPathIbrav4(cnt, mu)
 
@@ -211,7 +211,7 @@ def bandCalculation(cnt, name, pseudo_dir = 'pseudo_dir', ecutwfc = 20, ecutrho 
         kpointCard = kpointCard)
 
     print('Start bands calculation: ... ', end='', flush=True)
-    process = runProcess('mpirun -n 4 pw.x', inputFile)
+    process = runProcess(f'mpirun -n {nprocs} pw.x', inputFile)
     if process.returncode == 0:
         print('DONE.')
     else:
@@ -220,7 +220,7 @@ def bandCalculation(cnt, name, pseudo_dir = 'pseudo_dir', ecutwfc = 20, ecutrho 
     # print(process.stderr)
 
 
-def bandsXCalculation(name, mu = 0):
+def bandsXCalculation(name, mu = 0, nprocs = 1):
 
     inputFile, bandFile = bandsxInputFile(
         name,
@@ -228,7 +228,7 @@ def bandsXCalculation(name, mu = 0):
         filebands = f'bands-{mu:02d}.txt')
 
     print(f'Start mu={mu} k-path calculation: ... ', end='', flush=True)
-    process = runProcess('mpirun -n 4 bands.x', inputFile)
+    process = runProcess(f'mpirun -n {nprocs} bands.x', inputFile)
     if process.returncode == 0:
         print('DONE.')
     else:
@@ -239,7 +239,7 @@ def bandsXCalculation(name, mu = 0):
     return np.loadtxt(bandFile + '.gnu').T
 
 
-def dftElectronBands(cnt, name, pseudo_dir = 'pseudo_dir', ecutwfc = 20, ecutrho = 200, nbnd = 8, clat = 1, kpoints = 12, deltan=1):
+def dftElectronBands(cnt, name, from_file = False, pseudo_dir = 'pseudo_dir', ecutwfc = 20, ecutrho = 200, nbnd = 8, clat = 1, kpoints = 12, deltan = 1, nprocs = 1):
 
     attrBands = 'electronBandsHel'
     _, ksteps, _ = cnt.bzCutsHel.shape
@@ -247,13 +247,18 @@ def dftElectronBands(cnt, name, pseudo_dir = 'pseudo_dir', ecutwfc = 20, ecutrho
     bands = np.zeros( (cnt.D, 2*deltan, 2, ksteps) ) # bands = E_n^mu(k), bands[mu index, n index, k/energy index, grid index]
     bands[:,:,0,:] = bz
 
-    # fermi = scfCalculation(cnt, name, pseudo_dir = pseudo_dir, ecutwfc = ecutwfc, ecutrho = ecutrho, nbnd = nbnd, clat = clat, kpoints = kpoints)
-    fermi = -3.3597
-    print(fermi)
+    if from_file:
+        fermi = -3.3597
+    else:
+        fermi = scfCalculation(cnt, name, pseudo_dir = pseudo_dir, ecutwfc = ecutwfc, ecutrho = ecutrho, nbnd = nbnd, clat = clat, kpoints = kpoints, nprocs = nprocs)
     for mu in range(cnt.D):
-        #bandCalculation(cnt, name, pseudo_dir = pseudo_dir, ecutwfc = ecutwfc, ecutrho = ecutrho, nbnd = nbnd, clat = clat, mu = mu)
-        #band = bandsXCalculation(name, mu = mu)
-        band = np.loadtxt(f'./{name}/bands-{mu:02d}.txt.gnu').T
+        if from_file:
+            WORK_DIR  = os.getcwd()
+            bandFile  = os.path.join(WORK_DIR, name, f'bands-{mu:02d}.txt.gnu')
+            band = np.loadtxt(bandFile).T
+        else:
+            bandCalculation(cnt, name, pseudo_dir = pseudo_dir, ecutwfc = ecutwfc, ecutrho = ecutrho, nbnd = nbnd, clat = clat, mu = mu, nprocs = nprocs)
+            band = bandsXCalculation(name, mu = mu, nprocs = nprocs)
         dftKgrid = band[0].reshape(nbnd,-1)[0]
         dftKgrid = (dftKgrid - np.max(dftKgrid)/2) * np.pi * 2 / cnt.a0
         if abs(dftKgrid[0]-bz[0]) + abs(dftKgrid[-1]-bz[-1]) > 1e-2:

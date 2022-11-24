@@ -186,9 +186,10 @@ class Swcnt(object):
         self.bzHel = np.linspace(-0.5, 0.5, self.kStepsHel) * self.normHel
 
 
-    def calculateElectronBands(self, calc, name, sym='hel', **kwargs):
+    def calculateElectronBands(self, calc, name, **kwargs):
         '''
         Calculate the electron bands energy dispersion using different methods.
+        Note! 'DFT' only compute bands in helical symmetry.
 
         Parameters:
         -----------
@@ -196,9 +197,6 @@ class Swcnt(object):
                             can be either 'TB' or 'DFT' (more in the future)
 
             name (str):     unique name to identify the resulting bands
-
-            sym (str):      linear or helical symmetry, either 'lin' or 'hel'
-                            optional, default = 'hel'
 
             **kwargs:       Optional key-value arguments.
                             They depends on the calculation to be performed.
@@ -210,12 +208,50 @@ class Swcnt(object):
                                 fermi (float):      position of the Fermi energy
                                                     wrt the graphene Fermi level
                                                     optional, default = 0.0 eV
+
+                                sym (str):          linear or helical symmetry,
+                                                    either 'lin' or 'hel'
+                                                    optional, default = 'hel'
                             
                             DFT calculation:
-                                something, not yet defined
+                                nprocs (int):       number of processors to use
+                                                    optional, default = 1
+                                
+                                from_file (bool):   if True, read bands from a
+                                                    previous calculation
+                                                    optional, default = False
+
+                                pseudo_dir (str):   directory containing the
+                                                    pseudopotential
+                                                    optional, default = './pseudo_dir'
+                                
+                                ecutwfc (float):    wavefunction cutoff for
+                                                    the planewave expansion
+                                                    optional, default = 20 Ry
+                                
+                                ecutrho (float):    density cutoff for
+                                                    the planewave expansion
+                                                    optional, default = 200 Ry
+                                
+                                nbnd (int):         number of electron bands to
+                                                    calculate
+                                                    optional, default = 8
+                                
+                                deltan (int):       number of bands around the
+                                                    Fermi energy to consider
+                                                    optional, default = 1
+
+                                clat (float):       spacing between adjecent
+                                                    graphene sheets
+                                                    optional, default = 1 nm
+                                
+                                kpoints (int):      number of kpoints for the BZ
+                                                    sampling in the self-consistent
+                                                    calculation
+                                                    optional, default = 12
         '''
         if calc == 'TB':
-            tightbinding.tightBindingElectronBands(self, name, sym, **kwargs)
+            tightbinding.tightBindingElectronBands(self, name, **kwargs)
         elif calc == 'DFT':
             dft.dftElectronBands(self, name, **kwargs)
         elif calc == 'something else':
