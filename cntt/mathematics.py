@@ -36,6 +36,44 @@ import warnings
 import numpy as np
 
 
+def fourierInterpolation(x, y, newx):
+    '''
+    Returns the Fourier interpolation of a function y = f(x).
+    Note! The function is assumed to be periodic.
+    This means, the list of x values must NOT include the last point:
+    e.g. use x = np.linspace(minx, maxx, lenx, endpoint = False) !!
+    
+    Parameters:
+    -----------
+        x (float):     1D-array, x domain
+        
+        y (float):     1D-array, values of function f(x)
+        
+        newx (float):  1D-array, new (finer) x domain over which
+                       compute the new values of the function
+    
+    Returns:
+    --------
+        newy (float):  values of function f(newx)
+    '''
+    lenx = len(x)
+    lennewx = len(newx)
+    lendiff = lennewx - lenx
+    if lenx % 2 == 0:
+        pads = (int(np.floor(lendiff/2)), int(np.ceil(lendiff/2)))
+    elif lenx % 2 == 1:
+        pads = (int(np.ceil(lendiff/2)), int(np.floor(lendiff/2)))
+    dx      = x[1] - x[0]
+    newdx   = newx[1] - newx[0]
+    freq    = np.fft.fftfreq(lenx, dx)
+    newfreq = np.fft.fftfreq(lennewx, newdx)
+    yFT     = np.fft.fft(y)
+    yFT_pad = np.pad(np.fft.fftshift(yFT), pads, 'constant', constant_values = (0.0, 0.0))
+    yFT_pad = np.fft.ifftshift(yFT_pad)
+    newy    = np.fft.ifft(yFT_pad).real
+    return lennewx / lenx * newy
+
+
 def findFunctionExtrema(x, y, which = 'max'):
     '''
     Finds the extrema of a given function y = f(x).
