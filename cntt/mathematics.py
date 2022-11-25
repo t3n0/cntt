@@ -63,10 +63,6 @@ def fourierInterpolation(x, y, newx):
         pads = (int(np.floor(lendiff/2)), int(np.ceil(lendiff/2)))
     elif lenx % 2 == 1:
         pads = (int(np.ceil(lendiff/2)), int(np.floor(lendiff/2)))
-    dx      = x[1] - x[0]
-    newdx   = newx[1] - newx[0]
-    freq    = np.fft.fftfreq(lenx, dx)
-    newfreq = np.fft.fftfreq(lennewx, newdx)
     yFT     = np.fft.fft(y)
     yFT_pad = np.pad(np.fft.fftshift(yFT), pads, 'constant', constant_values = (0.0, 0.0))
     yFT_pad = np.fft.ifftshift(yFT_pad)
