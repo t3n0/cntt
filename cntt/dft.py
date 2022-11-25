@@ -289,7 +289,7 @@ def dftElectronBands(cnt, name, from_file = False, fourier_interp = False, pseud
                 egrid = fourierInterpolation(dftBz[:-1], dftEgrids[i][:-1], bz[:-1])
                 egrid = np.append(egrid, dftEgrids[i][-1])
             else:
-                print(f'Performing linear interpolation: kpoints {len(dftBz)} -> {len(bz)}')
+                #print(f'Performing linear interpolation: kpoints {len(dftBz)} -> {len(bz)}')
                 egrid = np.interp(bz, dftBz, dftEgrids[i])
             bands[mu,i-nbnd//2+deltan,1,:] = egrid
     getattr(cnt, attrBands)[name] = bands
