@@ -33,6 +33,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from cntt.utils import runProcess
 from cntt.physics import Bohr2nm
+from cntt.mathematics import fourierInterpolation
 from textwrap import dedent
 import numpy as np
 import os
@@ -248,7 +249,7 @@ def bandsXCalculation(name, mu = 0, nprocs = 1):
     return np.loadtxt(bandFile + '.gnu').T
 
 
-def dftElectronBands(cnt, name, from_file = False, pseudo_dir = 'pseudo_dir', ecutwfc = 20, ecutrho = 200, nbnd = 8, clat = 1, kpoints = 12, deltan = 1, nprocs = 1):
+def dftElectronBands(cnt, name, from_file = False, fourier_interp = False, pseudo_dir = 'pseudo_dir', ecutwfc = 20, ecutrho = 200, nbnd = 8, clat = 1, kpoints = 12, deltan = 1, nprocs = 1):
 
     attrBands = 'electronBandsHel'
     _, ksteps, _ = cnt.bzCutsHel.shape
@@ -283,7 +284,13 @@ def dftElectronBands(cnt, name, from_file = False, pseudo_dir = 'pseudo_dir', ec
         dftEgrids = band[1].reshape(nbnd,-1)
         dftEgrids = np.roll(dftEgrids, len(dftEgrids[0])//2, axis=1) - fermi
         for i in range(nbnd//2-deltan, nbnd//2+deltan):
-            egrid = np.interp(bz, dftBz, dftEgrids[i])
+            if len(bz) > len(dftBz) and fourier_interp:
+                print(f'Performing Fourier interpolation: kpoints {len(dftBz)} -> {len(bz)}')
+                egrid = fourierInterpolation(dftBz[:-1], dftEgrids[i][:-1], bz[:-1])
+                egrid = np.append(egrid, dftEgrids[i][-1])
+            else:
+                print(f'Performing linear interpolation: kpoints {len(dftBz)} -> {len(bz)}')
+                egrid = np.interp(bz, dftBz, dftEgrids[i])
             bands[mu,i-nbnd//2+deltan,1,:] = egrid
     getattr(cnt, attrBands)[name] = bands
 

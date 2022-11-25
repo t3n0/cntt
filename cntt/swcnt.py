@@ -201,7 +201,8 @@ class Swcnt(object):
             **kwargs:       Optional key-value arguments.
                             They depends on the calculation to be performed.
 
-                            TB calculation:
+                            calc = 'TB' calculation:
+                            ----------------------
                                 gamma (float):      TB on-site parameter,
                                                     optional, default = 3.0 eV
                                 
@@ -213,12 +214,18 @@ class Swcnt(object):
                                                     either 'lin' or 'hel'
                                                     optional, default = 'hel'
                             
-                            DFT calculation:
+                            calc = 'DFT' calculation:
+                            -------------------------
                                 nprocs (int):       number of processors to use
                                                     optional, default = 1
                                 
                                 from_file (bool):   if True, read bands from a
                                                     previous calculation
+                                                    optional, default = False
+
+                                fourier_interp      if True, the code will attempt
+                                          (bool):   to interpolate the dft bands
+                                                    to the finer BZ kpoint grid
                                                     optional, default = False
 
                                 pseudo_dir (str):   directory containing the
