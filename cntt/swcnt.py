@@ -437,21 +437,40 @@ class Swcnt(object):
 
 
     def saveToDirectory(self, dirpath):
-        for mu in range(0, self.NU):
-            path = os.path.join(dirpath, f"bandLin{mu:03d}.txt")
-            utils.save_file(self.bandLin[mu][0], self.bandLin[mu][1], path=path)
-        for mu in range(0, self.D):
-            path = os.path.join(dirpath, f"bandHel{mu:03d}.txt")
-            utils.save_file(self.bandHel[mu][0], self.bandHel[mu][1], path=path)
-        for k in self.excParaBands:
-            path = os.path.join(dirpath, f"excPara{k}.txt")
-            utils.save_file(*self.excParaBands[k], path=path)
-        for k in self.excPerpBands:
-            path = os.path.join(dirpath, f"excPerp{k}.txt")
-            utils.save_file(*self.excPerpBands[k], path=path)
-        for k in self.excDarkBands:
-            path = os.path.join(dirpath, f"excDark{k}.txt")
-            utils.save_file(*self.excDarkBands[k], path=path)
+        WORK_DIR = os.getcwd()
+        OUT_DIR = os.path.join(WORK_DIR, dirpath)
+        if not os.path.exists(OUT_DIR):
+            os.makedirs(OUT_DIR)
+        
+        print(OUT_DIR)
+        # for mu in range(0, self.NU):
+        #     path = os.path.join(dirpath, f"bandLin{mu:03d}.txt")
+        #     utils.save_file(self.bandLin[mu][0], self.bandLin[mu][1], path=path)
+        # for mu in range(0, self.D):
+        #     path = os.path.join(dirpath, f"bandHel{mu:03d}.txt")
+        #     utils.save_file(self.bandHel[mu][0], self.bandHel[mu][1], path=path)
+        # for k in self.excParaBands:
+        #     path = os.path.join(dirpath, f"excPara{k}.txt")
+        #     utils.save_file(*self.excParaBands[k], path=path)
+        # for k in self.excPerpBands:
+        #     path = os.path.join(dirpath, f"excPerp{k}.txt")
+        #     utils.save_file(*self.excPerpBands[k], path=path)
+        # for k in self.excDarkBands:
+        #     path = os.path.join(dirpath, f"excDark{k}.txt")
+        #     utils.save_file(*self.excDarkBands[k], path=path)
+
+        # path = os.path.join(dirpath, f"cicco.txt")
+        # utils.save_file(np.array([1,2,3]), np.array([4,5,6]), path=path)
+
+        excitons = self.excitonBands['DFT-65rough']
+        
+        print(len(excitons))
+        for exc in excitons:
+            # path = os.path.join(dirpath, f"{exc}.txt")
+            # utils.save_file(*excitons[exc], path=path)
+            #np.savetxt(path, excitons[exc])
+            #print(exc, ' ', excitons[exc])
+            print(exc)
 
 
     def plot(self, path=None):

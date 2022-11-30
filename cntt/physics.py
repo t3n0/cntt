@@ -194,7 +194,7 @@ def effectiveMassExcitonBands(cnt, which, name=None, deltaK = 10.0, bindEnergy =
                             invMass = condInvMass * valeInvMass / (condInvMass + valeInvMass)
                             energy = condEnergy - valeEnergy - bindEnergy
 
-                            if deltaNorm < 1e-4:
+                            if deltaNorm < 1:
                                 # parallel excitons
                                 excBands[f"para.{mu}.{n}.{i}.{nu}.{m}.{j}"] = excitonBandDispersion(kpoint, invMass, energy, deltaK, kSteps)
                             elif 0.6*cnt.normKC < deltaNorm < 1.4*cnt.normKC:

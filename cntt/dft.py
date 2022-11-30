@@ -131,10 +131,10 @@ def espressoBaseTxt(**kwargs):
 def pwxInputFile(**kwargs):
 
     WORK_DIR  = os.getcwd()
-    DFT_DIR   = os.path.join(WORK_DIR, kwargs['flag'])
-    FILE_IN = os.path.join(WORK_DIR, DFT_DIR, kwargs['filename']+'.in')
-    FILE_OUT  = os.path.join(WORK_DIR, DFT_DIR, kwargs['filename']+'.out')
-    FILE_ERR = os.path.join(WORK_DIR, DFT_DIR, kwargs['filename']+'.err')
+    DFT_DIR   = os.path.join(WORK_DIR, 'dft', kwargs['flag'])
+    FILE_IN = os.path.join(DFT_DIR, kwargs['filename']+'.in')
+    FILE_OUT  = os.path.join(DFT_DIR, kwargs['filename']+'.out')
+    FILE_ERR = os.path.join(DFT_DIR, kwargs['filename']+'.err')
     if not os.path.exists(DFT_DIR):
         os.makedirs(DFT_DIR)
     kwargs['pseudo_dir'] = os.path.join(WORK_DIR, kwargs['pseudo_dir'])
@@ -148,12 +148,12 @@ def pwxInputFile(**kwargs):
 
 def bandsxInputFile(flag, filename, filebands):
     WORK_DIR  = os.getcwd()
-    DFT_DIR   = os.path.join(WORK_DIR, flag)
-    FILE_IN = os.path.join(WORK_DIR, DFT_DIR, filename+'.in')
-    FILE_OUT = os.path.join(WORK_DIR, DFT_DIR, filename+'.out')
-    FILE_ERR = os.path.join(WORK_DIR, DFT_DIR, filename+'.err')
-    FILE_BANDS  = os.path.join(WORK_DIR, DFT_DIR, filebands)
-    OUTDIR    = os.path.join(WORK_DIR, DFT_DIR, 'outdir')
+    DFT_DIR   = os.path.join(WORK_DIR, 'dft', flag)
+    FILE_IN = os.path.join(DFT_DIR, filename+'.in')
+    FILE_OUT = os.path.join(DFT_DIR, filename+'.out')
+    FILE_ERR = os.path.join(DFT_DIR, filename+'.err')
+    FILE_BANDS  = os.path.join(DFT_DIR, filebands)
+    OUTDIR    = os.path.join(DFT_DIR, 'outdir')
     if not os.path.exists(DFT_DIR):
         os.makedirs(DFT_DIR)
     text = f'''\
@@ -259,7 +259,7 @@ def dftElectronBands(cnt, name, from_file = False, fourier_interp = False, pseud
 
     if from_file:
         WORK_DIR  = os.getcwd()
-        outputFile  = os.path.join(WORK_DIR, name, f'1-scf.out')
+        outputFile  = os.path.join(WORK_DIR, 'dft', name, f'1-scf.out')
         with open(outputFile, 'r') as f:
             text = f.read()
         fermi = parseScf(text)
@@ -268,12 +268,15 @@ def dftElectronBands(cnt, name, from_file = False, fourier_interp = False, pseud
     for mu in range(cnt.D):
         if from_file:
             WORK_DIR  = os.getcwd()
-            bandFile  = os.path.join(WORK_DIR, name, f'bands-{mu:02d}.txt.gnu')
+            bandFile  = os.path.join(WORK_DIR, 'dft', name, f'bands-{mu:02d}.txt.gnu')
             band = np.loadtxt(bandFile).T
         else:
             bandCalculation(cnt, name, pseudo_dir = pseudo_dir, ecutwfc = ecutwfc, ecutrho = ecutrho, nbnd = nbnd, clat = clat, mu = mu, nprocs = nprocs)
             band = bandsXCalculation(name, mu = mu, nprocs = nprocs)
         dftKgrid = band[0].reshape(nbnd,-1)[0]
+        # print(len(dftKgrid))
+        # dftKgrid = np.array(list(dict.fromkeys(band[0])))
+        # print(len(dftKgrid))
         dftKgrid = (dftKgrid - np.max(dftKgrid)/2) * np.pi * 2 / cnt.a0
         if abs(dftKgrid[0]-bz[0]) + abs(dftKgrid[-1]-bz[-1]) > 1e-2:
             print('Warning: dft BZ mismatch.')
