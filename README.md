@@ -78,7 +78,7 @@ The above code produces the following plot
 CNTT provides a number of functionalities to compute, manipulate and visualise SWCNTs properties.
 The following links are simple jupyter notebooks that explain the core capabilities of CNTT:
 
-- [basic usage](./docs/tutorials/basic.ipynb): zone-filding TB, linear and helical BZs.
+- [basic usage](./docs/tutorials/1.basics.ipynb): zone-filding TB, linear and helical BZs.
 - [simple dft](./docs/tutorials/2.dft-coarse.ipynb): coarse k-grid DFT, comparison with the TB model.
 - [finer dft](./docs/tutorials/3.dft_restart.ipynb): restart a previous DFT calculation on a finer k-grid.
 
