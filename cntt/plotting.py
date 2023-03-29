@@ -158,8 +158,8 @@ def electronBands(cnt, ax=None, sym='hel'):
                 ax.set_ylabel(f'Energy ({cnt.unitE})')
                 ax.set_xlabel(f'k ({cnt.unitInvL})')
                 label = '_'
-    energyExtrema(cnt, ax, 'cond')
-    energyExtrema(cnt, ax, 'vale')
+    #energyExtrema(cnt, ax, 'cond')
+    #energyExtrema(cnt, ax, 'vale')
     ax.axhline(0,ls='--',c='grey')
     ax.legend()
 

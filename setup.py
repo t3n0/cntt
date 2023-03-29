@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='cntt',
-      version='0.2',
+      version='0.3',
       description='CNTT, also C-entity, computes, displays and manipulates carbon nanotubes properties.',
       author='Stefano Dal Forno',
       author_email='tenobaldi@gmail.com',

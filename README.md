@@ -2,18 +2,18 @@
 
 [![GitHub Release Date](https://img.shields.io/github/release-date/t3n0/cntt)](https://github.com/t3n0/cntt/releases/latest)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/t3n0/cntt)](https://github.com/t3n0/cntt/releases/latest)
-[![GitHub all releases](https://img.shields.io/github/downloads/t3n0/cntt/total)](https://github.com/t3n0/cntt/releases/download/v0.2/cntt-v0.3.zip)
+[![GitHub all releases](https://img.shields.io/github/downloads/t3n0/cntt/total)](https://github.com/t3n0/cntt/releases/download/v0.3/cntt-v0.3.zip)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-![logo-wide](./docs/readme-pics/logo-wide.png)
+![logo-wide](./docs/figures/logo-wide.png)
 
 **CNTT**, also spelled **C-entity**, is an utility to compute, display and manipulate electronic and optical properties of single-walled carbon nanotubes (SWCNTs). CNTT is an acronym for **Carbon NanoTube Tool**.
 
-At the current state of developement, this tool is capable of computing the electronic and excitonic band structure of SWCNTs, along with the electron and exciton Density of States (DOS). This is done in a very efficient way by exploiting the **helical symmetry** of SWCNTs. Results are then displayed in helical coordinates. In this way, most of the optical properties of SWCNTs become apparent by simply inspecting the [helical bandstructure](./docs/readme-pics/cnt(4,2).png).
+At the current state of developement, this tool is capable of computing the electronic and excitonic band structure of SWCNTs, along with the electron and exciton Density of States (DOS). This is done in a very efficient way by exploiting the **helical symmetry** of SWCNTs. Results are then displayed in helical coordinates. In this way, most of the optical properties of SWCNTs become apparent by simply inspecting the [helical bandstructure](./docs/figures/cnt(4,2).png).
 
 ## Installation
 
-Simply download [.zip file](https://github.com/t3n0/cntt/releases/download/v0.2/cntt-v0.3.zip), extract it at your favourite location and run
+Simply download [.zip file](https://github.com/t3n0/cntt/releases/download/v0.3/cntt-v0.3.zip), extract it at your favourite location and run
 ```
 pip install .
 ```
@@ -23,9 +23,7 @@ This will install the system-wide command `cntt` and the python package `cntt`.
 
 Since version v0.3, Density Function Theory (DFT) capabilities are included in CNTT.
 These are outsourced to [Quantum Espresso](https://www.quantum-espresso.org/) which must be available in the local PATH.
-To download and install QE please refer to the [official QE documentation](https://www.quantum-espresso.org/Doc/user_guide_PDF/user_guide.pdf) or follow the
-
-- [QE installation guide for the impatient](./docs/tutorials/QE_install.md).
+To download and install QE please refer to the [official QE documentation](https://www.quantum-espresso.org/Doc/user_guide_PDF/user_guide.pdf).
 
 ## Usage (1): command line
 
@@ -35,7 +33,7 @@ cntt 4 2
 ```
 This will display:
 
-- the linear and helical band structure of a [(4,2) single-walled carbon nanotube](./docs/readme-pics/cnt(4,2).png),
+- the linear and helical band structure of a [(4,2) single-walled carbon nanotube](./docs/figures/cnt(4,2).png),
 - the (singlet, bright and dark) exciton energy dispersions,
 - electron and exciton DOS,
 - and the most important physical parameters, unit cells and Brillouin zones.
@@ -73,14 +71,16 @@ mycnt.plot()
 
 The above code produces the following plot
 
-![cnt(4,2)fermi](./docs/readme-pics/cnt(4,2)fermi.png)
+![cnt(4,2)fermi](./docs/figures/cnt(4,2)fermi.png)
 
 ## Examples and tutorials
 
 CNTT provides a number of functionalities to compute, manipulate and visualise SWCNTs properties.
 The following links are simple jupyter notebooks that explain the core capabilities of CNTT:
 
-- [basic usage](./docs/tutorials/basic.ipynb)
+- [basic usage](./docs/tutorials/basic.ipynb): zone-filding TB, linear and helical BZs.
+- [simple dft](./docs/tutorials/2.dft-coarse.ipynb): coarse k-grid DFT, comparison with the TB model.
+- [finer dft](./docs/tutorials/3.dft_restart.ipynb): restart a previous DFT calculation on a finer k-grid.
 
 ## Support
 
