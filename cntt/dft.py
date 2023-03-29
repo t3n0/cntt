@@ -81,7 +81,11 @@ def kPointsPathIbrav4(cnt, mu):
     for i in range(0,len(cuts)-1,2):
         segment = np.linalg.norm(cuts[i+1] - cuts[i])
         text += f'    {cuts[i,0]} {cuts[i,1]} {0.0} {int(segment/dk)}\n    {cuts[i+1,0]} {cuts[i+1,1]} {0.0} {0}\n'
-    
+        # xs = np.linspace(cuts[i,0], cuts[i+1,0], int(segment/dk)+1)
+        # ys = np.linspace(cuts[i,1], cuts[i+1,1], int(segment/dk)+1)
+        # ks = xs.reshape(-1,1)*np.array([1, 1/np.sqrt(3)]) + ys.reshape(-1,1)*np.array([0, 2/np.sqrt(3)])
+        # print(ks)
+
     return text
 
 
@@ -274,26 +278,28 @@ def dftElectronBands(cnt, name, from_file = False, fourier_interp = False, pseud
             bandCalculation(cnt, name, pseudo_dir = pseudo_dir, ecutwfc = ecutwfc, ecutrho = ecutrho, nbnd = nbnd, clat = clat, mu = mu, nprocs = nprocs)
             band = bandsXCalculation(name, mu = mu, nprocs = nprocs)
         dftKgrid = band[0].reshape(nbnd,-1)[0]
-        # print(len(dftKgrid))
-        # dftKgrid = np.array(list(dict.fromkeys(band[0])))
-        # print(len(dftKgrid))
-        dftKgrid = (dftKgrid - np.max(dftKgrid)/2) * np.pi * 2 / cnt.a0
-        if abs(dftKgrid[0]-bz[0]) + abs(dftKgrid[-1]-bz[-1]) > 1e-2:
+        # mask to get rid of identical k points
+        mask = dftKgrid != np.roll(dftKgrid,1)
+        kGrid = dftKgrid[mask]
+        kGrid = (kGrid - np.max(kGrid)/2) * np.pi * 2 / cnt.a0
+        if abs(kGrid[0]-bz[0]) + abs(kGrid[-1]-bz[-1]) > 1e-2:
             print('Warning: dft BZ mismatch.')
-            print('    ', dftKgrid[0], bz[0], abs(dftKgrid[0]-bz[0]))
-            print('    ', dftKgrid[-1], bz[-1], abs(dftKgrid[-1]-bz[-1]))
-        dftKsteps = len(dftKgrid)
+            print('    ', kGrid[0], bz[0], abs(kGrid[0]-bz[0]))
+            print('    ', kGrid[-1], bz[-1], abs(kGrid[-1]-bz[-1]))
+        dftKsteps = len(kGrid)
         dftBz = np.linspace(bz[0], bz[-1], dftKsteps)
         dftEgrids = band[1].reshape(nbnd,-1)
-        dftEgrids = np.roll(dftEgrids, len(dftEgrids[0])//2, axis=1) - fermi
         for i in range(nbnd//2-deltan, nbnd//2+deltan):
+            eGrid = dftEgrids[i][mask]
+            eGrid = np.roll(eGrid, len(eGrid)//2) - fermi
             if len(bz) > len(dftBz) and fourier_interp:
                 print(f'Performing Fourier interpolation: kpoints {len(dftBz)} -> {len(bz)}')
-                egrid = fourierInterpolation(dftBz[:-1], dftEgrids[i][:-1], bz[:-1])
-                egrid = np.append(egrid, dftEgrids[i][-1])
+                eGridInterp = fourierInterpolation(dftBz[:-1], eGrid[:-1], bz[:-1])
+                eGridInterp = np.append(eGridInterp, eGrid[-1])
             else:
-                #print(f'Performing linear interpolation: kpoints {len(dftBz)} -> {len(bz)}')
-                egrid = np.interp(bz, dftBz, dftEgrids[i])
-            bands[mu,i-nbnd//2+deltan,1,:] = egrid
+                #print(f'Performing linear interpolation: kpoints {len(dftBz)} -> {len(bz)}')                
+                eGridInterp = np.interp(bz, dftBz, eGrid)
+
+            bands[mu,i-nbnd//2+deltan,1,:] = eGridInterp
     getattr(cnt, attrBands)[name] = bands
 

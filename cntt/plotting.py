@@ -86,6 +86,7 @@ def dirLat(cnt, ax=None):
     ax.set_ylim(miny, maxy)
     return ax
 
+
 def recLat(cnt, ax=None):
     _, _, invLfactor = physics.unitFactors(cnt)
     KT, k1L, k2L, k1H, k2H, b0 = physics.changeUnits(cnt, invLfactor, 'KT', 'k1L', 'k2L', 'k1H', 'k2H', 'b0')
@@ -139,6 +140,7 @@ def recLat(cnt, ax=None):
     ax.set_ylim(miny, maxy)
     return ax
 
+
 def electronBands(cnt, ax=None, sym='hel'):
     efactor, _, invLfactor = physics.unitFactors(cnt)
     if ax is None:
@@ -156,8 +158,25 @@ def electronBands(cnt, ax=None, sym='hel'):
                 ax.set_ylabel(f'Energy ({cnt.unitE})')
                 ax.set_xlabel(f'k ({cnt.unitInvL})')
                 label = '_'
+    energyExtrema(cnt, ax, 'cond')
+    energyExtrema(cnt, ax, 'vale')
     ax.axhline(0,ls='--',c='grey')
     ax.legend()
+
+
+def energyExtrema(cnt, ax, which):
+    efactor, _, invLfactor = physics.unitFactors(cnt)
+    energies = getattr(cnt, f'{which}EnergyZeros') #cnt.condEnergyZeros
+    kpoints = getattr(cnt, f'{which}KpointZeros') #cnt.condKpointZeros
+    NN = len(kpoints)
+    for i, key in enumerate(kpoints):                                         # name of the calculation
+        for kcuts, ecuts in zip(kpoints[key], energies[key]):   # mu index
+            count = 0
+            for ks, es in zip(kcuts, ecuts):                    # band index
+                for k, e in zip(ks, es):                        # extrema index
+                    plt.text(k * invLfactor, e * efactor, f'{count}', ha="center", va="center")
+                    ax.scatter(k * invLfactor, e * efactor, s=250, color=mycolors(i,NN), alpha=0.3)
+                    count += 1
 
 
 def excitonBands(cnt, ax=None):
@@ -229,6 +248,7 @@ def excitonDOS(cnt, ax=None, swapAxes=False):
             ax.set_xlabel(f'Energy ({cnt.unitE})')
     ax.legend()
 
+
 def boundingRectangle(*args):
     vecs = [[0.0, 0.0]]
     for arg in args:
@@ -266,6 +286,7 @@ def linePatches(xs, ys, dxs, dys, ec="k", fc="w"):
     lines = PatchCollection(patches, edgecolor=ec, facecolor=fc)
     return lines
 
+
 def dirHexPatches(minx, maxx, miny, maxy, c):
     minNx = 2 * int(np.floor(minx / c / np.sqrt(3)))
     maxNx = int(np.ceil(2 * maxx / c / np.sqrt(3)))
@@ -283,6 +304,7 @@ def dirHexPatches(minx, maxx, miny, maxy, c):
         hex = mpatches.RegularPolygon((x, y), numVertices=6, radius=c / np.sqrt(3), orientation=rotation)
         patches.append(hex)
     return PatchCollection(patches, edgecolor="k", facecolor=(1,1,1,0))
+
 
 def recHexPatches(minx, maxx, miny, maxy, c):
     minNx = int(np.floor(minx / c)) - 1
