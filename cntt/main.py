@@ -63,8 +63,8 @@ def main():
     cnt = Swcnt(n, m)
     cnt.calculateCuttingLines()
 
-    cnt.calculateElectronBands('TB', 'TB', 'lin')
-    cnt.calculateElectronBands('TB', 'TB', 'hel')
+    cnt.calculateElectronBands('TB', 'TB', sym = 'lin')
+    cnt.calculateElectronBands('TB', 'TB', sym = 'hel')
 
     cnt.calculateKpointValleys()
 
