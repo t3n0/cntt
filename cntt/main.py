@@ -73,7 +73,6 @@ def main():
     cnt.calculateDOS('electron')
     cnt.calculateDOS('exciton')
 
-
     if args.outdir:
         WORK_DIR = os.getcwd()
         OUT_DIR = os.path.join(WORK_DIR, args.outdir)
