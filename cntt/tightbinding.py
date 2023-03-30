@@ -40,18 +40,23 @@ def grapheneTBBands(k, a1, a2, gamma=3.0):
 
     Parameters:
     -----------
-        k (float)       (kx, ky) point or array of kpoints
+        k: (float, float)
+            (kx, ky) point or array of kpoints
 
-        a1 (float)      (a1x, a1y) lattice vector
+        a1: (float, float)
+            (a1x, a1y) lattice vector
 
-        a2 (float)      (a2x, a2y) lattice vector
+        a2: (float, float)
+            (a2x, a2y) lattice vector
 
-        gamma (float)   onsite energy parameter
-                        optional, default = 3.0 eV
+        gamma: float (optional)
+            onsite energy parameter
+            default = 3.0 eV
 
     Returns:
     --------
-        band (float)    band structure at the given kpoint or array of kpoints
+        band: float
+            band structure at the given kpoint or array of kpoints
     '''
     band = gamma * np.sqrt(3 + 2 * np.cos(np.dot(k, a1)) + 2 * np.cos(np.dot(k, a2)) + 2 * np.cos(np.dot(k, (a2 - a1))) + 1e-6)
     # 1e-6 to avoid sqrt of negative number (maybe some subtraction cancelation is happening)

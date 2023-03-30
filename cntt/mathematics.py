@@ -45,16 +45,20 @@ def fourierInterpolation(x, y, newx):
     
     Parameters:
     -----------
-        x (float):     1D-array, x domain
+        x: float
+            1D-array, x domain
         
-        y (float):     1D-array, values of function f(x)
+        y: float
+            1D-array, values of function f(x)
         
-        newx (float):  1D-array, new (finer) x domain over which
-                       compute the new values of the function
+        newx: float
+            1D-array, new (finer) x domain over which
+            to compute the new values of the function
     
     Returns:
     --------
-        newy (float):  values of function f(newx)
+        newy: float
+            1D-array with values of function f(newx)
     '''
     lenx = len(x)
     lennewx = len(newx)
@@ -77,15 +81,20 @@ def findFunctionExtrema(x, y, which = 'max'):
 
     Parameters:
     -----------
-        x (float)       array, x values
+        x: float
+            1d array, x values
 
-        y (float)       array, y = f(x) values
+        y: float
+            1d array, y = f(x) values
 
-        which (str)     'max' or 'min'
+        which: str (optional)
+            type of extrema [ 'max' | 'min' ]
+            default = max
     
     Returns:
     --------
-        mask (bool)     array, boolean mask with True value at the extrema
+        mask: bool
+            1d array, boolean mask with True value at the extrema
     '''
     with warnings.catch_warnings(record=True) as caught_warnings:
         prime = np.gradient(y, x)
@@ -109,14 +118,18 @@ def findFunctionListExtrema(funcList, which='max'):
 
     Partameters
     -----------
-        funcList
-            (array)     list of functions [[x1, y1], [x2, y2], ...]
+        funcList: list
+            list of functions [f1, f2, ...]
+            where f1 = [x_list, y_list]
 
-        which (str)     'max' or 'min'
+        which: str (optional)
+            type of extrema [ 'max' | 'min' ]
+            default = max
     
     Returns:
     --------
-        masks (bool)    array, list of boolean masks with True value at the extrema
+        masks: bool
+            2d array, list of boolean masks with True value at the extrema
     '''
     masks = []
     for func in funcList:
@@ -131,11 +144,13 @@ def findFunctionZeros(y):
 
     Partameters
     -----------
-        y (float)       1D array, function
+        y: float
+            1D array, function
     
     Returns:
     --------
-        masks (bool)    array, boolean mask with True value at the zeros
+        masks: bool
+        1d array, boolean mask with True value at the zeros
     '''
     mask = (np.roll(y, 1) * y) < 0
     return mask

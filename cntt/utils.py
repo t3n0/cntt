@@ -50,11 +50,13 @@ def textParams(cnt):
 
     Parameters:
     -----------
-        cnt (swcnt):    cnt object
+        cnt: swcnt
+            cnt object
 
     Returns:
     --------
-        text (str):     physical properties and parameters
+        text: str
+            physical properties and parameters
     '''
     eFactor, lFactor, invLFactor = unitFactors(cnt)
     text = (
