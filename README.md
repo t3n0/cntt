@@ -2,7 +2,7 @@
 
 [![GitHub Release Date](https://img.shields.io/github/release-date/t3n0/cntt)](https://github.com/t3n0/cntt/releases/latest)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/t3n0/cntt)](https://github.com/t3n0/cntt/releases/latest)
-[![GitHub all releases](https://img.shields.io/github/downloads/t3n0/cntt/total)](https://github.com/t3n0/cntt/releases/download/v0.3/cntt-v0.3.zip)
+[![GitHub all releases](https://img.shields.io/github/downloads/t3n0/cntt/total)](https://github.com/t3n0/cntt/releases/download/v0.4/cntt-v0.4.zip)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 ![logo-wide](./docs/figures/logo-wide.png)
@@ -13,10 +13,12 @@ At the current state of developement, this tool is capable of computing the elec
 
 ## Installation
 
-Simply download [.zip file](https://github.com/t3n0/cntt/releases/download/v0.3/cntt-v0.3.zip), extract it at your favourite location and run
-```
+Simply download [.zip file](https://github.com/t3n0/cntt/releases/download/v0.4/cntt-v0.4.zip), extract it at your favourite location and run
+
+```Shell
 pip install .
 ```
+
 This will install the system-wide command `cntt` and the python package `cntt`.
 
 ### DFT capabilities
@@ -28,9 +30,11 @@ To download and install QE please refer to the [official QE documentation](https
 ## Usage (1): command line
 
 For a basic usage of the tool, simply type in the terminal
-```
+
+```Shell
 cntt 4 2
 ```
+
 This will display:
 
 - the linear and helical band structure of a [(4,2) single-walled carbon nanotube](./docs/figures/cnt(4,2).png),
@@ -43,7 +47,8 @@ Also, typing `cntt -h` provide a help dialoge for advanced usage.
 ## Usage (2): package
 
 From a pyhton interpreter, import the base `Swcnt` class. For a basic usage, just copy the following snippet:
-```
+
+```Python
 from cntt.swcnt import Swcnt
 
 mycnt = Swcnt(4,2)

@@ -14,7 +14,7 @@ github: https://github.com/t3n0/cntt
 LICENSE:
 --------
 
-Copyright (c) 2021-2022 Stefano Dal Forno.
+Copyright (c) 2021-2023 Stefano Dal Forno.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
