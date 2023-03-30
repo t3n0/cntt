@@ -61,12 +61,15 @@ class Swcnt(object):
 
         Parameters:
         -----------
-            n (int):        carbon nanotube n number
+            n: int
+                carbon nanotube n number
 
-            m (int):        carbon nanotube m number
+            m: int
+                carbon nanotube m number
 
-            a0 (float):     carbon nanotube lattice constant (nm)
-                            optional, default = 0.2461 nm
+            a0: float (optional)
+                carbon nanotube lattice constant (nm)
+                default = 0.2461 nm
         '''
         # units
         self.unitL = 'nm'
@@ -160,9 +163,11 @@ class Swcnt(object):
 
         Parameters:
         -----------
-            energy (str):   energy units, either 'eV', 'Ha', 'Ry'
+            energy: str
+                energy units [ 'eV' | 'Ha' | 'Ry' ]
 
-            length (str):   length units, either 'nm', 'bohr', 'Angstrom'
+            length: str
+                length units [ 'nm' | 'bohr' | 'Angstrom' ]
         '''
         self.unitE = energy
         self.unitL = length
@@ -175,8 +180,9 @@ class Swcnt(object):
 
         Parameters:
         -----------
-            ksteps (int):   number of kpoints for the discretisation
-                            optional, default = 11
+            ksteps: int (optional)
+                number of kpoints for the discretisation
+                default = 11
         '''
         self.kStepsLin = ksteps
         self.kStepsHel = int(self.normHel / self.normLin * self.kStepsLin)
@@ -189,73 +195,75 @@ class Swcnt(object):
     def calculateElectronBands(self, calc, name, **kwargs):
         '''
         Calculate the electron bands energy dispersion using different methods.
-        Note! 'DFT' only compute bands in helical symmetry.
 
         Parameters:
         -----------
-            calc (str):     specify the method for the band calculation
-                            can be either 'TB' or 'DFT' (more in the future)
+            calc: str
+                specify the method for the band calculation
+                [ 'TB' | 'DFT' ]
 
-            name (str):     unique name to identify the resulting bands
+            name: str
+                unique name to identify the resulting bands
 
-            **kwargs:       Optional key-value arguments.
-                            They depends on the calculation to be performed.
+            **kwargs: (optional)
+                Key-value arguments that depend on the calculation to be performed.
 
-                            calc = 'TB' calculation:
-                            ----------------------
-                                gamma (float):      TB on-site parameter,
-                                                    optional, default = 3.0 eV
-                                
-                                fermi (float):      position of the Fermi energy
-                                                    wrt the graphene Fermi level
-                                                    optional, default = 0.0 eV
+                calc = 'TB' calculation:
+                ------------------------
+                    gamma: float (optional)
+                        TB on-site parameter
+                        default = 3.0 eV
+                    
+                    fermi: float (optional)
+                        position of the Fermi energy wrt the graphene Fermi level
+                        default = 0.0 eV
 
-                                sym (str):          linear or helical symmetry,
-                                                    either 'lin' or 'hel'
-                                                    optional, default = 'hel'
-                            
-                            calc = 'DFT' calculation:
-                            -------------------------
-                                nprocs (int):       number of processors to use
-                                                    optional, default = 1
-                                
-                                from_file (bool):   if True, read bands from a
-                                                    previous calculation
-                                                    optional, default = False
+                    sym: str (optional)
+                        linear or helical symmetry [ 'lin' | 'hel' ]
+                        default = 'hel'
+                
+                calc = 'DFT' calculation:
+                -------------------------
+                    nprocs: int (optional)
+                        number of processors to use
+                        default = 1
+                    
+                    from_file: bool (optional)
+                        if True, read bands from a previous calculation
+                        default = False
 
-                                fourier_interp      if True, the code will attempt
-                                          (bool):   to interpolate the dft bands
-                                                    to the finer BZ kpoint grid
-                                                    optional, default = False
+                    fourier_interp: bool (optional)
+                        if True, the code will attempt  to interpolate the dft bands
+                        to the BZ kpoint grid
+                        default = False
 
-                                pseudo_dir (str):   directory containing the
-                                                    pseudopotential
-                                                    optional, default = './pseudo_dir'
-                                
-                                ecutwfc (float):    wavefunction cutoff for
-                                                    the planewave expansion
-                                                    optional, default = 20 Ry
-                                
-                                ecutrho (float):    density cutoff for
-                                                    the planewave expansion
-                                                    optional, default = 200 Ry
-                                
-                                nbnd (int):         number of electron bands to
-                                                    calculate
-                                                    optional, default = 8
-                                
-                                deltan (int):       number of bands around the
-                                                    Fermi energy to consider
-                                                    optional, default = 1
+                    pseudo_dir: str (optional)
+                        directory containing the pseudopotential
+                        default = './pseudo_dir'
+                    
+                    ecutwfc: float (optional)
+                        wavefunction cutoff for the planewave expansion
+                        default = 20 Ry
+                    
+                    ecutrho: float (optional)
+                        density cutoff for the planewave expansion
+                        default = 200 Ry
+                    
+                    nbnd: int (optional)
+                        number of electron bands to calculate
+                        default = 8
+                    
+                    deltan: int (optional)
+                        number of bands around the Fermi energy to consider
+                        default = 1
 
-                                clat (float):       spacing between adjecent
-                                                    graphene sheets
-                                                    optional, default = 1 nm
-                                
-                                kpoints (int):      number of kpoints for the BZ
-                                                    sampling in the self-consistent
-                                                    calculation
-                                                    optional, default = 12
+                    clat: float (optional)
+                        spacing between adjecent graphene sheets
+                        default = 1 nm
+                    
+                    kpoints: int (optional)
+                        number of kpoints for the BZ sampling in the self-consistent calculation
+                        default = 12
         '''
         if calc == 'TB':
             tightbinding.tightBindingElectronBands(self, name, **kwargs)
@@ -275,8 +283,9 @@ class Swcnt(object):
 
         Parameters:
         -----------
-            which (str)     name of the helical electron band to use for the calculation
-                            optional, defalut = all
+            which: str (optional)
+                name of the helical electron band to use for the calculation
+                defalut = all
         '''
         if which == 'all':
             keys = self.electronBandsHel.keys()
@@ -348,32 +357,37 @@ class Swcnt(object):
 
         Parameters:
         -----------
-            calc (str):     specify the method for the band calculation
-                            can be either 'EffMass' or 'something else' (more in the future)
+            calc: str
+                specify the method for the band calculation
+                [ 'EffMass' | 'BSE' | 'more in the future' ]
 
-            which (str):    name of the helical electron band to use for the calculation
+            which: str
+                name of the helical electron band to use for the calculation
 
-            name (str):     unique name to identify the resulting bands
-                            optional, default = same as which
+            name: str (optional)
+                unique name to identify the resulting bands
+                default = same as which
 
-            **kwargs:       key-value arguments depend on the calculation to
-                            be performed.
+            **kwargs: (optional)
+                key-value arguments depend on the calculation to be performed.
 
-                            EffMass calculation:
-                                deltaK (float):     width of the exciton parabolic bands
-                                                    optional, default = 10.0 nm-1
-                                
-                                bindEnergy
-                                        (float):    binding energy between electron and
-                                                    hole states
-                                                    optional, default = 0.0 eV
+                calc = EffMass calculation:
+                ---------------------------
+
+                    deltaK: float (optional)
+                        width of the exciton parabolic bands
+                        default = 10.0 nm-1
+                    
+                    bindEnergy: float (optional)
+                        binding energy between electron and hole states
+                        default = 0.0 eV
         '''
         if calc == 'EffMass' or calc == 'EM':
             physics.effectiveMassExcitonBands(self, which, name, **kwargs)
-        elif calc == 'DFT':
+        elif calc == 'BSE':
             pass
-        elif calc == 'something else':
-            pass
+        elif calc == 'more in the future':
+            print('Pollo!')
         else:
             print(f'Calculation {calc} not implemented.')
 
@@ -385,13 +399,16 @@ class Swcnt(object):
 
         Parameters:
         -----------
-            which (str):    particle, either 'electron', 'exciton', 'phonon'
+            which: str
+                particle type [ 'electron' | 'exciton' ]
 
-            name (str):     name of the specific band to use for DOS
-                            optional, default = all
+            name: str (optional)
+                name of the specific band to use for DOS
+                default = all
 
-            enSteps (int):  energy steps for the discretisation
-                            optional, default = 1000
+            enSteps: int (optional)
+                energy steps for the discretisation
+                default = 1000
         '''
         if which == 'el' or which == 'electron':
             if name == 'all':
@@ -428,10 +445,12 @@ class Swcnt(object):
 
         Parameters:
         -----------
-            which (str):    particle, either 'el', 'ex', 'ph'
+            which: str
+                particle type [ 'el' | 'ex' | 'ph' ]
 
-            enesteps (int): energy steps for the discretisation
-                            optional, default = 1000
+            enesteps: int (optional)
+                energy steps for the discretisation
+                default = 1000
         '''
         pass
 
@@ -487,8 +506,9 @@ class Swcnt(object):
 
         Parameters:
         -----------
-            path (str):     destination path where to save the figure
-                            optional, default = shows the figure
+            path: str (optional)
+                destination path where to save the figure
+                default = shows the figure
         '''
         if path == None:
             fig = plt.figure(figsize=(16, 9))
