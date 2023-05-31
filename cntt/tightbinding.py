@@ -61,26 +61,3 @@ def grapheneTBBands(k, a1, a2, gamma=3.0):
     band = gamma * np.sqrt(3 + 2 * np.cos(np.dot(k, a1)) + 2 * np.cos(np.dot(k, a2)) + 2 * np.cos(np.dot(k, (a2 - a1))) + 1e-6)
     # 1e-6 to avoid sqrt of negative number (maybe some subtraction cancelation is happening)
     return band
-
-
-def tightBindingElectronBands(cnt, name, sym='hel', gamma=3.0, fermi=0.0):
-    '''
-    Computes the band structure of the given CNT.
-    '''
-    attrCuts = f'bzCuts{sym.capitalize()}'
-    attrBz = f'bz{sym.capitalize()}'
-    attrBands = f'electronBands{sym.capitalize()}'
-    if hasattr(cnt, attrCuts):
-        bzCuts = getattr(cnt, attrCuts)
-        bz = getattr(cnt, attrBz)
-        subN, ksteps, _ = bzCuts.shape
-        bands = np.zeros( (subN, 2, 2, ksteps) ) # bands = E_n^mu(k), bands[mu index, n index, k/energy index, grid index]
-        bands[:,:,0,:] = bz
-        for mu, cut in enumerate(bzCuts):
-            upperBand =   grapheneTBBands(cut, cnt.a1, cnt.a2, gamma) - fermi
-            lowerBand = - grapheneTBBands(cut, cnt.a1, cnt.a2, gamma) - fermi
-            bands[mu, 0, 1, :] = lowerBand
-            bands[mu, 1, 1, :] = upperBand
-        getattr(cnt, attrBands)[name] = bands
-    else:
-        print(f'Cutlines "{sym}" not defined.')

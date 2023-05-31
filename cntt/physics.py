@@ -85,9 +85,9 @@ def changeUnits(cnt, factor, *args):
     return newValues
 
 
-def minVector2AtomUnitCell(l, k, n):
+def twoAtomUnitCell(l, k, n):
     '''
-    Returns the u,v pair of integer number defining the CNT 2-atom unit cell.
+    Returns the (u, v) pair of integer number defining the CNT 2-atom unit cell.
     There are infinite choice of u,v (i.e. infinite slanted parallelograms
     of same area).
     We pick the pair with minimum (integer) u such that v is also integer.
@@ -124,8 +124,8 @@ def densityOfStates(bands, energySteps):
     return energyGrid, dos
 
 
-def bzCuts(k1, k2, N, ksteps, min=-0.5, max=0.5):
-    kmesh = np.linspace(min, max, ksteps)
+def bzCuts(k1, k2, N, ksteps):
+    kmesh = np.linspace(0.0, 1.0, ksteps, endpoint=False)
     k1grid = np.outer(kmesh, k1)
     cuts = []
     for mu in range(0, N):
@@ -149,12 +149,10 @@ def valeCondBands(bands):
     return valeBands, condBands
 
 
-def effectiveMassExcitonBands(cnt, which, name=None, deltaK = 10.0, bindEnergy = 0.0):
+def effectiveMassExcitonBands(cnt, deltaK = 10.0, bindEnergy = 0.0):
     '''
     Calculates the exciton energy dispersion in the effective mass approximation.
     '''
-    if name == None:
-        name = which
     condValleys = cnt.condKpointValleys[which]
     condInvMasses = cnt.condInvMasses[which]
     condEnergyZeros = cnt.condEnergyZeros[which]

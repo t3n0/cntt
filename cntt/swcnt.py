@@ -33,6 +33,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import matplotlib.pyplot as plt
 import numpy as np
+import numpy.linalg as la
 import os
 
 import cntt.utils as utils
@@ -88,9 +89,9 @@ class Swcnt(object):
         self.n, self.m = n, m
         self.R = np.gcd(2 * m + n, 2 * n + m)
         self.D = np.gcd(m, n)
-        self.N = n ** 2 + n * m + m ** 2
-        self.NU = 2 * self.N // self.R
-        self.p, self.q = (2 * m + n) // self.R, -(2 * n + m) // self.R
+        #self.N = n ** 2 + n * m + m ** 2
+        self.N = 2 * (n ** 2 + n * m + m ** 2) // self.R
+        self.t1, self.t2 = (2 * m + n) // self.R, -(2 * n + m) // self.R
 
         # graphene lattice vectors
         self.a1 = self.a0 * np.array([np.sqrt(3) / 2, 1 / 2])
@@ -98,48 +99,51 @@ class Swcnt(object):
         self.b1 = self.b0 * np.array([1 / 2, np.sqrt(3) / 2])
         self.b2 = self.b0 * np.array([1 / 2, -np.sqrt(3) / 2])
 
-        # CNT lattice vectors
+        # CNT Supercell lattice vectors (C, T)
         self.C = self.n * self.a1 + self.m * self.a2
-        self.T = self.p * self.a1 + self.q * self.a2
-        self.u1, self.v1 = physics.minVector2AtomUnitCell(self.p, self.q, self.n)
-        self.alpha = (self.n * self.R - 2 * self.N * self.u1) / (2 * self.m + self.n)
-        self.t1 = self.u1 * self.a1 + self.v1 * self.a2
-        self.u2, self.v2 = physics.minVector2AtomUnitCell(self.n // self.D, self.m // self.D, self.p)
-        self.beta = (self.D * (2 * self.m + self.n) / self.R / self.n + self.NU * self.u2 / self.n)
-        self.t2 = self.u2 * self.a1 + self.v2 * self.a2
-        self.atomA = 1/3*(self.a1 + self.a2)
-        self.atomB = 2/3*(self.a1 + self.a2)
-        self.atomAlin = 1/3*(self.T + self.t1)
-        self.atomBlin = 2/3*(self.T + self.t1)
-        self.atomAhel = 1/3*(self.C/self.D + self.t2)
-        self.atomBhel = 2/3*(self.C/self.D + self.t2)
+        self.T = self.t1 * self.a1 + self.t2 * self.a2
+
+        # Linear 2 atom unit cell (Tl, T)
+        self.l1, self.l2 = physics.twoAtomUnitCell(self.t1, self.t2, self.n)
+        self.Tl = self.l1 * self.a1 + self.l2 * self.a2
+
+        # Helical 2 atom unit cell (Th, C/D)
+        self.h1, self.h2 = physics.twoAtomUnitCell(self.n // self.D, self.m // self.D, self.t1)
+        self.Th = self.h1 * self.a1 + self.h2 * self.a2
+        
+        # self.atomA = 1/3*(self.a1 + self.a2)
+        # self.atomB = 2/3*(self.a1 + self.a2)
+        # self.atomAlin = 1/3*(self.T + self.t1)
+        # self.atomBlin = 2/3*(self.T + self.t1)
+        # self.atomAhel = 1/3*(self.C/self.D + self.t2)
+        # self.atomBhel = 2/3*(self.C/self.D + self.t2)
 
         # CNT crystallographic constants
-        self.normT  = np.linalg.norm(self.T)
-        self.normCD = np.linalg.norm(self.C)/self.D
-        self.normt1 = np.linalg.norm(self.t1)
-        self.normt2 = np.linalg.norm(self.t2)
-        self.cosTt1 = np.dot(self.T, self.t1)/self.normT/self.normt1
-        self.cosCt2 = np.dot(self.C/self.D, self.t2)/self.normCD/self.normt2
+        
+        # self.normt1 = np.linalg.norm(self.t1)
+        # self.normt2 = np.linalg.norm(self.t2)
+        # self.cosTt1 = np.dot(self.T, self.t1)/self.normT/self.normt1
+        # self.cosCt2 = np.dot(self.C/self.D, self.t2)/self.normCD/self.normt2
 
         # CNT reciprocal lattice vectors
-        self.KC = (-self.q * self.b1 + self.p * self.b2) / self.NU
-        self.KT = (self.m * self.b1 - self.n * self.b2) / self.NU
-        self.k1L = self.NU * self.KC
-        self.k2L = self.KT + self.alpha * self.KC
-        self.k1H = self.beta * self.KT + self.D * self.KC
-        self.k2H = -self.NU / self.D * self.KT
+        self.K1 = (-self.t2 * self.b1 + self.t1 * self.b2) / self.N
+        self.K2 = (self.m * self.b1 - self.n * self.b2) / self.N
+        # self.k1L = self.NU * self.KC
+        # self.k2L = self.KT + self.alpha * self.KC
+        self.k1H = self.K1 * self.D + self.K2 * (self.h2*self.t1 - self.h1*self.t2)
+        self.k2H = - self.K2 * self.N / self.D
 
-        # CNT linear and helical BZs
-        self.normKT = np.linalg.norm(self.KT)
-        self.normKC = np.linalg.norm(self.KC)
-        self.normLin = np.linalg.norm(self.KT)
-        self.normHel = np.linalg.norm(self.k2H)
-        self.normOrt = abs(self.beta)/self.D*self.normLin
+        # CNT norms
+        self.normT = la.norm(self.T)
+        self.normC = la.norm(self.C)
+        self.normK1 = la.norm(self.K1)
+        self.normK2 = la.norm(self.K2)
+        self.bzLin = la.norm(self.K2)
+        self.bzHel = la.norm(self.k2H)
+        # self.normOrt = abs(self.beta)/self.D*self.normLin
 
         # CNT data containers for electron and exciton bands, DOS, JDOS, etc
-        self.electronBandsLin = {}
-        self.electronBandsHel = {}
+        self.electronBands = {}
 
         self.condKpointValleys = {}
         self.condEnergyZeros = {}
@@ -174,25 +178,35 @@ class Swcnt(object):
         self.unitInvL = length + '-1'
 
 
-    def calculateCuttingLines(self, ksteps=11):
+    def calculateCuttingLines(self, ksteps=100, sym='helical'):
         '''
-        Calculate the linear and helical cutting lines in the zone-folding scheme.
+        Calculate the cutting lines in the zone-folding scheme.
 
         Parameters:
         -----------
             ksteps: int (optional)
-                number of kpoints for the discretisation
-                default = 11
+                number of kpoints for the discretisation (helical sym)
+                default = 100
+
+            sym: str (optional)
+                linear or helical symmetry [ 'linear' | 'helical']
+                default = 'helical'
         '''
-        self.kStepsLin = ksteps
-        self.kStepsHel = int(self.normHel / self.normLin * self.kStepsLin)
-        self.bzCutsLin = physics.bzCuts(self.KT, self.KC, self.NU, self.kStepsLin)
-        self.bzCutsHel = physics.bzCuts(self.k2H, self.k1H / self.D, self.D, self.kStepsHel)
-        self.bzLin = np.linspace(-0.5, 0.5, self.kStepsLin) * self.normLin
-        self.bzHel = np.linspace(-0.5, 0.5, self.kStepsHel) * self.normHel
+        self.kSteps = ksteps
+        # self.kStepsLin = int(self.bzLin / self.bzHel * self.kStepsHel)
+        if sym == 'linear' or sym == 'lin':
+            self.sym = 'linear'
+            self.cuttingLines = physics.bzCuts(self.K2, self.K1, self.N, self.kSteps)
+            self.kGrid = np.linspace(0.0, 1.0, self.kSteps, endpoint=False) * self.bzLin
+            self.subN = self.N
+        else:
+            self.sym = 'helical'
+            self.cuttingLines = physics.bzCuts(self.k2H, self.k1H / self.D, self.D, self.kSteps)
+            self.kGrid = np.linspace(0.0, 1.0, self.kSteps, endpoint=False) * self.bzHel
+            self.subN = self.D
 
 
-    def calculateElectronBands(self, calc, name, **kwargs):
+    def calculateElectronBands(self, calc, **kwargs):
         '''
         Calculate the electron bands energy dispersion using different methods.
 
@@ -201,9 +215,6 @@ class Swcnt(object):
             calc: str
                 specify the method for the band calculation
                 [ 'TB' | 'DFT' ]
-
-            name: str
-                unique name to identify the resulting bands
 
             **kwargs: (optional)
                 Key-value arguments that depend on the calculation to be performed.
@@ -217,10 +228,6 @@ class Swcnt(object):
                     fermi: float (optional)
                         position of the Fermi energy wrt the graphene Fermi level
                         default = 0.0 eV
-
-                    sym: str (optional)
-                        linear or helical symmetry [ 'lin' | 'hel' ]
-                        default = 'hel'
                 
                 calc = 'DFT' calculation:
                 -------------------------
@@ -266,89 +273,47 @@ class Swcnt(object):
                         default = 12
         '''
         if calc == 'TB':
-            tightbinding.tightBindingElectronBands(self, name, **kwargs)
+            self.electronBands = tightBindingElectronBands(self, **kwargs)
         elif calc == 'DFT':
-            dft.dftElectronBands(self, name, **kwargs)
+            dft.dftElectronBands(self, **kwargs)
         elif calc == 'something else':
             pass
         else:
             print(f'Calculation {calc} not implemented.')
 
 
-    def calculateKpointValleys(self, which='all'):
-        '''
-        Calculate the (kx,ky) position of the minima and maxima of the electron band dispersion.
+    # def calculateKpointValleys(self):
+    #     '''
+    #     Calculate the (kx,ky) position of the minima and maxima of the electron band dispersion.
+    #     Note! The K valley extrema are calculated in the helical coordinate system.
+    #     '''
+    #     bzCuts = self.bzCutsHel
+    #     bands = self.electronBands
+    #     subN, _, _, _ = bands.shape
 
-        Note! The K valley extrema are calculated in the helical coordinate system.
+    #     self.condKpointValleys = []
+    #     self.valeKpointValleys = []
 
-        Parameters:
-        -----------
-            which: str (optional)
-                name of the helical electron band to use for the calculation
-                defalut = all
-        '''
-        if which == 'all':
-            keys = self.electronBandsHel.keys()
-        else:
-            keys = [which]
-        
-        for which in keys:
-            bzCuts = self.bzCutsHel
-            bands = self.electronBandsHel[which]
-            subN, _, _, _ = bands.shape
-
-            self.condKpointValleys[which] = []
-            self.condInvMasses[which] = []
-            self.condEnergyZeros[which] = []
-            self.condKpointZeros[which] = []
-
-            self.valeKpointValleys[which] = []
-            self.valeInvMasses[which] = []
-            self.valeEnergyZeros[which] = []
-            self.valeKpointZeros[which] = []
-
-            for mu in range(0, subN): # angular momentum
-                vales, conds = physics.valeCondBands(bands[mu])
-                condMasks = mathematics.findFunctionListExtrema(conds, 'min')
-                valeMasks = mathematics.findFunctionListExtrema(vales, 'max')
-                cuts = bzCuts[mu]
-                
-                # valence band properties
-                energyZeros = []
-                kpointZeros = []
-                invMasses = []
-                kValley = []
-                for vale, mask in zip(vales, valeMasks):
-                    prime = np.gradient(vale[1], vale[0])
-                    second = np.gradient(prime, vale[0])
-                    energyZeros.append( vale[1][mask] )
-                    kpointZeros.append( vale[0][mask] )
-                    invMasses.append( second[mask] )
-                    kValley.append( cuts[mask] )
-                self.valeKpointValleys[which].append( kValley )
-                self.valeEnergyZeros[which].append( energyZeros )
-                self.valeKpointZeros[which].append( kpointZeros )
-                self.valeInvMasses[which].append( invMasses )
-                
-                # conduction band properties
-                energyZeros = []
-                kpointZeros = []
-                invMasses = []
-                kValley = []
-                for cond, mask in zip(conds, condMasks):
-                    prime = np.gradient(cond[1], cond[0])
-                    second = np.gradient(prime, cond[0])
-                    energyZeros.append( cond[1][mask] )
-                    kpointZeros.append( cond[0][mask] )
-                    invMasses.append( second[mask] )
-                    kValley.append( cuts[mask] )
-                self.condKpointValleys[which].append( kValley )
-                self.condEnergyZeros[which].append( energyZeros )
-                self.condKpointZeros[which].append( kpointZeros )
-                self.condInvMasses[which].append( invMasses )
+    #     for mu in range(0, subN): # angular momentum
+    #         vales, conds = physics.valeCondBands(bands[mu])
+    #         condMasks = mathematics.findFunctionListExtrema(conds, 'min')
+    #         valeMasks = mathematics.findFunctionListExtrema(vales, 'max')
+    #         cuts = bzCuts[mu]
+            
+    #         # valence band properties
+    #         kValley = []
+    #         for mask in valeMasks:
+    #             kValley.append( cuts[mask] )
+    #         self.valeKpointValleys.append( kValley )
+            
+    #         # conduction band properties
+    #         kValley = []
+    #         for mask in condMasks:
+    #             kValley.append( cuts[mask] )
+    #         self.condKpointValleys.append( kValley )
 
 
-    def calculateExcitonBands(self, calc, which, name=None, **kwargs):
+    def calculateExcitonBands(self, calc, **kwargs):
         '''
         Calculate the exciton bands energy dispersion using different methods.
         
@@ -359,31 +324,20 @@ class Swcnt(object):
         -----------
             calc: str
                 specify the method for the band calculation
-                [ 'EffMass' | 'BSE' | 'more in the future' ]
-
-            which: str
-                name of the helical electron band to use for the calculation
-
-            name: str (optional)
-                unique name to identify the resulting bands
-                default = same as which
+                [ 'EM' | 'BSE' | 'more in the future' ]
 
             **kwargs: (optional)
                 key-value arguments depend on the calculation to be performed.
 
-                calc = EffMass calculation:
-                ---------------------------
-
-                    deltaK: float (optional)
-                        width of the exciton parabolic bands
-                        default = 10.0 nm-1
-                    
+                calc = 'EM' calculation:
+                ---------------------------                    
                     bindEnergy: float (optional)
                         binding energy between electron and hole states
                         default = 0.0 eV
         '''
         if calc == 'EffMass' or calc == 'EM':
-            physics.effectiveMassExcitonBands(self, which, name, **kwargs)
+            self.excitonBands = effMassExcitonBands(self, **kwargs)
+            # physics.effectiveMassExcitonBands(self, **kwargs)
         elif calc == 'BSE':
             pass
         elif calc == 'more in the future':
@@ -577,3 +531,26 @@ class Swcnt(object):
         else:
             fig.savefig(path)
             plt.close()
+
+
+def tightBindingElectronBands(cnt: Swcnt, gamma=3.0, fermi=0.0):
+    '''
+    Computes the band structure of the given CNT with the tight binding method in the zone folding scheme.
+    Bands are computed using the symmetry selected in the "Swcnt.cuttingLines" method.
+    '''
+    if hasattr(cnt, 'cuttingLines'):
+        cuts = cnt.cuttingLines
+        subN, ksteps, _ = cuts.shape
+        bands = np.zeros( (subN, 2, ksteps) ) # bands = E_n^mu(k), bands[mu index, n index, grid index]
+        for mu, cut in enumerate(cuts):
+            upperBand =   tightbinding.grapheneTBBands(cut, cnt.a1, cnt.a2, gamma) - fermi
+            lowerBand = - tightbinding.grapheneTBBands(cut, cnt.a1, cnt.a2, gamma) - fermi
+            bands[mu, 0, :] = lowerBand
+            bands[mu, 1, :] = upperBand
+        return bands
+    else:
+        print(f'Cutting lines not defined.')
+
+
+def effMassExcitonBands(cnt: Swcnt, bindEnergy=0.0):
+    pass
