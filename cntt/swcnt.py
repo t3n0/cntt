@@ -106,11 +106,13 @@ class Swcnt(object):
         # Linear 2 atom unit cell (Tl, T)
         self.l1, self.l2 = physics.twoAtomUnitCell(self.t1, self.t2, self.n)
         self.Tl = self.l1 * self.a1 + self.l2 * self.a2
+        alpha = self.n * self.l2 - self.m * self.l1
 
         # Helical 2 atom unit cell (Th, C/D)
         self.h1, self.h2 = physics.twoAtomUnitCell(self.n // self.D, self.m // self.D, self.t1)
         self.Th = self.h1 * self.a1 + self.h2 * self.a2
-        
+        beta = self.h2*self.t1 - self.h1*self.t2
+
         # self.atomA = 1/3*(self.a1 + self.a2)
         # self.atomB = 2/3*(self.a1 + self.a2)
         # self.atomAlin = 1/3*(self.T + self.t1)
@@ -126,11 +128,13 @@ class Swcnt(object):
         # self.cosCt2 = np.dot(self.C/self.D, self.t2)/self.normCD/self.normt2
 
         # CNT reciprocal lattice vectors
-        self.K1 = (-self.t2 * self.b1 + self.t1 * self.b2) / self.N
-        self.K2 = (self.m * self.b1 - self.n * self.b2) / self.N
-        # self.k1L = self.NU * self.KC
-        # self.k2L = self.KT + self.alpha * self.KC
-        self.k1H = self.K1 * self.D + self.K2 * (self.h2*self.t1 - self.h1*self.t2)
+        self.K1 = (-self.t2 * self.b1 + self.t1 * self.b2) / self.N  # K1.T = 0
+        self.K2 = (self.m * self.b1 - self.n * self.b2) / self.N     # K2.C = 0
+
+        self.k1L = self.N * self.K1
+        self.k2L = self.K2 + self.K1 * alpha
+        
+        self.k1H = self.K1 * self.D + self.K2 * beta
         self.k2H = - self.K2 * self.N / self.D
 
         # CNT norms
@@ -140,7 +144,7 @@ class Swcnt(object):
         self.normK2 = la.norm(self.K2)
         self.bzLin = la.norm(self.K2)
         self.bzHel = la.norm(self.k2H)
-        # self.normOrt = abs(self.beta)/self.D*self.normLin
+        self.normOrt = self.bzLin * abs(beta) / self.D
 
         # CNT data containers for electron and exciton bands, DOS, JDOS, etc
         self.electronBands = {}
