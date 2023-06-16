@@ -2,15 +2,17 @@ cntt 0.4 (2023 ?? ??)
 ---------------------------
 
 * Changed
-  - CNT objects does not contain many bands anymore. Now, every CNT has only one and only one band structure.
-    This has been done to improve usability and maintainability.
+  - The CNT constructor now takes the ksteps and symmetry parameters
+  - The <calculateCuttingLines> method has been replaced with the <setKSteps> method
+  - Labelling bands has been removed. CNT objects now only contain one set of bands.
 
 * Added
   - CHANGELOG file
-  -
+  - Exciton 2D maps, so to visualize exciton in the (ke, kh) space
+  - Electron-hole continuum bands
 
 * Improved
-  -
+  - Exciton band dispersion now span the full helical BZ.
 
 * Bugfix
   - Bug in the calculation of the helical reciprocal vectors: beta was wrong due to integer casting.

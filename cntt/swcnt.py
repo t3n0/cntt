@@ -68,10 +68,19 @@ class Swcnt(object):
             m: int
                 carbon nanotube m number
 
+            ksteps: int (optional)
+                number of kpoints for the BZ discretisation
+                default = 100
+
             a0: float (optional)
                 carbon nanotube lattice constant (nm)
                 default = 0.2461 nm
+            
+            sym: str (optional)
+                symmetry of the BZ, either linear or helical
+                default = 'helical'
         '''
+        
         # units
         self.unitL = 'nm'
         self.unitE = 'eV'
