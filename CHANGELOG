@@ -1,0 +1,54 @@
+cntt 0.4 (2023 ?? ??)
+---------------------------
+
+* Changed
+  - CNT objects does not contain many bands anymore. Now, every CNT has only one and only one band structure.
+    This has been done to improve usability and maintainability.
+
+* Added
+  - CHANGELOG file
+  -
+
+* Improved
+  -
+
+* Bugfix
+  - Bug in the calculation of the helical reciprocal vectors: beta was wrong due to integer casting.
+
+
+cntt 0.3 (2023 Mar 29)
+---------------------------
+
+* Added
+  - DFT capabilities (outsourced to Quantum Espresso).
+  - Fourier interpolation of k-points.
+
+* Bugfix
+  - Minor fixes.
+
+
+cntt 0.2 (2022 Oct 28)
+---------------------------
+
+* Added
+  - Package has been renamed to CNTT.
+  - New logo.
+  - New plotting features: labels, simultaneous multiple plots and comparison.
+  - Density of States calculation (for both electron and excitons).
+  - Basic doping capabilities: the choice of the fermi level and binding energy will reflect in the exciton band dispersion.
+
+* Improved
+  - Plot of the kpoint valley minima (takes into account valence and conduction bands).
+
+* Bugfix
+  - Minor fixes.
+
+
+swcnt-bands 0.1 (2022 Sep 20)
+---------------------------
+
+* Added
+  - Linear and helical unit cells.
+  - Linear and helical Brillouin zones.
+  - Linear and helical electron band structure.
+  - Helical effective mass approximation of the dispersion relation of bright and dark singlet excitons.

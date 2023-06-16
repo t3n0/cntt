@@ -89,7 +89,7 @@ The following links are simple jupyter notebooks that explain the core capabilit
 
 ## Support
 
-For any problems, questions or suggestions, please contact me at tenobaldi@gmail.com.
+For any problems, questions or suggestions, please contact me at [tenobaldi@gmail.com](tenobaldi@gmail.com).
 
 ## Roadmap
 
