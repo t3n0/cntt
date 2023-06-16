@@ -89,7 +89,6 @@ class Swcnt(object):
         self.n, self.m = n, m
         self.R = np.gcd(2 * m + n, 2 * n + m)
         self.D = np.gcd(m, n)
-        #self.N = n ** 2 + n * m + m ** 2
         self.N = 2 * (n ** 2 + n * m + m ** 2) // self.R
         self.t1, self.t2 = (2 * m + n) // self.R, -(2 * n + m) // self.R
 
@@ -111,7 +110,7 @@ class Swcnt(object):
         # Helical 2 atom unit cell (Th, C/D)
         self.h1, self.h2 = physics.twoAtomUnitCell(self.n // self.D, self.m // self.D, self.t1)
         self.Th = self.h1 * self.a1 + self.h2 * self.a2
-        beta = self.h2*self.t1 - self.h1*self.t2
+        beta = self.h2 * self.t1 - self.h1 * self.t2
 
         # self.atomA = 1/3*(self.a1 + self.a2)
         # self.atomB = 2/3*(self.a1 + self.a2)
@@ -147,19 +146,9 @@ class Swcnt(object):
         self.normOrt = self.bzLin * abs(beta) / self.D
 
         # CNT data containers for electron and exciton bands, DOS, JDOS, etc
-        self.electronBands = {}
-
-        self.condKpointValleys = {}
-        self.condEnergyZeros = {}
-        self.condKpointZeros = {}
-        self.condInvMasses = {}
-
-        self.valeKpointValleys = {}
-        self.valeEnergyZeros = {}
-        self.valeKpointZeros = {}
-        self.valeInvMasses = {}
-
-        self.excitonBands = {}
+        self.excitonBands = np.empty((self.D, self.D), dtype=object)
+        self.excitonContinuum = np.empty((self.D, self.D), dtype=object)
+        self.excitonMaps = np.empty((self.D, self.D), dtype=object)
         self.excitonDOS = {}
         self.electronDOS = {}
 
@@ -197,7 +186,6 @@ class Swcnt(object):
                 default = 'helical'
         '''
         self.kSteps = ksteps
-        # self.kStepsLin = int(self.bzLin / self.bzHel * self.kStepsHel)
         if sym == 'linear' or sym == 'lin':
             self.sym = 'linear'
             self.cuttingLines = physics.bzCuts(self.K2, self.K1, self.N, self.kSteps)
@@ -212,7 +200,7 @@ class Swcnt(object):
 
     def calculateElectronBands(self, calc, **kwargs):
         '''
-        Calculate the electron bands energy dispersion using different methods.
+        Calculate the CNT electron band structure using different methods.
 
         Parameters:
         -----------
@@ -328,7 +316,7 @@ class Swcnt(object):
         -----------
             calc: str
                 specify the method for the band calculation
-                [ 'EM' | 'BSE' | 'more in the future' ]
+                [ 'free' | 'BSE' | 'more in the future' ]
 
             **kwargs: (optional)
                 key-value arguments depend on the calculation to be performed.
@@ -339,9 +327,8 @@ class Swcnt(object):
                         binding energy between electron and hole states
                         default = 0.0 eV
         '''
-        if calc == 'EffMass' or calc == 'EM':
-            self.excitonBands = effMassExcitonBands(self, **kwargs)
-            # physics.effectiveMassExcitonBands(self, **kwargs)
+        if calc == 'free':
+            freeExcitonBands(self, **kwargs)
         elif calc == 'BSE':
             pass
         elif calc == 'more in the future':
@@ -540,21 +527,51 @@ class Swcnt(object):
 def tightBindingElectronBands(cnt: Swcnt, gamma=3.0, fermi=0.0):
     '''
     Computes the band structure of the given CNT with the tight binding method in the zone folding scheme.
-    Bands are computed using the symmetry selected in the "Swcnt.cuttingLines" method.
+    Bands are computed using the symmetry selected in the <cuttingLines> method.
     '''
     if hasattr(cnt, 'cuttingLines'):
-        cuts = cnt.cuttingLines
-        subN, ksteps, _ = cuts.shape
-        bands = np.zeros( (subN, 2, ksteps) ) # bands = E_n^mu(k), bands[mu index, n index, grid index]
-        for mu, cut in enumerate(cuts):
+        bands = np.zeros( (cnt.subN, 2, cnt.kSteps) ) # bands = E_n^mu(k), bands[mu index, n index, grid index]
+        for mu, cut in enumerate(cnt.cuttingLines):
             upperBand =   tightbinding.grapheneTBBands(cut, cnt.a1, cnt.a2, gamma) - fermi
             lowerBand = - tightbinding.grapheneTBBands(cut, cnt.a1, cnt.a2, gamma) - fermi
             bands[mu, 0, :] = lowerBand
             bands[mu, 1, :] = upperBand
         return bands
     else:
-        print(f'Cutting lines not defined.')
+        print(f'Cutting lines not defined. Run cnt.calculateCuttingLines() to do it.')
 
 
-def effMassExcitonBands(cnt: Swcnt, bindEnergy=0.0):
-    pass
+def freeExcitonBands(cnt: Swcnt, bindEnergy=0.0):
+    '''
+    Computes the excitonic band structure in helical coordinates.
+    The electron-hole Coulomb interaction is not taken into account.
+    The bands are computed in a non-interacting approximation, hence
+    a constant value for the binding energy can be input by the user
+    (default = 0 eV).
+    '''
+    for mu1 in range(cnt.subN):
+        bandLo = cnt.electronBands[mu1,0,:]
+        
+        for mu2 in range(cnt.subN):    
+            bandUp = cnt.electronBands[mu2,1,:]
+            
+            bands, continuum, map = physics.excBand1Band2(bandLo, bandUp, cnt.kGrid)
+            cnt.excitonBands[mu1, mu2] = bands - bindEnergy
+            cnt.excitonContinuum[mu1, mu2] = continuum
+            cnt.excitonMaps[mu1, mu2] = map
+
+            # plt.fill_between(cnt.kGrid, excContLo, excContUp, color='grey')
+            # for i in idxLo:
+            #     plt.plot(cnt.kGrid, excBands[i, :])
+            # plt.show()
+
+            # plt.contourf(excBands)
+            # plt.show()
+            # plt.contourf(excMap)
+            # plt.show()
+            # print('idxLo', idxLo)
+            # print('idxUp', idxUp)
+            # print()
+
+
+

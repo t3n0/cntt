@@ -32,7 +32,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
 import warnings
-
 import numpy as np
 
 
@@ -101,10 +100,10 @@ def findFunctionExtrema(x, y, which = 'max'):
         threshold = np.max(prime) - np.min(prime)
         if which == 'max':
             mask1 = ((np.roll(prime, 1) > 0) * (prime <= 0)) # derivative change sign, might be maximum
-            mask1 = mask1 & (np.roll(prime, 2) > 0) * (np.roll(prime, -1) < 0) # check also the nearest 2 points
+            #mask1 = mask1 & (np.roll(prime, 2) > 0) * (np.roll(prime, -1) < 0) # check also the nearest 2 points
         elif which == 'min':
             mask1 = ((np.roll(prime, 1) < 0) * (prime >= 0)) # derivative change sign, might be minimum
-            mask1 = mask1 & (np.roll(prime, 2) < 0) * (np.roll(prime, -1) > 0) # check also the nearest 2 points
+            #mask1 = mask1 & (np.roll(prime, 2) < 0) * (np.roll(prime, -1) > 0) # check also the nearest 2 points
         mask2 = np.abs(np.roll(prime, 1) - prime) > 0.3*threshold # delta derivative too big, might be dirac point
         mask = mask1 & (~ mask2) # tilde is negation, not mask2
         # print(caught_warnings) # when masks with np.nan are generated, there can be some RuntimeWarnings

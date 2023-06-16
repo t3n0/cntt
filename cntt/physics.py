@@ -103,6 +103,38 @@ def twoAtomUnitCell(l, k, n):
             return u, int(v)
 
 
+def excBand1Band2(bandLo, bandUp, kGrid):
+    kSteps = len(kGrid)
+    grid = np.linspace(0, kSteps, kSteps, endpoint=False, dtype=int)
+    maskLo = mathematics.findFunctionExtrema(kGrid, bandLo, 'max')
+    maskUp = mathematics.findFunctionExtrema(kGrid, bandUp, 'min')
+
+    idxLo = grid[maskLo]
+    idxUp = grid[maskUp]
+
+    # cutting at the fermi level, TODO: implement fermi-dirac population
+    bandLo = np.where(bandLo < 0, bandLo, np.nan)
+    bandUp = np.where(bandUp > 0, bandUp, np.nan)
+    
+    # excMap: 2D map of the non-interacting electron-hole energies
+    excMap1 = bandUp - bandLo.reshape((kSteps,1))
+    
+    # non-interacting exciton energies in the center of mass (CoM) coordinate
+    # kc = ke + kh  |     ke = k
+    #               |-->  
+    # k  = ke       |     kh = kc - k
+    excMap2 = np.zeros((kSteps, kSteps))
+    for kc in range(kSteps):
+        excMap2[:, kc] = np.roll(np.flip(bandUp), kc+1) - bandLo
+
+    # energies between max and min exciton defines the continuum
+    excContinuum = [np.nanmin(excMap2, axis=0), np.nanmax(excMap2, axis=0)]
+
+    excBands = np.array( [ excMap2[i, :] for i in idxLo] )
+
+    return excBands, excContinuum, excMap1
+
+
 def densityOfStates(bands, energySteps):
     energyMin = np.min(bands[:,1]) - 0.1*abs(np.min(bands[:,1]))
     energyMax = np.max(bands[:,1]) + 0.1*abs(np.max(bands[:,1]))
@@ -134,80 +166,80 @@ def bzCuts(k1, k2, N, ksteps):
     return np.array(cuts)
 
 
-def valeCondBands(bands):
-    condBands = []
-    valeBands = []
-    for band in bands:
-        cond = np.where(band[1]>0, band, np.nan)
-        vale = np.where(band[1]<0, band, np.nan)
-        if not np.all(np.isnan(cond)): # skip if there are no states at this energy
-            condBands.append( cond )
-        if not np.all(np.isnan(vale)): # skip if there are no states at this energy
-            valeBands.append( vale )
-    condBands = np.array(condBands)
-    valeBands = np.array(valeBands)
-    return valeBands, condBands
+# def valeCondBands(bands):
+#     condBands = []
+#     valeBands = []
+#     for band in bands:
+#         cond = np.where(band[1]>0, band, np.nan)
+#         vale = np.where(band[1]<0, band, np.nan)
+#         if not np.all(np.isnan(cond)): # skip if there are no states at this energy
+#             condBands.append( cond )
+#         if not np.all(np.isnan(vale)): # skip if there are no states at this energy
+#             valeBands.append( vale )
+#     condBands = np.array(condBands)
+#     valeBands = np.array(valeBands)
+#     return valeBands, condBands
 
 
-def effectiveMassExcitonBands(cnt, deltaK = 10.0, bindEnergy = 0.0):
-    '''
-    Calculates the exciton energy dispersion in the effective mass approximation.
-    '''
-    condValleys = cnt.condKpointValleys[which]
-    condInvMasses = cnt.condInvMasses[which]
-    condEnergyZeros = cnt.condEnergyZeros[which]
-    condKpointZeros = cnt.condKpointZeros[which]
+# def effectiveMassExcitonBands(cnt, which, deltaK = 10.0, bindEnergy = 0.0):
+#     '''
+#     Calculates the exciton energy dispersion in the effective mass approximation.
+#     '''
+#     condValleys = cnt.condKpointValleys[which]
+#     condInvMasses = cnt.condInvMasses[which]
+#     condEnergyZeros = cnt.condEnergyZeros[which]
+#     condKpointZeros = cnt.condKpointZeros[which]
 
-    valeValleys = cnt.valeKpointValleys[which]
-    valeInvMasses = cnt.valeInvMasses[which]
-    valeEnergyZeros = cnt.valeEnergyZeros[which]
-    valeKpointZeros = cnt.valeKpointZeros[which]
+#     valeValleys = cnt.valeKpointValleys[which]
+#     valeInvMasses = cnt.valeInvMasses[which]
+#     valeEnergyZeros = cnt.valeEnergyZeros[which]
+#     valeKpointZeros = cnt.valeKpointZeros[which]
 
-    counter = 0
-    excBands = {}
+#     counter = 0
+#     excBands = {}
 
-    kSteps = int(deltaK / cnt.normLin * cnt.kStepsLin)
+#     kSteps = int(deltaK / cnt.normLin * cnt.kStepsLin)
 
-    for mu in range(len(condInvMasses)):                # cut index
-        for n in range(len(condInvMasses[mu])):         # band index
-            for i in range(len(condInvMasses[mu][n])):  # valley index
-                condInvMass = abs( condInvMasses[mu][n][i] )
-                condEnergy = condEnergyZeros[mu][n][i]
-                condKpoint = condKpointZeros[mu][n][i]
-                condValley = condValleys[mu][n][i]
-                for nu in range(len(valeInvMasses)):                # cut index
-                    for m in range(len(valeInvMasses[nu])):         # band index
-                        for j in range(len(valeInvMasses[nu][m])):  # valley index
-                            valeInvMass = abs( valeInvMasses[nu][m][j] )
-                            valeEnergy = valeEnergyZeros[nu][m][j]
-                            valeKpoint = valeKpointZeros[nu][m][j]
-                            valeValley = valeValleys[nu][m][j]
+#     for mu in range(len(condInvMasses)):                # cut index
+#         for n in range(len(condInvMasses[mu])):         # band index
+#             for i in range(len(condInvMasses[mu][n])):  # valley index
+#                 condInvMass = abs( condInvMasses[mu][n][i] )
+#                 condEnergy = condEnergyZeros[mu][n][i]
+#                 condKpoint = condKpointZeros[mu][n][i]
+#                 condValley = condValleys[mu][n][i]
+#                 for nu in range(len(valeInvMasses)):                # cut index
+#                     for m in range(len(valeInvMasses[nu])):         # band index
+#                         for j in range(len(valeInvMasses[nu][m])):  # valley index
+#                             valeInvMass = abs( valeInvMasses[nu][m][j] )
+#                             valeEnergy = valeEnergyZeros[nu][m][j]
+#                             valeKpoint = valeKpointZeros[nu][m][j]
+#                             valeValley = valeValleys[nu][m][j]
 
-                            counter += 1
+#                             counter += 1
 
-                            #print(counter, mu,n,i,nu,m,j, condEnergy, valeEnergy)
+#                             #print(counter, mu,n,i,nu,m,j, condEnergy, valeEnergy)
 
-                            deltaNorm = mathematics.minimumPbcNorm(condValley - valeValley, cnt.k1H, cnt.k2H)
-                            kpoint = (condKpoint - valeKpoint + cnt.normHel / 2) % cnt.normHel - cnt.normHel / 2
-                            invMass = condInvMass * valeInvMass / (condInvMass + valeInvMass)
-                            energy = condEnergy - valeEnergy - bindEnergy
+#                             deltaNorm = mathematics.minimumPbcNorm(condValley - valeValley, cnt.k1H, cnt.k2H)
+#                             kpoint = (condKpoint - valeKpoint + cnt.normHel / 2) % cnt.normHel - cnt.normHel / 2
+#                             invMass = condInvMass * valeInvMass / (condInvMass + valeInvMass)
+#                             energy = condEnergy - valeEnergy - bindEnergy
 
-                            if deltaNorm < 1:
-                                # parallel excitons
-                                excBands[f"para.{mu}.{n}.{i}.{nu}.{m}.{j}"] = excitonBandDispersion(kpoint, invMass, energy, deltaK, kSteps)
-                            elif 0.6*cnt.normKC < deltaNorm < 1.4*cnt.normKC:
-                                # perpendicular excitons
-                                excBands[f"perp.{mu}.{n}.{i}.{nu}.{m}.{j}"] = excitonBandDispersion(kpoint, invMass, energy, deltaK, kSteps)
-                            else:
-                                # dark excitons
-                                excBands[f"dark.{mu}.{n}.{i}.{nu}.{m}.{j}"] = excitonBandDispersion(kpoint, invMass, energy, deltaK, kSteps)
-    cnt.excitonBands[name] = excBands
+#                             if deltaNorm < 1:
+#                                 # parallel excitons
+#                                 excBands[f"para.{mu}.{n}.{i}.{nu}.{m}.{j}"] = excitonBandDispersion(kpoint, invMass, energy, deltaK, kSteps)
+#                             elif 0.6*cnt.normKC < deltaNorm < 1.4*cnt.normKC:
+#                                 # perpendicular excitons
+#                                 excBands[f"perp.{mu}.{n}.{i}.{nu}.{m}.{j}"] = excitonBandDispersion(kpoint, invMass, energy, deltaK, kSteps)
+#                             else:
+#                                 # dark excitons
+#                                 excBands[f"dark.{mu}.{n}.{i}.{nu}.{m}.{j}"] = excitonBandDispersion(kpoint, invMass, energy, deltaK, kSteps)
+#     cnt.excitonBands[name] = excBands
 
 
-def excitonBandDispersion(helPos, invMass, energy, deltak, kstep):
-    kmesh = np.linspace(-0.5*deltak, 0.5*deltak, kstep)
-    band = 0.5 * invMass * kmesh ** 2 + energy
-    return kmesh-helPos, band
+# def excitonBandDispersion(helPos, invMass, energy, deltak, kstep):
+#     kmesh = np.linspace(-0.5*deltak, 0.5*deltak, kstep)
+#     band = 0.5 * invMass * kmesh ** 2 + energy
+#     return kmesh-helPos, band
 
 
 # def opt_mat_elems(k, a1, a2, n, m):
