@@ -56,7 +56,7 @@ class Swcnt(object):
         - absorption spectra (soon);
         - and more (soon).
     """
-    def __init__(self, n, m, a0 = 0.2461):
+    def __init__(self, n, m, ksteps = 100, a0 = 0.2461, sym = 'helical'):
         '''
         Constructor for the Swcnt class.
 
@@ -145,12 +145,28 @@ class Swcnt(object):
         self.bzHel = la.norm(self.k2H)
         self.normOrt = self.bzLin * abs(beta) / self.D
 
+        # Symmetry and cuttiling lines
+        self.kSteps = ksteps
+        if sym in ['linear', 'lin', 'l', 'L']:
+            self.sym = 'linear'
+            self.cuttingLines = physics.bzCuts(self.K2, self.K1, self.N, self.kSteps)
+            self.kGrid = np.linspace(0.0, 1.0, self.kSteps, endpoint=False) * self.bzLin
+            self.subN = self.N
+        else:
+            self.sym = 'helical'
+            self.cuttingLines = physics.bzCuts(self.k2H, self.k1H / self.D, self.D, self.kSteps)
+            self.kGrid = np.linspace(0.0, 1.0, self.kSteps, endpoint=False) * self.bzHel
+            self.subN = self.D
+
         # CNT data containers for electron and exciton bands, DOS, JDOS, etc
-        self.excitonBands = np.empty((self.D, self.D), dtype=object)
-        self.excitonContinuum = np.empty((self.D, self.D), dtype=object)
-        self.excitonMaps = np.empty((self.D, self.D), dtype=object)
-        self.excitonDOS = {}
-        self.electronDOS = {}
+        self.electronBands    = np.empty((self.subN), dtype=object)
+        self.electronDOS      = np.empty((self.subN), dtype=object)
+
+        self.excitonBands     = np.empty((self.subN, self.subN), dtype=object)
+        self.excitonContinuum = np.empty((self.subN, self.subN), dtype=object)
+        self.excitonMaps      = np.empty((self.subN, self.subN), dtype=object)
+        self.excitonDOS       = np.empty((self.subN, self.subN), dtype=object)
+        
 
     def setUnits(self, energy, length):
         '''
@@ -171,23 +187,20 @@ class Swcnt(object):
         self.unitInvL = length + '-1'
 
 
-    def calculateCuttingLines(self, ksteps=100, sym='helical'):
+    def setKSteps(self, ksteps):
         '''
-        Calculate the cutting lines in the zone-folding scheme.
+        Reset the numer of kpoints for the BZ discretisation.
+
+        (Useful to increase the ksteps after a coarse calculation
+        and subsequently to interpolate with Fourier)
 
         Parameters:
         -----------
             ksteps: int (optional)
-                number of kpoints for the discretisation (helical sym)
-                default = 100
-
-            sym: str (optional)
-                linear or helical symmetry [ 'linear' | 'helical']
-                default = 'helical'
+                number of kpoints for the discretisation
         '''
         self.kSteps = ksteps
-        if sym == 'linear' or sym == 'lin':
-            self.sym = 'linear'
+        if self.sym == 'linear':
             self.cuttingLines = physics.bzCuts(self.K2, self.K1, self.N, self.kSteps)
             self.kGrid = np.linspace(0.0, 1.0, self.kSteps, endpoint=False) * self.bzLin
             self.subN = self.N
@@ -265,7 +278,7 @@ class Swcnt(object):
                         default = 12
         '''
         if calc == 'TB':
-            self.electronBands = tightBindingElectronBands(self, **kwargs)
+            tightBindingElectronBands(self, **kwargs)
         elif calc == 'DFT':
             dft.dftElectronBands(self, **kwargs)
         elif calc == 'something else':
@@ -321,7 +334,7 @@ class Swcnt(object):
             **kwargs: (optional)
                 key-value arguments depend on the calculation to be performed.
 
-                calc = 'EM' calculation:
+                calc = 'free' calculation:
                 ---------------------------                    
                     bindEnergy: float (optional)
                         binding energy between electron and hole states
@@ -337,7 +350,7 @@ class Swcnt(object):
             print(f'Calculation {calc} not implemented.')
 
 
-    def calculateDOS(self, which, name = 'all', enSteps=1000):
+    def calculateDOS(self, which, enSteps=1000):
         '''
         Calcualte the density of states for a given particle energy dispersion.
         By default, the DOS is calculated on the helical symmetry.
@@ -347,37 +360,23 @@ class Swcnt(object):
             which: str
                 particle type [ 'electron' | 'exciton' ]
 
-            name: str (optional)
-                name of the specific band to use for DOS
-                default = all
-
             enSteps: int (optional)
                 energy steps for the discretisation
                 default = 1000
         '''
-        if which == 'el' or which == 'electron':
-            if name == 'all':
-                bandNames = self.electronBandsHel.keys()
-            else:
-                bandNames = [name]
-            for name in bandNames:
-                bands = self.electronBandsHel[name]
-                cutIdx, bandIdx, axIdx, gridIdx = bands.shape
-                en, dos = physics.densityOfStates(bands.reshape((cutIdx * bandIdx, axIdx, gridIdx)), enSteps)
-                self.electronDOS[name] = [en, dos/self.normHel]
-        elif which == 'ex' or which == 'exciton':
-            if name == 'all':
-                bandNames = self.excitonBands.keys()
-            else:
-                bandNames = [name]
-            for name in bandNames:
-                bands = self.excitonBands[name]
-                allBands = []
-                for key in bands:
-                    allBands.append(bands[key])
-                allBands = np.array(allBands)
-                en, dos = physics.densityOfStates(allBands, enSteps)
-                self.excitonDOS[name] = [en, dos]
+        if which in ['electron', 'elec', 'el']:
+            bands = self.electronBands
+            cutIdx, bandIdx, axIdx, gridIdx = bands.shape
+            en, dos = physics.densityOfStates(bands.reshape((cutIdx * bandIdx, axIdx, gridIdx)), enSteps)
+            # self.electronDOS[name] = [en, dos/self.normHel]
+        elif which in ['exciton', 'exc', 'ex']:
+            # bands = self.excitonBands[name]
+            allBands = []
+            for key in bands:
+                allBands.append(bands[key])
+            allBands = np.array(allBands)
+            en, dos = physics.densityOfStates(allBands, enSteps)
+            # self.excitonDOS[name] = [en, dos]
         else:
             print(f'Particle {which} not recognized.')
         
@@ -529,16 +528,11 @@ def tightBindingElectronBands(cnt: Swcnt, gamma=3.0, fermi=0.0):
     Computes the band structure of the given CNT with the tight binding method in the zone folding scheme.
     Bands are computed using the symmetry selected in the <cuttingLines> method.
     '''
-    if hasattr(cnt, 'cuttingLines'):
-        bands = np.zeros( (cnt.subN, 2, cnt.kSteps) ) # bands = E_n^mu(k), bands[mu index, n index, grid index]
-        for mu, cut in enumerate(cnt.cuttingLines):
-            upperBand =   tightbinding.grapheneTBBands(cut, cnt.a1, cnt.a2, gamma) - fermi
-            lowerBand = - tightbinding.grapheneTBBands(cut, cnt.a1, cnt.a2, gamma) - fermi
-            bands[mu, 0, :] = lowerBand
-            bands[mu, 1, :] = upperBand
-        return bands
-    else:
-        print(f'Cutting lines not defined. Run cnt.calculateCuttingLines() to do it.')
+    for mu, cut in enumerate(cnt.cuttingLines):
+        upperBand =   tightbinding.grapheneTBBands(cut, cnt.a1, cnt.a2, gamma) - fermi
+        lowerBand = - tightbinding.grapheneTBBands(cut, cnt.a1, cnt.a2, gamma) - fermi
+        cnt.electronBands[mu] = np.array( [lowerBand, upperBand] )
+    
 
 
 def freeExcitonBands(cnt: Swcnt, bindEnergy=0.0):
@@ -550,28 +544,15 @@ def freeExcitonBands(cnt: Swcnt, bindEnergy=0.0):
     (default = 0 eV).
     '''
     for mu1 in range(cnt.subN):
-        bandLo = cnt.electronBands[mu1,0,:]
+        bandLo = cnt.electronBands[mu1][0,:]
         
         for mu2 in range(cnt.subN):    
-            bandUp = cnt.electronBands[mu2,1,:]
+            bandUp = cnt.electronBands[mu2][1,:]
             
             bands, continuum, map = physics.excBand1Band2(bandLo, bandUp, cnt.kGrid)
             cnt.excitonBands[mu1, mu2] = bands - bindEnergy
             cnt.excitonContinuum[mu1, mu2] = continuum
             cnt.excitonMaps[mu1, mu2] = map
-
-            # plt.fill_between(cnt.kGrid, excContLo, excContUp, color='grey')
-            # for i in idxLo:
-            #     plt.plot(cnt.kGrid, excBands[i, :])
-            # plt.show()
-
-            # plt.contourf(excBands)
-            # plt.show()
-            # plt.contourf(excMap)
-            # plt.show()
-            # print('idxLo', idxLo)
-            # print('idxUp', idxUp)
-            # print()
 
 
 
