@@ -135,25 +135,21 @@ def excBand1Band2(bandLo, bandUp, kGrid):
     return excBands, excContinuum, excMap1
 
 
-def densityOfStates(bands, energySteps):
-    energyMin = np.min(bands[:,1]) - 0.1*abs(np.min(bands[:,1]))
-    energyMax = np.max(bands[:,1]) + 0.1*abs(np.max(bands[:,1]))
-    energyGrid = np.linspace(energyMin, energyMax, energySteps)
-    dos = np.zeros(len(energyGrid))
-    for n in range(len(bands)):
-        prime = np.gradient(bands[n,1], bands[n,0])
-        for i, energy in enumerate(energyGrid):
-            maskZeros = mathematics.findFunctionZeros(bands[n,1] - energy)
-            primeZeros = prime[maskZeros]
-            #if 0.0 in primeZeros:
-                #mask = np.where(primeZeros == 0.0)
-            mask = np.where(np.abs(primeZeros) < 1e-6)
-            # todo add verbosity when we manually rescale the divergencies
-            #print('Divide by zero in van hove, set it to 1000, lol')
-            # van Hove singularities set to 1000, because, why not!? lol
-            primeZeros[mask] = 1/1000
-            dos[i] += np.sum( 1 / np.abs(primeZeros) )
-    return energyGrid, dos
+def densityOfStates(band, kGrid, eGrid):
+    dos = np.zeros(len(eGrid))
+    prime = np.gradient(band, kGrid)
+    for i, en in enumerate(eGrid):
+        maskZeros = mathematics.findFunctionZeros(band - en)
+        primeZeros = prime[maskZeros]
+        #if 0.0 in primeZeros:
+            #mask = np.where(primeZeros == 0.0)
+        mask = np.where(np.abs(primeZeros) < 1e-6)
+        # TODO add verbosity when we manually rescale the divergencies
+        #print('Divide by zero in van hove, set it to 1000, lol')
+        # van Hove singularities set to 1000, because, why not!? lol
+        primeZeros[mask] = 1/100
+        dos[i] += np.sum( 1 / np.abs(primeZeros) )
+    return dos
 
 
 def bzCuts(k1, k2, N, ksteps):
@@ -165,6 +161,15 @@ def bzCuts(k1, k2, N, ksteps):
         cuts.append(cut)
     return np.array(cuts)
 
+
+def energyGrid(eMin, eMax, eSteps, bands):
+    if eMin == None:
+        eMin = np.min( bands )
+        eMin = eMin - 0.1*abs(eMin)
+    if eMax == None:
+        eMax = np.max( bands )
+        eMax = eMax + 0.1*abs(eMax)
+    return np.linspace(eMin, eMax, eSteps)
 
 # def valeCondBands(bands):
 #     condBands = []

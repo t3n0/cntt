@@ -80,7 +80,7 @@ class Swcnt(object):
                 symmetry of the BZ, either linear or helical
                 default = 'helical'
         '''
-        
+
         # units
         self.unitL = 'nm'
         self.unitE = 'eV'
@@ -120,20 +120,6 @@ class Swcnt(object):
         self.h1, self.h2 = physics.twoAtomUnitCell(self.n // self.D, self.m // self.D, self.t1)
         self.Th = self.h1 * self.a1 + self.h2 * self.a2
         beta = self.h2 * self.t1 - self.h1 * self.t2
-
-        # self.atomA = 1/3*(self.a1 + self.a2)
-        # self.atomB = 2/3*(self.a1 + self.a2)
-        # self.atomAlin = 1/3*(self.T + self.t1)
-        # self.atomBlin = 2/3*(self.T + self.t1)
-        # self.atomAhel = 1/3*(self.C/self.D + self.t2)
-        # self.atomBhel = 2/3*(self.C/self.D + self.t2)
-
-        # CNT crystallographic constants
-        
-        # self.normt1 = np.linalg.norm(self.t1)
-        # self.normt2 = np.linalg.norm(self.t2)
-        # self.cosTt1 = np.dot(self.T, self.t1)/self.normT/self.normt1
-        # self.cosCt2 = np.dot(self.C/self.D, self.t2)/self.normCD/self.normt2
 
         # CNT reciprocal lattice vectors
         self.K1 = (-self.t2 * self.b1 + self.t1 * self.b2) / self.N  # K1.T = 0
@@ -359,7 +345,7 @@ class Swcnt(object):
             print(f'Calculation {calc} not implemented.')
 
 
-    def calculateDOS(self, which, enSteps=1000):
+    def calculateDOS(self, which, eMin=None, eMax=None, eSteps=1000):
         '''
         Calcualte the density of states for a given particle energy dispersion.
         By default, the DOS is calculated on the helical symmetry.
@@ -369,23 +355,25 @@ class Swcnt(object):
             which: str
                 particle type [ 'electron' | 'exciton' ]
 
-            enSteps: int (optional)
+            eSteps: int (optional)
                 energy steps for the discretisation
                 default = 1000
         '''
         if which in ['electron', 'elec', 'el']:
-            bands = self.electronBands
-            cutIdx, bandIdx, axIdx, gridIdx = bands.shape
-            en, dos = physics.densityOfStates(bands.reshape((cutIdx * bandIdx, axIdx, gridIdx)), enSteps)
-            # self.electronDOS[name] = [en, dos/self.normHel]
+            self.electronEnergyGrid = physics.energyGrid(eMin, eMax, eSteps, self.electronBands.tolist())
+            for mu in range(self.subN):
+                dos = []
+                for band in self.electronBands[mu]:
+                    dos.append( physics.densityOfStates(band, self.kGrid, self.electronEnergyGrid) )
+                self.electronDOS[mu] = dos
         elif which in ['exciton', 'exc', 'ex']:
-            # bands = self.excitonBands[name]
-            allBands = []
-            for key in bands:
-                allBands.append(bands[key])
-            allBands = np.array(allBands)
-            en, dos = physics.densityOfStates(allBands, enSteps)
-            # self.excitonDOS[name] = [en, dos]
+            self.excitonEnergyGrid = physics.energyGrid(eMin, eMax, eSteps, self.excitonBands.tolist())
+            for mu1 in range(self.subN):
+                for mu2 in range(self.subN):
+                    dos = []
+                    for band in self.excitonBands[mu1, mu2]:
+                        dos.append( physics.densityOfStates(band, self.kGrid, self.excitonEnergyGrid) )
+                    self.excitonDOS[mu1, mu2] = dos
         else:
             print(f'Particle {which} not recognized.')
         
