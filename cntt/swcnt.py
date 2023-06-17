@@ -400,6 +400,21 @@ class Swcnt(object):
 
 
     def getCell(self, which):
+        '''
+        Returns a polygon representing the selected cell.
+
+        Parameters:
+        -----------
+            which: str
+                Selection of the CNT cell to return:
+                supercell, unit cell, reciprocal cell
+                ['sc' | 'uc' | 'rc']
+        
+        Returns:
+        --------
+            res: ndarray
+                array of (x, y) positions of the four corners of the selected cell
+        '''
         if which in ['supercell', 'sc']:
             res = [ [0.0, 0.0], self.T, self.T + self.C, self.C]
         elif which in ['unitcell', 'uc']:
