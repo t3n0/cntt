@@ -31,18 +31,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 '''
 
 
-import matplotlib.pyplot as plt
+import os
 import numpy as np
 import numpy.linalg as la
-import os
 
-import cntt.utils as utils
-import cntt.plotting as plotting
 import cntt.physics as physics
 import cntt.tightbinding as tightbinding
 import cntt.dft as dft
-import cntt.mathematics as mathematics
-
 
 
 class Swcnt(object):
@@ -355,6 +350,14 @@ class Swcnt(object):
             which: str
                 particle type [ 'electron' | 'exciton' ]
 
+            eMin: float (optional)
+                minimum of the DOS energy grid
+                default, minimum of the band
+            
+            eMax: float (optional)
+                maximum of the DOS energy grid
+                default, maximum of the band
+
             eSteps: int (optional)
                 energy steps for the discretisation
                 default = 1000
@@ -396,6 +399,22 @@ class Swcnt(object):
         pass
 
 
+    def getCell(self, which):
+        if which in ['supercell', 'sc']:
+            res = [ [0.0, 0.0], self.T, self.T + self.C, self.C]
+        elif which in ['unitcell', 'uc']:
+            if self.sym == 'linear':
+                res = [ [0.0, 0.0], self.Tl, self.Tl + self.T, self.T]
+            else:
+                res = [ [0.0, 0.0], self.C / self.D, self.C / self.D + self.Th, self.Th ]
+        elif which in ['reciprocalcell', 'rc']:
+            if self.sym == 'linear':
+                res = [ [0.0, 0.0], self.k1L, self.k1L + self.k2L, self.k2L ]
+            else:
+                res = [[0.0, 0.0], self.k1H, self.k1H + self.k2H, self.k2H]
+        return np.array(res)
+
+
     def saveToDirectory(self, dirpath):
         WORK_DIR = os.getcwd()
         OUT_DIR = os.path.join(WORK_DIR, dirpath)
@@ -433,91 +452,91 @@ class Swcnt(object):
             print(exc)
 
 
-    def plot(self, path=None):
-        '''
-        Plots all relevant quantities and properties of the nanotube object.
+    # def plot(self, path=None):
+    #     '''
+    #     Plots all relevant quantities and properties of the nanotube object.
 
-        This is a *convenience* function that displays the carbon nanotube
-        parameters, direct and reciprocal lattices, K and K' valley minima,
-        linear and helical electron bands, and the helical exciton and
-        phonon bands.
+    #     This is a *convenience* function that displays the carbon nanotube
+    #     parameters, direct and reciprocal lattices, K and K' valley minima,
+    #     linear and helical electron bands, and the helical exciton and
+    #     phonon bands.
 
-        For more versatile plotting routines, the user might want to import
-        the `cntt.plotting` module.
+    #     For more versatile plotting routines, the user might want to import
+    #     the `cntt.plotting` module.
 
-        Parameters:
-        -----------
-            path: str (optional)
-                destination path where to save the figure
-                default = shows the figure
-        '''
-        if path == None:
-            fig = plt.figure(figsize=(16, 9))
-        else:
-            fig = plt.figure(figsize=(16, 9), dpi=300)
+    #     Parameters:
+    #     -----------
+    #         path: str (optional)
+    #             destination path where to save the figure
+    #             default = shows the figure
+    #     '''
+    #     if path == None:
+    #         fig = plt.figure(figsize=(16, 9))
+    #     else:
+    #         fig = plt.figure(figsize=(16, 9), dpi=300)
 
-        # figure and axes
-        fig.suptitle(f"CNT ({self.n},{self.m})")
-        ax1 = fig.add_axes([0.23, 0.63, 0.35, 0.32])
-        ax2 = fig.add_axes([0.63, 0.63, 0.35, 0.32])
-        ax3 = fig.add_axes([0.05, 0.25, 0.2, 0.3])
-        ax4 = fig.add_axes([0.25, 0.25, 0.58, 0.3])
-        ax5 = fig.add_axes([0.83, 0.25, 0.15, 0.3])
-        ax6 = fig.add_axes([0.25, 0.05, 0.58, 0.2])
-        ax7 = fig.add_axes([0.83, 0.05, 0.15, 0.2])
+    #     # figure and axes
+    #     fig.suptitle(f"CNT ({self.n},{self.m})")
+    #     ax1 = fig.add_axes([0.23, 0.63, 0.35, 0.32])
+    #     ax2 = fig.add_axes([0.63, 0.63, 0.35, 0.32])
+    #     ax3 = fig.add_axes([0.05, 0.25, 0.2, 0.3])
+    #     ax4 = fig.add_axes([0.25, 0.25, 0.58, 0.3])
+    #     ax5 = fig.add_axes([0.83, 0.25, 0.15, 0.3])
+    #     ax6 = fig.add_axes([0.25, 0.05, 0.58, 0.2])
+    #     ax7 = fig.add_axes([0.83, 0.05, 0.15, 0.2])
 
-        # plot all axes
-        plotting.dirLat(self, ax1)
-        plotting.recLat(self, ax2)
-        plotting.electronBands(self, ax3, 'lin')
-        plotting.electronBands(self, ax4, 'hel')
-        plotting.excitonBands(self, ax6)
-        plotting.electronDOS(self, ax5, True)
-        plotting.excitonDOS(self, ax7, True)
+    #     # plot all axes
+    #     plotting.dirLat(self, ax1)
+    #     plotting.recLat(self, ax2)
+    #     plotting.electronBands(self, ax3, 'lin')
+    #     plotting.electronBands(self, ax4, 'hel')
+    #     plotting.excitonBands(self, ax6)
+    #     plotting.electronDOS(self, ax5, True)
+    #     plotting.excitonDOS(self, ax7, True)
 
-        # format some text and layout
-        ax3.set_title("Linear")
-        ax4.set_title("Helical")
-        ax5.set_title("DOS")
-        for ax in [ax4, ax5, ax7]:
-            ax.set_ylabel('')
-        for ax in [ax4, ax5]:
-            ax.set_xlabel('')
+    #     # format some text and layout
+    #     ax3.set_title("Linear")
+    #     ax4.set_title("Helical")
+    #     ax5.set_title("DOS")
+    #     for ax in [ax4, ax5, ax7]:
+    #         ax.set_ylabel('')
+    #     for ax in [ax4, ax5]:
+    #         ax.set_xlabel('')
 
-        # "Matplotlib fai ribrezzo ai popoli del mondo!"
-        # "Tu metti in subbuglio il mio sistema di donna sensibile!"
-        # (Alida Valli)
+    #     # "Matplotlib fai ribrezzo ai popoli del mondo!"
+    #     # "Tu metti in subbuglio il mio sistema di donna sensibile!"
+    #     # (Alida Valli)
 
-        ax3.get_shared_y_axes().join(ax3, ax4, ax5)
-        ax6.get_shared_y_axes().join(ax6, ax7)                                   
-        ax4.get_shared_x_axes().join(ax4, ax6)
+    #     ax3.get_shared_y_axes().join(ax3, ax4, ax5)
+    #     ax6.get_shared_y_axes().join(ax6, ax7)                                   
+    #     ax4.get_shared_x_axes().join(ax4, ax6)
         
-        ax4.set_yticklabels([]) 
-        ax5.set_yticklabels([])
-        ax4.set_xticklabels([])
-        ax5.set_xticklabels([])
-        ax7.set_yticklabels([])
+    #     ax4.set_yticklabels([]) 
+    #     ax5.set_yticklabels([])
+    #     ax4.set_xticklabels([])
+    #     ax5.set_xticklabels([])
+    #     ax7.set_yticklabels([])
 
-        # cnt parameters text
-        plt.text(0.05, 0.9, utils.textParams(self), ha="left", va="top", transform=fig.transFigure)
+    #     # cnt parameters text
+    #     plt.text(0.05, 0.9, utils.textParams(self), ha="left", va="top", transform=fig.transFigure)
 
-        # ticks locators and grids
-        for ax in [ax4, ax6]:
-            ax.locator_params(axis='x', nbins=10)
-        for ax in [ax3, ax4, ax5]:
-            ax.locator_params(axis='y', nbins=6)
-        for ax in [ax6, ax7]:
-            ax.locator_params(axis='y', nbins=6)
-        for ax in [ax3, ax4, ax5, ax6, ax7]:    
-            ax.grid(linestyle='--')
+    #     # ticks locators and grids
+    #     for ax in [ax4, ax6]:
+    #         ax.locator_params(axis='x', nbins=10)
+    #     for ax in [ax3, ax4, ax5]:
+    #         ax.locator_params(axis='y', nbins=6)
+    #     for ax in [ax6, ax7]:
+    #         ax.locator_params(axis='y', nbins=6)
+    #     for ax in [ax3, ax4, ax5, ax6, ax7]:    
+    #         ax.grid(linestyle='--')
 
 
-        # save if path is not None
-        if path == None:
-            plt.show()
-        else:
-            fig.savefig(path)
-            plt.close()
+    #     # save if path is not None
+    #     if path == None:
+    #         plt.show()
+    #     else:
+    #         fig.savefig(path)
+    #         plt.close()
 
 
 def tightBindingElectronBands(cnt: Swcnt, gamma=3.0, fermi=0.0):

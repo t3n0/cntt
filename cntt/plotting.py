@@ -38,6 +38,7 @@ from matplotlib.collections import PatchCollection
 from matplotlib.markers import MarkerStyle
 from matplotlib.cm import get_cmap
 import cntt.physics as physics
+from cntt.swcnt import Swcnt
 
 
 def show():
@@ -58,23 +59,19 @@ def mylabel(i, label):
         return '_'
 
 
-def dirLat(cnt, ax=None):
-    _, lfactor, _ = physics.unitFactors(cnt)
-    C, T, t1, t2, a0 = physics.changeUnits(cnt, lfactor, 'C', 'T', 't1', 't2', 'a0')
+def dirLat(cnt: Swcnt, ax=None):
     if ax is None:
         fig = plt.figure(figsize=(5, 5))
-        ax = fig.add_axes([0.05, 0.05, 0.9, 0.9])
+        ax = fig.add_axes([0.08, 0.08, 0.87, 0.87])
+    sc, uc = cnt.getCell('sc'), cnt.getCell('uc')
     # hexagons
-    boundVectors = C, T, C + T, t1, t1 + T, t2, t2 + C / cnt.D
-    minx, maxx, miny, maxy = boundingRectangle(*boundVectors)
-    hexs = dirHexPatches(minx, maxx, miny, maxy, a0)
+    # minx, maxx, miny, maxy = boundingRectangle(*sc, *uc)
+    minx, maxx, miny, maxy = boundingSquare(*sc, *uc)
+    hexs = dirHexPatches(minx, maxx, miny, maxy, cnt.a0)
     # cells
-    unitCell_la = np.array([[0.0, 0.0], C, C + T, T])
-    unitCell_lh = np.array([[0.0, 0.0], t1, t1 + T, T])
-    unitCell_ha = np.array([[0.0, 0.0], C / cnt.D, C / cnt.D + t2, t2])
-    unitCells = cellPatches([unitCell_la, unitCell_ha, unitCell_lh], ["g", "b", "r"])
+    unitCells = cellPatches([sc, uc], ["g", "b"])
     # lattice vectors
-    latVecs = arrowPatches(C, T, t1, t2, color='grey')
+    latVecs = arrowPatches(cnt.C, cnt.T, cnt.Th, cnt.Tl, color='grey')
     # plot
     ax.add_collection(hexs)
     ax.add_collection(unitCells)
@@ -87,48 +84,46 @@ def dirLat(cnt, ax=None):
     return ax
 
 
-def recLat(cnt, ax=None):
-    _, _, invLfactor = physics.unitFactors(cnt)
-    KT, k1L, k2L, k1H, k2H, b0 = physics.changeUnits(cnt, invLfactor, 'KT', 'k1L', 'k2L', 'k1H', 'k2H', 'b0')
+def recLat(cnt: Swcnt, ax=None):
+    # _, _, invLfactor = physics.unitFactors(cnt)
+    # KT, k1L, k2L, k1H, k2H, b0 = physics.changeUnits(cnt, invLfactor, 'KT', 'k1L', 'k2L', 'k1H', 'k2H', 'b0')
     if ax is None:
         fig = plt.figure(figsize=(5, 5))
         ax = fig.add_axes([0.05, 0.05, 0.9, 0.9])
     # hexagons
-    boundVectors = k1L - 0.5*KT, \
-        k1L + k2L - KT, k2L - 0.5*KT, \
-        k1H + 0.5*cnt.NU/cnt.D*KT, \
-        k1H + k2H + cnt.NU/cnt.D*KT, \
-        k2H + 0.5*cnt.NU/cnt.D*KT, \
-        0.5*cnt.NU/cnt.D*KT, \
-        k1H - 0.5*cnt.NU/cnt.D*KT
-    minx, maxx, miny, maxy = boundingRectangle(*boundVectors)
-    hexs = recHexPatches(minx, maxx, miny, maxy, b0)
+    rc = cnt.getCell('rc')
+    # minx, maxx, miny, maxy = boundingRectangle(*rc)
+    minx, maxx, miny, maxy = boundingSquare(*rc)
+    hexs = recHexPatches(minx, maxx, miny, maxy, cnt.b0)
     # cells
-    recCell_lh = np.array([[0.0, 0.0], k1L, k1L + k2L, k2L]) - 0.5*KT
-    recCell_ha = np.array([[0.0, 0.0], k1H, k1H + k2H, k2H]) + 0.5*cnt.NU/cnt.D*KT
-    recCells = cellPatches([recCell_lh, recCell_ha], ["r", "b"])
+    # recCell_lh = np.array([[0.0, 0.0], k1L, k1L + k2L, k2L]) - 0.5*KT
+    # recCell_ha = np.array([[0.0, 0.0], k1H, k1H + k2H, k2H]) + 0.5*cnt.NU/cnt.D*KT
+    recCells = cellPatches([rc], ["r"])
     # lattice vectors
     #latVecs = arrowPatches(cnt.k1L, cnt.k2L, cnt.k1H, cnt.k2H, color='grey', d= cnt.KT)
-    if hasattr(cnt, 'bzCutsLin') and hasattr(cnt, 'bzCutsHel'):
-        # plot linear cutting lines
-        cuts = invLfactor * cnt.bzCutsLin
-        cutsPatches = linePatches(cuts[:, 0, 0], cuts[:, 0, 1], cuts[:, -1, 0] - cuts[:, 0, 0], cuts[:, -1, 1] - cuts[:, 0, 1], ec="r")
-        ax.add_collection(cutsPatches)
-        # plot helical cutting lines
-        cuts = invLfactor * cnt.bzCutsHel
-        cutsPatches = linePatches(cuts[:, 0, 0], cuts[:, 0, 1], cuts[:, -1, 0] - cuts[:, 0, 0], cuts[:, -1, 1] - cuts[:, 0, 1], ec="b")
-        ax.add_collection(cutsPatches)
-    # KpointValleys
-    for key in cnt.condKpointValleys:           # name of the calculation
-        for cuts in cnt.condKpointValleys[key]: # mu index
-            for xys in cuts:                    # band index
-                for xy in xys:                  # extrema index
-                    ax.scatter(xy[0], xy[1], s=50, c='white', edgecolor='black', marker=MarkerStyle("o", fillstyle="right"))
-    for key in cnt.valeKpointValleys:
-        for cuts in cnt.valeKpointValleys[key]:
-            for xys in cuts:
-                for xy in xys:
-                    ax.scatter(xy[0], xy[1], s=50, c='white', edgecolor='black', marker=MarkerStyle("o", fillstyle="left"))
+
+    # if hasattr(cnt, 'bzCutsLin') and hasattr(cnt, 'bzCutsHel'):
+    #     # plot linear cutting lines
+    #     cuts = invLfactor * cnt.bzCutsLin
+    #     cutsPatches = linePatches(cuts[:, 0, 0], cuts[:, 0, 1], cuts[:, -1, 0] - cuts[:, 0, 0], cuts[:, -1, 1] - cuts[:, 0, 1], ec="r")
+    #     ax.add_collection(cutsPatches)
+    #     # plot helical cutting lines
+    #     cuts = invLfactor * cnt.bzCutsHel
+    #     cutsPatches = linePatches(cuts[:, 0, 0], cuts[:, 0, 1], cuts[:, -1, 0] - cuts[:, 0, 0], cuts[:, -1, 1] - cuts[:, 0, 1], ec="b")
+    #     ax.add_collection(cutsPatches)
+
+    # # KpointValleys
+    # for key in cnt.condKpointValleys:           # name of the calculation
+    #     for cuts in cnt.condKpointValleys[key]: # mu index
+    #         for xys in cuts:                    # band index
+    #             for xy in xys:                  # extrema index
+    #                 ax.scatter(xy[0], xy[1], s=50, c='white', edgecolor='black', marker=MarkerStyle("o", fillstyle="right"))
+    # for key in cnt.valeKpointValleys:
+    #     for cuts in cnt.valeKpointValleys[key]:
+    #         for xys in cuts:
+    #             for xy in xys:
+    #                 ax.scatter(xy[0], xy[1], s=50, c='white', edgecolor='black', marker=MarkerStyle("o", fillstyle="left"))
+    
     # plot
     ax.add_collection(hexs)
     ax.add_collection(recCells)
@@ -250,15 +245,22 @@ def excitonDOS(cnt, ax=None, swapAxes=False):
 
 
 def boundingRectangle(*args):
-    vecs = [[0.0, 0.0]]
-    for arg in args:
-        vecs.append(arg)
-    vecs = np.array(vecs)
+    vecs = np.array(args)
     minx = np.min(vecs[:, 0])
     maxx = np.max(vecs[:, 0])
     miny = np.min(vecs[:, 1])
     maxy = np.max(vecs[:, 1])
     return minx, maxx, miny, maxy
+
+
+def boundingSquare(*args):
+    minx, maxx, miny, maxy = boundingRectangle(*args)
+    spanx = maxx - minx
+    spany = maxy - miny
+    span = max(spanx, spany)
+    meanx = (maxx + minx) / 2
+    meany = (maxy + miny) / 2
+    return meanx-span/2, meanx+span/2, meany-span/2, meany+span/2
 
 
 def arrowPatches(*vec,color):
