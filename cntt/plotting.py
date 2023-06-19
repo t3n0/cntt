@@ -34,6 +34,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+from matplotlib.lines import Line2D
 from matplotlib.collections import PatchCollection
 from matplotlib.markers import MarkerStyle
 from matplotlib.cm import get_cmap
@@ -45,11 +46,10 @@ def show():
     plt.show()
 
 
-def mycolors(i, n, which='cividis'):
+def mycolors(n, which='cividis'):
     x = np.linspace(0, 1, n)
-    cmap = get_cmap(which)
-    rgba = cmap(x)
-    return rgba[i]
+    res = get_cmap(which)(x)
+    return res
 
 
 def mylabel(i, label):
@@ -68,30 +68,31 @@ def dirLat(*cnts: Swcnt, ax=None, pad='on_top', shift=[0,0], cmap='Paired'):
     Parameters:
     -----------
         cnts: Swcnt objects
-            list or tuple of CNTs
+            List or tuple of CNTs.
 
         ax: matplotlib axis (optional)
-            axis where to draw the plot
-            default, make a new figure
+            Axis where to draw the plot.
+            Default, make a new figure.
         
         pad: str or int (optional)
-            defines the shift on x where to draw the CNTs
-            can be either 'on_top', 'by_side' or any integer number of unitcells
-            default 'on_top'
+            Defines the padding on x where to draw the CNTs
+            can be either 'on_top', 'by_side' or any integer number of unitcells.
+            Default 'on_top'.
 
         shift: [int, int] (optional)
-            rigid shift of the entire plot in units of lattice vectors
-            default (0,0)
+            Rigid shift of the entire plot in units of lattice vectors.
+            Useful to plot other cnts on a provious <ax>.
+            Default (0,0).
         
         cmap: str (optional)
-            color map that specify the sequence of colors to use for the plots
-            cmap options are listed on the matplotlib documentation
-            default 'Paired'
+            Color map that specify the sequence of colors to use for the plots.
+            Cmap options are listed on the matplotlib documentation.
+            Default 'Paired'.
 
     Returns:
     --------
         ax: matplotlib axis object
-            axis where the plot has been drawn
+            Axis where the plot has been drawn.
     '''
     if ax is None:
         fig = plt.figure(figsize=(5, 5))
@@ -129,7 +130,7 @@ def dirLat(*cnts: Swcnt, ax=None, pad='on_top', shift=[0,0], cmap='Paired'):
         vectors.append( [origin, delta2] )
     vectors = np.array(vectors)
 
-    colors = [mycolors(i, len(cells), cmap) for i in range(len(cells)) ]
+    colors = mycolors(len(cells), cmap)
     unitCells = cellPatches(cells, colors=colors)
 
     # build all CNTS lattice vectors
@@ -155,6 +156,40 @@ def dirLat(*cnts: Swcnt, ax=None, pad='on_top', shift=[0,0], cmap='Paired'):
 
 
 def recLat(*cnts: Swcnt, ax=None, pad='on_top', shift=[0,0], cmap='Paired'):
+    '''
+    Plots the reciprocal cell and the lattice vectors of the given CNTs.
+    If an <axis> is given, the plot is drawn on the given axis, otherwise a new figure is made.
+    CNTs should be commensurate (i.e. same a0), otherwise plots might be inconsistent.
+
+    Parameters:
+    -----------
+        cnts: Swcnt objects
+            List or tuple of CNTs.
+
+        ax: matplotlib axis (optional)
+            Axis where to draw the plot.
+            Default, make a new figure.
+        
+        pad: str or int (optional)
+            Defines the padding on kx where to draw the CNTs
+            can be either 'on_top', 'by_side' or any integer number of unitcells.
+            Default 'on_top'.
+
+        shift: [int, int] (optional)
+            Rigid shift of the entire plot in units of lattice vectors.
+            Useful to plot other cnts on a provious <ax>.
+            Default (0,0).
+        
+        cmap: str (optional)
+            Color map that specify the sequence of colors to use for the plots.
+            Cmap options are listed on the matplotlib documentation.
+            Default 'Paired'.
+
+    Returns:
+    --------
+        ax: matplotlib axis object
+            Axis where the plot has been drawn.
+    '''
     if ax is None:
         fig = plt.figure(figsize=(5, 5))
         ax = fig.add_axes([0.08, 0.08, 0.87, 0.87])
@@ -189,7 +224,7 @@ def recLat(*cnts: Swcnt, ax=None, pad='on_top', shift=[0,0], cmap='Paired'):
         vectors.append( [origin, delta2] )
     vectors = np.array(vectors)
 
-    colors = [mycolors(i, len(cells), cmap) for i in range(len(cells)) ]
+    colors = mycolors(len(cells), cmap)
     recCells = cellPatches(cells, colors=colors)
     
 
@@ -236,27 +271,44 @@ def recLat(*cnts: Swcnt, ax=None, pad='on_top', shift=[0,0], cmap='Paired'):
     return ax
 
 
-def electronBands(cnt, ax=None, sym='hel'):
-    efactor, _, invLfactor = physics.unitFactors(cnt)
+def electronBands(cnt: Swcnt, ax=None, legend=True, gamma='center'):
+
     if ax is None:
         fig = plt.figure(figsize=(8, 5))
-        ax = fig.add_axes([0.05, 0.05, 0.9, 0.9])
-    dicBands = getattr(cnt, f'electronBands{sym.capitalize()}')
-    NN = len(dicBands)
-    for i, key in enumerate(dicBands):
-        label = key
-        bands = dicBands[key]
-        subN, bandN, _, _ = bands.shape
-        for mu in range(0, subN): # loop over the cuts
-            for n in range(0, bandN): # loop over the bands for the given cut
-                ax.plot(invLfactor*bands[mu, n, 0, :], efactor*bands[mu,n,1,:], color=mycolors(i,NN), label=label)
-                ax.set_ylabel(f'Energy ({cnt.unitE})')
-                ax.set_xlabel(f'k ({cnt.unitInvL})')
-                label = '_'
-    #energyExtrema(cnt, ax, 'cond')
-    #energyExtrema(cnt, ax, 'vale')
+        ax = fig.add_axes([0.08, 0.08, 0.87, 0.87])
+
+    colors = mycolors(cnt.subN, 'Set1')
+
+    # custom lines for the legend
+    if legend:
+        custom_lines = []
+        for mu in range(cnt.subN):
+            line = Line2D([0], [0], color=colors[mu], lw=2, label=f'mu = {mu}')
+            custom_lines.append( line )
+        ax.legend(handles=custom_lines, loc='upper right')
+    
+    # gamma shift
+    bz = max(cnt.kGrid)
+    if gamma == 'center':
+        kGrid = cnt.kGrid - bz/2
+        xlims = (-bz/2, bz/2)
+    else:
+        kGrid = cnt.kGrid
+        xlims = (0, bz)
+
+    for mu in range(cnt.subN):
+        bands = cnt.electronBands[mu]
+        for band in bands:
+            if gamma == 'center':
+                band = np.roll(band, cnt.kSteps//2)
+            ax.plot(kGrid, band, color=colors[mu])
+    
+    ax.set_ylabel('Energy')
+    ax.set_xlabel('k')
+    ax.set_xlim(*xlims)
+    # ax.set_ylim()
     ax.axhline(0,ls='--',c='grey')
-    ax.legend()
+    
 
 
 def energyExtrema(cnt, ax, which):

@@ -13,6 +13,7 @@ cntt 0.4 (2023 ?? ??)
 
 * Improved
   - Exciton band dispersion now span the full helical BZ.
+  - Plotting direct and reciprocal lattice now can handle multiple cnts at once.
 
 * Bugfix
   - Bug in the calculation of the helical reciprocal vectors: beta was wrong due to integer casting.
