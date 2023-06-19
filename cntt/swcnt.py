@@ -401,7 +401,7 @@ class Swcnt(object):
 
     def getCell(self, which):
         '''
-        Returns a polygon representing the selected cell.
+        Returns a polygon (rectangle) representing the selected cell.
 
         Parameters:
         -----------

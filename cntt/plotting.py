@@ -45,9 +45,9 @@ def show():
     plt.show()
 
 
-def mycolors(i, n):
-    x = np.linspace(0.1, 0.9, n)
-    cmap = get_cmap('cividis')
+def mycolors(i, n, which='cividis'):
+    x = np.linspace(0, 1, n)
+    cmap = get_cmap(which)
     rgba = cmap(x)
     return rgba[i]
 
@@ -59,26 +59,86 @@ def mylabel(i, label):
         return '_'
 
 
-def dirLat(cnt: Swcnt, ax=None):
+def dirLat(*cnts: Swcnt, ax=None, pad='on_top', cmap='Paired'):
+    '''
+    Plots the super cell, unit cell and lattice vectors of the given CNTs.
+    If an <ax> is given, the plot is drawn on the given axis, otherwise a new figure is made.
+    CNTs should be commensurate (i.e. same a0), otherwise plots might be inconsistent.
+
+    Parameters:
+    -----------
+        cnts: Swcnt objects
+            list or tuple of CNTs to plot
+
+        ax: matplotlib axis (optional)
+            axis where to draw the plot
+            default, make a new figure
+        
+        pad: str or int (optional)
+            defines the shift on x where to draw the CNTs
+            can be either 'on_top', 'by_side' or any integer number of unitcells
+            default 'on_top'
+        
+        cmap: str (optional)
+            color map that specify the sequence of colors to use for the plots
+            cmap options are listed on the matplotlib documentation
+            default 'Paired'
+
+    Returns:
+    --------
+        ax: matplotlib axis object
+            axis where the plot has been drawn
+    '''
     if ax is None:
         fig = plt.figure(figsize=(5, 5))
         ax = fig.add_axes([0.08, 0.08, 0.87, 0.87])
-    sc, uc = cnt.getCell('sc'), cnt.getCell('uc')
-    # hexagons
-    # minx, maxx, miny, maxy = boundingRectangle(*sc, *uc)
-    minx, maxx, miny, maxy = boundingSquare(*sc, *uc)
+    
+    # collect and build all CNTs cells
+    cells = []
+    for cnt in cnts:
+        sc = cnt.getCell('sc')
+        uc = cnt.getCell('uc')
+        cells.append( sc )
+        cells.append( uc )
+    cells = np.array(cells)
+    
+    # define padding
+    if pad == 'by_side':
+        padx = np.rint(np.max(cells[:,:,0])/3/cnt.ac) * 3 *cnt.ac
+    elif pad == 'on_top':
+        padx = 0.0
+    else:
+        padx = pad * 3 *cnt.ac
+
+    # padding all cells and define vectors
+    vectors = []
+    for i, cell in enumerate(cells):
+        cell[:,0] += padx * (i//2) # i = 0, 0, 1, 1, 2, 2, 3, 3, ...
+        origin = cell[0]
+        delta1 = cell[1] - origin
+        delta2 = cell[3] - origin
+        vectors.append( [origin, delta1] )
+        vectors.append( [origin, delta2] )
+    vectors = np.array(vectors)
+
+    colors = [mycolors(i, len(cells), cmap) for i in range(len(cells)) ]
+    unitCells = cellPatches(cells, colors=colors)
+
+    # build all CNTS lattice vectors
+    latVecs = arrowPatches(vectors)
+
+    # hexagons        
+    if pad == 'on_top':
+        minx, maxx, miny, maxy = boundingSquare(cells)
+    else:
+        minx, maxx, miny, maxy = boundingRectangle(cells)
     hexs = dirHexPatches(minx, maxx, miny, maxy, cnt.a0)
-    # cells
-    unitCells = cellPatches([sc, uc], ["g", "b"])
-    # lattice vectors
-    latVecs = arrowPatches(cnt.C, cnt.T, cnt.Th, cnt.Tl, color='grey')
+
     # plot
     ax.add_collection(hexs)
     ax.add_collection(unitCells)
     ax.add_collection(latVecs)
-    ax.set_aspect("equal")
-    ax.set_xlabel(f'x ({cnt.unitL})')
-    ax.set_ylabel(f'y ({cnt.unitL})')
+    ax.set_aspect(1)
     ax.set_xlim(minx, maxx)
     ax.set_ylim(miny, maxy)
     return ax
@@ -244,17 +304,17 @@ def excitonDOS(cnt, ax=None, swapAxes=False):
     ax.legend()
 
 
-def boundingRectangle(*args):
-    vecs = np.array(args)
-    minx = np.min(vecs[:, 0])
-    maxx = np.max(vecs[:, 0])
-    miny = np.min(vecs[:, 1])
-    maxy = np.max(vecs[:, 1])
+def boundingRectangle(cells):
+    vecs = np.array(cells)
+    minx = np.min(vecs[:, :, 0])
+    maxx = np.max(vecs[:, :, 0])
+    miny = np.min(vecs[:, :, 1])
+    maxy = np.max(vecs[:, :, 1])
     return minx, maxx, miny, maxy
 
 
-def boundingSquare(*args):
-    minx, maxx, miny, maxy = boundingRectangle(*args)
+def boundingSquare(args):
+    minx, maxx, miny, maxy = boundingRectangle(args)
     spanx = maxx - minx
     spany = maxy - miny
     span = max(spanx, spany)
@@ -263,19 +323,19 @@ def boundingSquare(*args):
     return meanx-span/2, meanx+span/2, meany-span/2, meany+span/2
 
 
-def arrowPatches(*vec,color):
+def arrowPatches(vecs):
     patches = []
-    width = np.max(vec)/150
-    for v in vec:
-        arrow = mpatches.FancyArrow(0,0,v[0],v[1], width=width, length_includes_head=True, color=color)
+    width = np.max(vecs)/400
+    for origin, delta in vecs:
+        arrow = mpatches.FancyArrow(*origin, *delta, width=width, length_includes_head=True, color='k')
         patches.append(arrow)
     return PatchCollection(patches, match_original=True)
 
 
-def cellPatches(cells, colors):
+def cellPatches(cells, colors, alpha=0.5):
     patches = []
     for aux, c in zip(cells, colors):
-        cell = mpatches.Polygon(aux, closed=True, color=c, alpha=0.2)
+        cell = mpatches.Polygon(aux, closed=True, color=c, alpha=alpha)
         patches.append(cell)
     return PatchCollection(patches, match_original=True)
 
