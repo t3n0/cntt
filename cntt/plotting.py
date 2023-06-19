@@ -59,16 +59,16 @@ def mylabel(i, label):
         return '_'
 
 
-def dirLat(*cnts: Swcnt, ax=None, pad='on_top', cmap='Paired'):
+def dirLat(*cnts: Swcnt, ax=None, pad='on_top', shift=[0,0], cmap='Paired'):
     '''
     Plots the super cell, unit cell and lattice vectors of the given CNTs.
-    If an <ax> is given, the plot is drawn on the given axis, otherwise a new figure is made.
+    If an <axis> is given, the plot is drawn on the given axis, otherwise a new figure is made.
     CNTs should be commensurate (i.e. same a0), otherwise plots might be inconsistent.
 
     Parameters:
     -----------
         cnts: Swcnt objects
-            list or tuple of CNTs to plot
+            list or tuple of CNTs
 
         ax: matplotlib axis (optional)
             axis where to draw the plot
@@ -78,6 +78,10 @@ def dirLat(*cnts: Swcnt, ax=None, pad='on_top', cmap='Paired'):
             defines the shift on x where to draw the CNTs
             can be either 'on_top', 'by_side' or any integer number of unitcells
             default 'on_top'
+
+        shift: [int, int] (optional)
+            rigid shift of the entire plot in units of lattice vectors
+            default (0,0)
         
         cmap: str (optional)
             color map that specify the sequence of colors to use for the plots
@@ -102,6 +106,10 @@ def dirLat(*cnts: Swcnt, ax=None, pad='on_top', cmap='Paired'):
         cells.append( uc )
     cells = np.array(cells)
     
+    # shift
+    shift = shift[0] * (cnt.a1 + cnt.a2) + shift[1] * (cnt.a1 - cnt.a2)
+    cells[:] += shift
+
     # define padding
     if pad == 'by_side':
         padx = np.rint(np.max(cells[:,:,0])/3/cnt.ac) * 3 *cnt.ac
@@ -125,7 +133,7 @@ def dirLat(*cnts: Swcnt, ax=None, pad='on_top', cmap='Paired'):
     unitCells = cellPatches(cells, colors=colors)
 
     # build all CNTS lattice vectors
-    latVecs = arrowPatches(vectors)
+    latVecs = arrowPatches(vectors, cnt.ac/30)
 
     # hexagons        
     if pad == 'on_top':
@@ -139,38 +147,70 @@ def dirLat(*cnts: Swcnt, ax=None, pad='on_top', cmap='Paired'):
     ax.add_collection(unitCells)
     ax.add_collection(latVecs)
     ax.set_aspect(1)
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
     ax.set_xlim(minx, maxx)
     ax.set_ylim(miny, maxy)
     return ax
 
 
-def recLat(cnt: Swcnt, ax=None):
-    # _, _, invLfactor = physics.unitFactors(cnt)
-    # KT, k1L, k2L, k1H, k2H, b0 = physics.changeUnits(cnt, invLfactor, 'KT', 'k1L', 'k2L', 'k1H', 'k2H', 'b0')
+def recLat(*cnts: Swcnt, ax=None, pad='on_top', shift=[0,0], cmap='Paired'):
     if ax is None:
         fig = plt.figure(figsize=(5, 5))
-        ax = fig.add_axes([0.05, 0.05, 0.9, 0.9])
-    # hexagons
-    rc = cnt.getCell('rc')
-    # minx, maxx, miny, maxy = boundingRectangle(*rc)
-    minx, maxx, miny, maxy = boundingSquare(*rc)
-    hexs = recHexPatches(minx, maxx, miny, maxy, cnt.b0)
-    # cells
-    # recCell_lh = np.array([[0.0, 0.0], k1L, k1L + k2L, k2L]) - 0.5*KT
-    # recCell_ha = np.array([[0.0, 0.0], k1H, k1H + k2H, k2H]) + 0.5*cnt.NU/cnt.D*KT
-    recCells = cellPatches([rc], ["r"])
-    # lattice vectors
-    #latVecs = arrowPatches(cnt.k1L, cnt.k2L, cnt.k1H, cnt.k2H, color='grey', d= cnt.KT)
+        ax = fig.add_axes([0.08, 0.08, 0.87, 0.87])
 
-    # if hasattr(cnt, 'bzCutsLin') and hasattr(cnt, 'bzCutsHel'):
-    #     # plot linear cutting lines
-    #     cuts = invLfactor * cnt.bzCutsLin
-    #     cutsPatches = linePatches(cuts[:, 0, 0], cuts[:, 0, 1], cuts[:, -1, 0] - cuts[:, 0, 0], cuts[:, -1, 1] - cuts[:, 0, 1], ec="r")
-    #     ax.add_collection(cutsPatches)
-    #     # plot helical cutting lines
-    #     cuts = invLfactor * cnt.bzCutsHel
-    #     cutsPatches = linePatches(cuts[:, 0, 0], cuts[:, 0, 1], cuts[:, -1, 0] - cuts[:, 0, 0], cuts[:, -1, 1] - cuts[:, 0, 1], ec="b")
-    #     ax.add_collection(cutsPatches)
+    # collect and build all CNTs reciprocal cells
+    cells = []
+    for cnt in cnts:
+        rc = cnt.getCell('rc')
+        cells.append( rc )
+    cells = np.array(cells)
+    
+    # shift
+    shift = shift[0] * (cnt.b1 + cnt.b2) + shift[1] * (cnt.b1 - cnt.b2)
+    cells[:] += shift
+
+    # define padding
+    if pad == 'by_side':
+        padx = np.rint(np.max(cells[:,:,0])/3/cnt.bc) * 3 *cnt.bc
+    elif pad == 'on_top':
+        padx = 0.0
+    else:
+        padx = pad * 3 *cnt.bc
+
+    # padding all cells and define vectors
+    vectors = []
+    for i, cell in enumerate(cells):
+        cell[:,0] += padx * i
+        origin = cell[0]
+        delta1 = cell[1] - origin
+        delta2 = cell[3] - origin
+        vectors.append( [origin, delta1] )
+        vectors.append( [origin, delta2] )
+    vectors = np.array(vectors)
+
+    colors = [mycolors(i, len(cells), cmap) for i in range(len(cells)) ]
+    recCells = cellPatches(cells, colors=colors)
+    
+
+    # build all CNTS lattice vectors
+    latVecs = arrowPatches(vectors, cnt.bc/30)
+    # hexagons        
+    if pad == 'on_top':
+        minx, maxx, miny, maxy = boundingSquare(cells)
+    else:
+        minx, maxx, miny, maxy = boundingRectangle(cells)
+    hexs = recHexPatches(minx, maxx, miny, maxy, cnt.b0)
+
+    
+    # plot cutting lines
+    for i, cnt in enumerate(cnts):
+        cuts = cnt.cuttingLines
+        cuts[:,:] += shift
+        cuts[:,:,0] += padx * i
+        lines = cuts[:, 0, 0], cuts[:, 0, 1], cuts[:, -1, 0] - cuts[:, 0, 0], cuts[:, -1, 1] - cuts[:, 0, 1]
+        cutsPatches = linePatches(*lines, color='r', width=cnt.bc/50)
+        ax.add_collection(cutsPatches)
 
     # # KpointValleys
     # for key in cnt.condKpointValleys:           # name of the calculation
@@ -187,10 +227,10 @@ def recLat(cnt: Swcnt, ax=None):
     # plot
     ax.add_collection(hexs)
     ax.add_collection(recCells)
-    #ax.add_collection(latVecs)
-    ax.set_aspect("equal")
-    ax.set_xlabel(f'kx ({cnt.unitInvL})')
-    ax.set_ylabel(f'ky ({cnt.unitInvL})')
+    ax.add_collection(latVecs)
+    ax.set_aspect(1)
+    ax.set_xlabel('kx')
+    ax.set_ylabel('ky')
     ax.set_xlim(minx, maxx)
     ax.set_ylim(miny, maxy)
     return ax
@@ -323,9 +363,8 @@ def boundingSquare(args):
     return meanx-span/2, meanx+span/2, meany-span/2, meany+span/2
 
 
-def arrowPatches(vecs):
+def arrowPatches(vecs, width):
     patches = []
-    width = np.max(vecs)/400
     for origin, delta in vecs:
         arrow = mpatches.FancyArrow(*origin, *delta, width=width, length_includes_head=True, color='k')
         patches.append(arrow)
@@ -340,12 +379,13 @@ def cellPatches(cells, colors, alpha=0.5):
     return PatchCollection(patches, match_original=True)
 
 
-def linePatches(xs, ys, dxs, dys, ec="k", fc="w"):
+def linePatches(xs, ys, dxs, dys, color, width):
     patches = []
     for x, y, dx, dy in zip(xs, ys, dxs, dys):
-        line = mpatches.FancyArrow(x, y, dx, dy, width=0.01, head_width=0)
+        line = mpatches.FancyArrow(x, y, dx, dy, width=width, head_width=0, color=color)
         patches.append(line)
-    lines = PatchCollection(patches, edgecolor=ec, facecolor=fc)
+    # lines = PatchCollection(patches, edgecolor=ec, facecolor=ec)
+    lines = PatchCollection(patches, match_original=True)
     return lines
 
 
