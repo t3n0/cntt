@@ -271,7 +271,7 @@ def recLat(*cnts: Swcnt, ax=None, pad='on_top', shift=[0,0], cmap='Paired'):
     return ax
 
 
-def electronBands(cnt: Swcnt, ax=None, legend=True, gamma='center'):
+def electronBands(cnt: Swcnt, ax=None, legend=True, gammaShift=True, ylims=None):
 
     if ax is None:
         fig = plt.figure(figsize=(8, 5))
@@ -289,7 +289,7 @@ def electronBands(cnt: Swcnt, ax=None, legend=True, gamma='center'):
     
     # gamma shift
     bz = max(cnt.kGrid)
-    if gamma == 'center':
+    if gammaShift:
         kGrid = cnt.kGrid - bz/2
         xlims = (-bz/2, bz/2)
     else:
@@ -299,14 +299,15 @@ def electronBands(cnt: Swcnt, ax=None, legend=True, gamma='center'):
     for mu in range(cnt.subN):
         bands = cnt.electronBands[mu]
         for band in bands:
-            if gamma == 'center':
+            if gammaShift:
                 band = np.roll(band, cnt.kSteps//2)
             ax.plot(kGrid, band, color=colors[mu])
     
     ax.set_ylabel('Energy')
     ax.set_xlabel('k')
     ax.set_xlim(*xlims)
-    # ax.set_ylim()
+    if ylims:
+        ax.set_ylim(*ylims)
     ax.axhline(0,ls='--',c='grey')
     
 
