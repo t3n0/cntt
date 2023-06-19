@@ -308,46 +308,85 @@ def electronBands(cnt: Swcnt, ax=None, legend=True, gammaShift=True, ylims=None)
     ax.set_xlim(*xlims)
     if ylims:
         ax.set_ylim(*ylims)
-    ax.axhline(0,ls='--',c='grey')
+    ax.axhline(0, ls='--', c='grey')
     
 
-
-def energyExtrema(cnt, ax, which):
-    efactor, _, invLfactor = physics.unitFactors(cnt)
-    energies = getattr(cnt, f'{which}EnergyZeros') #cnt.condEnergyZeros
-    kpoints = getattr(cnt, f'{which}KpointZeros') #cnt.condKpointZeros
-    NN = len(kpoints)
-    for i, key in enumerate(kpoints):                                         # name of the calculation
-        for kcuts, ecuts in zip(kpoints[key], energies[key]):   # mu index
-            count = 0
-            for ks, es in zip(kcuts, ecuts):                    # band index
-                for k, e in zip(ks, es):                        # extrema index
-                    plt.text(k * invLfactor, e * efactor, f'{count}', ha="center", va="center")
-                    ax.scatter(k * invLfactor, e * efactor, s=250, color=mycolors(i,NN), alpha=0.3)
-                    count += 1
+# def energyExtrema(cnt, ax, which):
+#     efactor, _, invLfactor = physics.unitFactors(cnt)
+#     energies = getattr(cnt, f'{which}EnergyZeros') #cnt.condEnergyZeros
+#     kpoints = getattr(cnt, f'{which}KpointZeros') #cnt.condKpointZeros
+#     NN = len(kpoints)
+#     for i, key in enumerate(kpoints):                                         # name of the calculation
+#         for kcuts, ecuts in zip(kpoints[key], energies[key]):   # mu index
+#             count = 0
+#             for ks, es in zip(kcuts, ecuts):                    # band index
+#                 for k, e in zip(ks, es):                        # extrema index
+#                     plt.text(k * invLfactor, e * efactor, f'{count}', ha="center", va="center")
+#                     ax.scatter(k * invLfactor, e * efactor, s=250, color=mycolors(i,NN), alpha=0.3)
+#                     count += 1
 
 
 def excitonBands(cnt, ax=None):
-    efactor, _, invLfactor = physics.unitFactors(cnt)
+    
     if ax is None:
         fig = plt.figure(figsize=(8, 5))
         ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
-    NN = len(cnt.excitonBands)
-    maxEnergy = 1.0
-    for i, name in enumerate(cnt.excitonBands):
-        label = name
-        for key in cnt.excitonBands[name]:
-            newMax = np.max(cnt.excitonBands[name][key][1])
-            if newMax > maxEnergy: maxEnergy = newMax
-            ax.plot(invLfactor*cnt.excitonBands[name][key][0], efactor*cnt.excitonBands[name][key][1], color=mycolors(i,NN), label=label)
-            ax.set_ylabel(f'Energy ({cnt.unitE})')
-            ax.set_xlabel(f'k ({cnt.unitInvL})')
-            label = '_'
-    ax.set_ylim(0.0, efactor*maxEnergy)
-    ax.set_xlim(-cnt.normHel/2, cnt.normHel/2)
-    ax.vlines(cnt.normOrt,0,efactor*maxEnergy,linestyles ="dashed", colors ="k")
-    ax.vlines(-cnt.normOrt,0,efactor*maxEnergy,linestyles ="dashed", colors ="k")
-    ax.legend()
+    
+    kgrid = cnt.kGrid
+    ort = cnt.normOrt
+    bz = cnt.bzHel
+
+    dataFill = []
+    dataPlot = []
+    for mu1 in range(cnt.subN):
+        for mu2 in range(cnt.subN):
+            dataFill.append( cnt.excitonContinuum[mu1, mu2] )
+            dataPlot.append( cnt.excitonBands[mu1, mu2] )
+            #ax.fill_between(kgrid, *cnt.excitonContinuum[mu1, mu2], color='grey')
+            # for band in cnt.excitonBands[mu1, mu2]:
+            #     ax.plot(kgrid, band)
+            #     print(type(ax))
+    
+
+    scrollPlot = ScrollPlots(ax, kgrid, dataFill, dataPlot)   
+    fig.canvas.mpl_connect('scroll_event', scrollPlot.on_scroll)
+    
+    return fig, scrollPlot
+    
+    # ax.vlines(cnt.normOrt,0,efactor*maxEnergy,linestyles ="dashed", colors ="k")
+    # ax.vlines(-cnt.normOrt,0,efactor*maxEnergy,linestyles ="dashed", colors ="k")
+
+
+class ScrollPlots:
+    def __init__(self, ax, kGrid, dataFill, dataPlot):
+        self.index = 0
+        self.dataFill = dataFill
+        self.dataPlot = dataPlot
+        self.kGrid = kGrid
+        self.ax = ax
+        # ax.fill_between(self.kGrid, *self.dataFill[self.index], color='grey')
+        # ax.plot(self.kGrid, dataPlot[self.index][0])
+        self.update()
+
+    def on_scroll(self, event):
+        #print(event.button, event.step)
+        max_idx = len(self.dataFill)
+        if event.button == 'up':
+            self.index += 1
+        else:
+            self.index -= 1
+        self.index = self.index % max_idx
+        self.update()
+
+    def update(self):
+        self.ax.clear()
+        self.ax.fill_between(self.kGrid, *self.dataFill[self.index], color='grey')
+        for band in self.dataPlot[self.index]:
+            self.ax.plot(self.kGrid, band)
+        self.ax.set_title(f'Use scroll wheel to navigate\nindex {self.index}')
+        plt.draw()
+
+
 
 
 def electronDOS(cnt, ax=None, swapAxes=False):
