@@ -52,14 +52,7 @@ def mycolors(n, which='cividis'):
     return res
 
 
-def mylabel(i, label):
-    if i == 0:
-        return label
-    else:
-        return '_'
-
-
-def dirLat(*cnts: Swcnt, ax=None, pad='on_top', shift=[0,0], cmap='Paired'):
+def dirLat(*cnts: Swcnt, ax=None, pad='on_top', shift=[0,0], cmap = 'Set1'):
     '''
     Plots the super cell, unit cell and lattice vectors of the given CNTs.
     If an <axis> is given, the plot is drawn on the given axis, otherwise a new figure is made.
@@ -95,9 +88,9 @@ def dirLat(*cnts: Swcnt, ax=None, pad='on_top', shift=[0,0], cmap='Paired'):
             Axis where the plot has been drawn.
     '''
     if ax is None:
-        fig = plt.figure(figsize=(5, 5))
-        ax = fig.add_axes([0.08, 0.08, 0.87, 0.87])
-    
+        fig, ax = plt.subplots()
+        fig.set_size_inches((5, 5))
+        
     # collect and build all CNTs cells
     cells = []
     for cnt in cnts:
@@ -155,7 +148,7 @@ def dirLat(*cnts: Swcnt, ax=None, pad='on_top', shift=[0,0], cmap='Paired'):
     return ax
 
 
-def recLat(*cnts: Swcnt, ax=None, pad='on_top', shift=[0,0], cmap='Paired'):
+def recLat(*cnts: Swcnt, ax=None, pad='on_top', shift=[0,0], cmap = 'Set1'):
     '''
     Plots the reciprocal cell and the lattice vectors of the given CNTs.
     If an <axis> is given, the plot is drawn on the given axis, otherwise a new figure is made.
@@ -191,8 +184,8 @@ def recLat(*cnts: Swcnt, ax=None, pad='on_top', shift=[0,0], cmap='Paired'):
             Axis where the plot has been drawn.
     '''
     if ax is None:
-        fig = plt.figure(figsize=(5, 5))
-        ax = fig.add_axes([0.08, 0.08, 0.87, 0.87])
+        fig, ax = plt.subplots()
+        fig.set_size_inches((5, 5))
 
     # collect and build all CNTs reciprocal cells
     cells = []
@@ -226,7 +219,6 @@ def recLat(*cnts: Swcnt, ax=None, pad='on_top', shift=[0,0], cmap='Paired'):
 
     colors = mycolors(len(cells), cmap)
     recCells = cellPatches(cells, colors=colors)
-    
 
     # build all CNTS lattice vectors
     latVecs = arrowPatches(vectors, cnt.bc/30)
@@ -237,7 +229,6 @@ def recLat(*cnts: Swcnt, ax=None, pad='on_top', shift=[0,0], cmap='Paired'):
         minx, maxx, miny, maxy = boundingRectangle(cells)
     hexs = recHexPatches(minx, maxx, miny, maxy, cnt.b0)
 
-    
     # plot cutting lines
     for i, cnt in enumerate(cnts):
         cuts = cnt.cuttingLines
@@ -246,18 +237,6 @@ def recLat(*cnts: Swcnt, ax=None, pad='on_top', shift=[0,0], cmap='Paired'):
         lines = cuts[:, 0, 0], cuts[:, 0, 1], cuts[:, -1, 0] - cuts[:, 0, 0], cuts[:, -1, 1] - cuts[:, 0, 1]
         cutsPatches = linePatches(*lines, color='r', width=cnt.bc/50)
         ax.add_collection(cutsPatches)
-
-    # # KpointValleys
-    # for key in cnt.condKpointValleys:           # name of the calculation
-    #     for cuts in cnt.condKpointValleys[key]: # mu index
-    #         for xys in cuts:                    # band index
-    #             for xy in xys:                  # extrema index
-    #                 ax.scatter(xy[0], xy[1], s=50, c='white', edgecolor='black', marker=MarkerStyle("o", fillstyle="right"))
-    # for key in cnt.valeKpointValleys:
-    #     for cuts in cnt.valeKpointValleys[key]:
-    #         for xys in cuts:
-    #             for xy in xys:
-    #                 ax.scatter(xy[0], xy[1], s=50, c='white', edgecolor='black', marker=MarkerStyle("o", fillstyle="left"))
     
     # plot
     ax.add_collection(hexs)
@@ -271,21 +250,20 @@ def recLat(*cnts: Swcnt, ax=None, pad='on_top', shift=[0,0], cmap='Paired'):
     return ax
 
 
-def electronBands(cnt: Swcnt, ax=None, legend=True, gammaShift=True, ylims=None):
+def electronBands(cnt: Swcnt, ax=None, gammaShift=True, ylims=None, cmap = 'Set1'):
 
     if ax is None:
-        fig = plt.figure(figsize=(8, 5))
-        ax = fig.add_axes([0.08, 0.08, 0.87, 0.87])
+        fig, ax = plt.subplots()
+        fig.set_size_inches((8, 5))
 
-    colors = mycolors(cnt.subN, 'Set1')
+    colors = mycolors(cnt.subN, cmap)
 
     # custom lines for the legend
-    if legend:
-        custom_lines = []
-        for mu in range(cnt.subN):
-            line = Line2D([0], [0], color=colors[mu], lw=2, label=f'mu = {mu}')
-            custom_lines.append( line )
-        ax.legend(handles=custom_lines, loc='upper right')
+    custom_lines = []
+    for mu in range(cnt.subN):
+        line = Line2D([0], [0], color=colors[mu], lw=2, label=f'mu = {mu}')
+        custom_lines.append( line )
+    ax.legend(handles=custom_lines, loc = 'upper right')
     
     # gamma shift
     bz = max(cnt.kGrid)
@@ -301,92 +279,89 @@ def electronBands(cnt: Swcnt, ax=None, legend=True, gammaShift=True, ylims=None)
         for band in bands:
             if gammaShift:
                 band = np.roll(band, cnt.kSteps//2)
-            ax.plot(kGrid, band, color=colors[mu])
+            ax.plot(kGrid, band, color = colors[mu])
     
     ax.set_ylabel('Energy')
     ax.set_xlabel('k')
-    ax.set_xlim(*xlims)
+    ax.set_xlim(xlims)
     if ylims:
-        ax.set_ylim(*ylims)
-    ax.axhline(0, ls='--', c='grey')
-    
-
-# def energyExtrema(cnt, ax, which):
-#     efactor, _, invLfactor = physics.unitFactors(cnt)
-#     energies = getattr(cnt, f'{which}EnergyZeros') #cnt.condEnergyZeros
-#     kpoints = getattr(cnt, f'{which}KpointZeros') #cnt.condKpointZeros
-#     NN = len(kpoints)
-#     for i, key in enumerate(kpoints):                                         # name of the calculation
-#         for kcuts, ecuts in zip(kpoints[key], energies[key]):   # mu index
-#             count = 0
-#             for ks, es in zip(kcuts, ecuts):                    # band index
-#                 for k, e in zip(ks, es):                        # extrema index
-#                     plt.text(k * invLfactor, e * efactor, f'{count}', ha="center", va="center")
-#                     ax.scatter(k * invLfactor, e * efactor, s=250, color=mycolors(i,NN), alpha=0.3)
-#                     count += 1
+        ax.set_ylim(ylims)
+    ax.axhline(0, ls = '--', c = 'grey')
+    ax.grid(True)
+    return ax
 
 
-def excitonBands(cnt, ax=None):
-    
-    if ax is None:
-        fig = plt.figure(figsize=(8, 5))
-        ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
-    
-    kgrid = cnt.kGrid
+def excitonBands(cnt: Swcnt, ax=None, arrange='individual', gammaShift=True, ylims=0, cmap = 'Set1'):
+    '''
+    arrange = together, individual
+    mode = static, interactive
+    '''
+    if ax == None:
+        if arrange == 'together':
+            fig, ax = plt.subplots()
+            fig.set_size_inches((8, 5))
+        elif arrange == 'individual':
+            fig, ax = plt.subplots(cnt.subN, cnt.subN, sharex='all', sharey='all')
+            fig.set_size_inches((8, 5))
+
+    # colors
+    colors = mycolors(cnt.subN*cnt.subN, cmap)
+
     ort = cnt.normOrt
     bz = cnt.bzHel
+    if gammaShift:
+        kGrid = cnt.kGrid - bz/2
+        xlims = (-bz/2, bz/2)
+    else:
+        kGrid = cnt.kGrid
+        xlims = (0, bz)
 
-    dataFill = []
-    dataPlot = []
-    for mu1 in range(cnt.subN):
-        for mu2 in range(cnt.subN):
-            dataFill.append( cnt.excitonContinuum[mu1, mu2] )
-            dataPlot.append( cnt.excitonBands[mu1, mu2] )
-            #ax.fill_between(kgrid, *cnt.excitonContinuum[mu1, mu2], color='grey')
-            # for band in cnt.excitonBands[mu1, mu2]:
-            #     ax.plot(kgrid, band)
-            #     print(type(ax))
-    
-
-    scrollPlot = ScrollPlots(ax, kgrid, dataFill, dataPlot)   
-    fig.canvas.mpl_connect('scroll_event', scrollPlot.on_scroll)
-    
-    return fig, scrollPlot
-    
-    # ax.vlines(cnt.normOrt,0,efactor*maxEnergy,linestyles ="dashed", colors ="k")
-    # ax.vlines(-cnt.normOrt,0,efactor*maxEnergy,linestyles ="dashed", colors ="k")
-
-
-class ScrollPlots:
-    def __init__(self, ax, kGrid, dataFill, dataPlot):
-        self.index = 0
-        self.dataFill = dataFill
-        self.dataPlot = dataPlot
-        self.kGrid = kGrid
-        self.ax = ax
-        # ax.fill_between(self.kGrid, *self.dataFill[self.index], color='grey')
-        # ax.plot(self.kGrid, dataPlot[self.index][0])
-        self.update()
-
-    def on_scroll(self, event):
-        #print(event.button, event.step)
-        max_idx = len(self.dataFill)
-        if event.button == 'up':
-            self.index += 1
-        else:
-            self.index -= 1
-        self.index = self.index % max_idx
-        self.update()
-
-    def update(self):
-        self.ax.clear()
-        self.ax.fill_between(self.kGrid, *self.dataFill[self.index], color='grey')
-        for band in self.dataPlot[self.index]:
-            self.ax.plot(self.kGrid, band)
-        self.ax.set_title(f'Use scroll wheel to navigate\nindex {self.index}')
-        plt.draw()
-
-
+    custom_lines = []
+    if arrange == 'together':
+        for mu1 in range(cnt.subN):
+            for mu2 in range(cnt.subN):
+                color = colors[mu1*cnt.subN + mu2]
+                line = Line2D([0], [0], color=color, lw=2, label=f'mu1, mu2 = ({mu1},{mu2})')
+                custom_lines.append( line )
+                if gammaShift:
+                    cont1 = np.roll(cnt.excitonContinuum[mu1, mu2][0], cnt.kSteps//2)
+                    cont2 = np.roll(cnt.excitonContinuum[mu1, mu2][1], cnt.kSteps//2)
+                ax.fill_between(kGrid, cont1, cont2, color='grey', alpha=0.2)
+                for band in cnt.excitonBands[mu1, mu2]:
+                    if gammaShift:
+                        band = np.roll(band, cnt.kSteps//2)
+                    ax.plot(kGrid, band, lw=2, color=color)
+        ax.vlines( ort, 0, 10, linestyles ="dashed", colors ="k")
+        ax.vlines(-ort, 0, 10, linestyles ="dashed", colors ="k")
+        ax.legend(handles=custom_lines, loc='upper right')
+        ax.set_ylabel('Energy')
+        ax.set_xlabel('k')
+        ax.set_xlim(xlims)
+        ax.set_ylim(ylims)
+        ax.grid(True)
+    elif arrange == 'individual':
+        for mu1 in range(cnt.subN):
+            for mu2 in range(cnt.subN):
+                color = colors[mu1*cnt.subN + mu2]
+                line = Line2D([0], [0], color=color, lw=2, label=f'mu1, mu2 = ({mu1},{mu2})')
+                ax[mu1,mu2].legend(handles=[line], loc='upper right')
+                if gammaShift:
+                    cont1 = np.roll(cnt.excitonContinuum[mu1, mu2][0], cnt.kSteps//2)
+                    cont2 = np.roll(cnt.excitonContinuum[mu1, mu2][1], cnt.kSteps//2)
+                ax[mu1,mu2].fill_between(kGrid, cont1, cont2, color='grey', alpha=0.2)
+                for band in cnt.excitonBands[mu1, mu2]:
+                    if gammaShift:
+                        band = np.roll(band, cnt.kSteps//2)
+                    ax[mu1,mu2].plot(kGrid, band, lw=2, color=color)                
+                if abs(mu1 - mu2) == 1 or abs(mu1 - mu2) == cnt.subN - 1:
+                    ax[mu1,mu2].vlines( ort, 0, 10, ls ='--', color ="k")
+                    ax[mu1,mu2].vlines(-ort, 0, 10, ls ='--', color ="k")
+                
+                ax[mu1,mu2].set_xlim(xlims)
+                ax[mu1,mu2].set_ylim(ylims)
+        
+                ax[mu1,mu2].grid(True)
+    return ax
 
 
 def electronDOS(cnt, ax=None, swapAxes=False):
@@ -476,7 +451,6 @@ def linePatches(xs, ys, dxs, dys, color, width):
     for x, y, dx, dy in zip(xs, ys, dxs, dys):
         line = mpatches.FancyArrow(x, y, dx, dy, width=width, head_width=0, color=color)
         patches.append(line)
-    # lines = PatchCollection(patches, edgecolor=ec, facecolor=ec)
     lines = PatchCollection(patches, match_original=True)
     return lines
 
