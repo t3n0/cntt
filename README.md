@@ -5,11 +5,11 @@
 [![GitHub all releases](https://img.shields.io/github/downloads/t3n0/cntt/total)](https://github.com/t3n0/cntt/releases/download/v0.4/cntt-v0.4.zip)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-![logo-wide](./docs/figures/logo-wide.png)
+![logo-wide](./docs/images/logo-wide.png)
 
 **CNTT**, also spelled **C-entity**, is an utility to compute, display and manipulate electronic and optical properties of single-walled carbon nanotubes (SWCNTs). CNTT is an acronym for **Carbon NanoTube Tool**.
 
-At the current state of developement, this tool is capable of computing the electronic and excitonic band structure of SWCNTs, along with the electron and exciton Density of States (DOS). This is done in a very efficient way by exploiting the **helical symmetry** of SWCNTs. Results are then displayed in helical coordinates. In this way, most of the optical properties of SWCNTs become apparent by simply inspecting the [helical bandstructure](./docs/figures/cnt(4,2).png).
+At the current state of developement, this tool is capable of computing the electronic and excitonic band structure of SWCNTs, along with the electron and exciton Density of States (DOS). This is done in a very efficient way by exploiting the **helical symmetry** of SWCNTs. Results are then displayed in helical coordinates. In this way, most of the optical properties of SWCNTs become apparent by simply inspecting the [helical bandstructure](./docs/images/cnt(4,2).png).
 
 ## Installation
 
@@ -37,7 +37,7 @@ cntt 4 2
 
 This will display:
 
-- the linear and helical band structure of a [(4,2) single-walled carbon nanotube](./docs/figures/cnt(4,2).png),
+- the linear and helical band structure of a [(4,2) single-walled carbon nanotube](./docs/images/cnt(4,2).png),
 - the (singlet, bright and dark) exciton energy dispersions,
 - electron and exciton DOS,
 - and the most important physical parameters, unit cells and Brillouin zones.
@@ -76,7 +76,7 @@ mycnt.plot()
 
 The above code produces the following plot
 
-![cnt(4,2)fermi](./docs/figures/cnt(4,2)fermi.png)
+![cnt(4,2)fermi](./docs/images/cnt(4,2)fermi.png)
 
 ## Examples and tutorials
 
