@@ -113,7 +113,7 @@ def dirLat(*cnts: Swcnt, ax=None, pad='on_top', shift=[0,0], cmap = 'Set1'):
         padx = pad * 3 *cnt.ac
 
     # padding all cells and define vectors
-    vectors = []
+    vectors = [[[-3*cnt.ac,0.0], cnt.a1], [[-3*cnt.ac,0.0], cnt.a2]]
     for i, cell in enumerate(cells):
         cell[:,0] += padx * (i//2) # i = 0, 0, 1, 1, 2, 2, 3, 3, ...
         origin = cell[0]
@@ -207,7 +207,7 @@ def recLat(*cnts: Swcnt, ax=None, pad='on_top', shift=[0,0], cmap = 'Set1'):
         padx = pad * 3 *cnt.bc
 
     # padding all cells and define vectors
-    vectors = []
+    vectors = [[[-2*cnt.b0,0.0], cnt.b1], [[-2*cnt.b0,0.0], cnt.b2]]
     for i, cell in enumerate(cells):
         cell[:,0] += padx * i
         origin = cell[0]
