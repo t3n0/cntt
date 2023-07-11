@@ -95,6 +95,8 @@ class Swcnt(object):
         self.D = np.gcd(m, n)
         self.N = 2 * (n ** 2 + n * m + m ** 2) // self.R
         self.t1, self.t2 = (2 * m + n) // self.R, -(2 * n + m) // self.R
+        self.M = (self.n - self.m) % (3*self.D)
+        self.S = (self.n - self.m) % 3
 
         # graphene lattice vectors
         self.a1 = self.a0 * np.array([np.sqrt(3) / 2, 1 / 2])
@@ -135,7 +137,7 @@ class Swcnt(object):
         self.bzHel = la.norm(self.k2H)
         self.normOrt = self.bzLin * abs(beta) / self.D
 
-        # Symmetry and cuttiling lines
+        # Symmetry, cuttiling lines
         self.kSteps = ksteps
         if sym in ['linear', 'lin', 'l', 'L']:
             self.sym = 'linear'
@@ -148,6 +150,10 @@ class Swcnt(object):
             self.kGrid = np.linspace(0.0, 1.0, self.kSteps, endpoint=False) * self.bzHel
             self.subN = self.D
 
+        # CNT other features
+        self.chirality = chirality(self)
+        self.type = conductingType(self)
+
         # CNT data containers for electron and exciton bands, DOS, JDOS, etc
         self.electronBands    = np.empty((self.subN), dtype=object)
         self.electronDOS      = np.empty((self.subN), dtype=object)
@@ -157,6 +163,14 @@ class Swcnt(object):
         self.excitonMaps      = np.empty((self.subN, self.subN), dtype=object)
         self.excitonDOS       = np.empty((self.subN, self.subN), dtype=object)
         
+    
+    def __str__(self):
+        text = \
+        f'CNT ({self.n},{self.m})\n' + \
+        f'Chirality: {self.chirality}\n' + \
+        f'Type: {self.type}'
+
+        return text
 
     def setUnits(self, energy, length):
         '''
@@ -586,4 +600,22 @@ def freeExcitonBands(cnt: Swcnt, bindEnergy=0.0):
             cnt.excitonMaps[mu1, mu2] = map
 
 
+def chirality(cnt: Swcnt):
+    if cnt.n == cnt.m:
+        type = 'armchair'
+    elif cnt.m == 0:
+        type = 'zigzag'
+    else:
+        type = 'chiral'
+    return type
 
+def conductingType(cnt: Swcnt):
+    if cnt.M == 0:
+        type = 'M2'
+    elif cnt.S == 0:
+        type = 'M1'
+    elif cnt.S == 1:
+        type = 'S1'
+    else:
+        type = 'S2'
+    return type

@@ -105,7 +105,8 @@ def findFunctionExtrema(x, y, which = 'max'):
             mask1 = ((np.roll(prime, 1) < 0) * (prime >= 0)) # derivative change sign, might be minimum
             #mask1 = mask1 & (np.roll(prime, 2) < 0) * (np.roll(prime, -1) > 0) # check also the nearest 2 points
         mask2 = np.abs(np.roll(prime, 1) - prime) > 0.3*threshold # delta derivative too big, might be dirac point
-        mask = mask1 & (~ mask2) # tilde is negation, not mask2
+        #todo: how should we treat dirac points?
+        mask = mask1 #& (~ mask2) # tilde is negation, not mask2
         # print(caught_warnings) # when masks with np.nan are generated, there can be some RuntimeWarnings
         return mask
 

@@ -200,11 +200,11 @@ def recLat(*cnts: Swcnt, ax=None, pad='on_top', shift=[0,0], cmap = 'Set1'):
 
     # define padding
     if pad == 'by_side':
-        padx = np.rint(np.max(cells[:,:,0])/3/cnt.bc) * 3 *cnt.bc
+        padx = np.rint(np.max(cells[:,:,0])/cnt.b0) * cnt.b0
     elif pad == 'on_top':
         padx = 0.0
     else:
-        padx = pad * 3 *cnt.bc
+        padx = pad * cnt.b0
 
     # padding all cells and define vectors
     vectors = [[[-2*cnt.b0,0.0], cnt.b1], [[-2*cnt.b0,0.0], cnt.b2]]
@@ -297,7 +297,7 @@ def excitonBands(cnt: Swcnt, ax=None, arrange='individual', gammaShift=True, yli
     mode = static, interactive
     '''
     if ax == None:
-        if arrange == 'together':
+        if arrange == 'together' or cnt.subN==1:
             fig, ax = plt.subplots()
             fig.set_size_inches((8, 5))
         elif arrange == 'individual':
@@ -317,7 +317,7 @@ def excitonBands(cnt: Swcnt, ax=None, arrange='individual', gammaShift=True, yli
         xlims = (0, bz)
 
     custom_lines = []
-    if arrange == 'together':
+    if arrange == 'together' or cnt.subN==1:
         for mu1 in range(cnt.subN):
             for mu2 in range(cnt.subN):
                 color = colors[mu1*cnt.subN + mu2]
