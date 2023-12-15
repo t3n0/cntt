@@ -1,7 +1,7 @@
 # Theoretical notes for the CNTT package
-
-By Stefano Dal Forno.  
-A collection of theoretical notes for the [C-entity package](https://github.com/t3n0/cntt).
+ 
+A collection of theoretical notes for the [C-entity package](https://github.com/t3n0/cntt).  
+By Stefano Dal Forno.
 
 ## Contents
 
