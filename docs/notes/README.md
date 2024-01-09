@@ -7,4 +7,5 @@ By Stefano Dal Forno.
 
 1. [zone folding approximation](./01.zone_folding.md)
 2. [tight binding method](./02.tight_binding.md)
-3. more to come...
+3. [graphene](./03.graphene.md)
+4. more to come...
